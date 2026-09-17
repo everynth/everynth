@@ -1,36 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EVERYNTH
 
-## Getting Started
+The Private Commerce Layer on Solana. Launch digital products (AI agents, APIs, datasets, tools, services), sell them for USDC, deliver them encrypted. Concept and roadmap: [docs/konsep-v1.md](docs/konsep-v1.md).
 
-First, run the development server:
+## Run
 
-```bash
+```
+copy .env.example .env.local   # then fill in the values
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Defaults to **devnet** and devnet USDC (`4zMM…ncDU`, faucet: https://faucet.circle.com).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How v1 works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Sign in**: wallet signs a free message; server verifies it and sets an HMAC session cookie (`lib/auth.ts`).
+- **Launch**: the browser encrypts the file / secret text with AES-GCM before upload (`lib/content-crypto.ts`). The server stores the ciphertext and the content key wrapped with `MASTER_KEY` (`lib/keywrap.ts`). Not end-to-end: the platform can unwrap keys.
+- **Buy**: no on-chain program. One transaction, two USDC transfers (95% creator, 5% treasury) plus a unique reference key (`lib/payment.ts`). The server checks the chain itself before unlocking anything (`lib/settle.ts`).
+- **Data**: embedded Postgres (PGlite) in `./data`. Swap `lib/db.ts` for a `pg` pool before deploying to serverless.
 
-## Learn More
+## Checks
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+npm test                 # unit tests: auth, money, key wrap, encryption, payment verification
+node scripts/e2e.mjs     # full flow over HTTP with a stub RPC; see the header of the file
+```
