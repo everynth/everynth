@@ -46,7 +46,7 @@ export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
         <span className="font-mono text-sm">
           {sessionWallet.slice(0, 4)}…{sessionWallet.slice(-4)}
         </span>
-        <button onClick={signOut} className="rounded-full border px-4 py-2 text-sm">
+        <button onClick={signOut} className="btn-ghost">
           Sign out
         </button>
       </div>
@@ -61,7 +61,7 @@ export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
           <button
             onClick={signIn}
             disabled={busy || !signMessage}
-            className="rounded-full bg-foreground px-4 py-2 text-sm text-background disabled:opacity-50"
+            className="btn"
           >
             {busy ? "Check your wallet…" : "Sign in (free)"}
           </button>
