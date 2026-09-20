@@ -1,3 +1,4 @@
+import { mkdirSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 
 // ponytail: embedded Postgres (PGlite) on local disk, single process only. Same SQL as real Postgres,
@@ -49,10 +50,15 @@ const g = globalThis as { __everynthDb?: Promise<PGlite> };
 
 function db(): Promise<PGlite> {
   return (g.__everynthDb ??= (async () => {
-    const pg = new PGlite(process.env.PGLITE_DIR ?? "./data/pg");
+    const dir = process.env.PGLITE_DIR ?? "./data/pg";
+    mkdirSync(dir, { recursive: true }); // PGlite does not create parent folders
+    const pg = new PGlite(dir);
     await pg.exec(SCHEMA);
     return pg;
-  })());
+  })().catch((e) => {
+    delete g.__everynthDb; // do not cache a failed open
+    throw e;
+  }));
 }
 
 export async function query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
