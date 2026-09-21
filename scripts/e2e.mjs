@@ -19,28 +19,28 @@ const { loginMessage } = await import(pathToFileURL(project + "lib/login-message
 const { encryptContent, decryptContent } = await import(pathToFileURL(project + "lib/content-crypto.ts").href);
 
 const BASE = "http://localhost:3100";
-const MINT = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+const SOL = 1_000_000_000;
 
 // ---- stub RPC ----
 const chain = { byAddress: new Map(), bySignature: new Map() };
+// A tx where `received[owner]` lamports arrived at each owner: keys = [payer, reference, ...owners].
 function putTx(signature, reference, received, { err = null } = {}) {
   const owners = Object.keys(received);
+  const paid = Object.values(received).reduce((a, b) => a + b, 0);
+  const keys = [Keypair.generate().publicKey.toBase58(), reference, ...owners];
   const tx = {
     slot: 1, blockTime: 1, version: "legacy",
     transaction: {
       signatures: [signature],
       message: {
-        accountKeys: [reference, ...owners].map((pubkey) => ({ pubkey, signer: false, writable: false, source: "transaction" })),
+        accountKeys: keys.map((pubkey, i) => ({ pubkey, signer: i === 0, writable: i !== 1, source: "transaction" })),
         instructions: [], recentBlockhash: Keypair.generate().publicKey.toBase58(),
       },
     },
     meta: {
-      err, fee: 5000, preBalances: [], postBalances: [], innerInstructions: [], logMessages: [],
-      preTokenBalances: [],
-      postTokenBalances: owners.map((owner, i) => ({
-        accountIndex: i + 1, mint: MINT, owner,
-        uiTokenAmount: { amount: String(received[owner]), decimals: 6, uiAmount: received[owner] / 1e6, uiAmountString: String(received[owner] / 1e6) },
-      })),
+      err, fee: 5000, innerInstructions: [], logMessages: [], preTokenBalances: [], postTokenBalances: [],
+      preBalances: keys.map(() => 10 * SOL),
+      postBalances: [10 * SOL - paid - 5000, 10 * SOL, ...owners.map((o) => 10 * SOL + received[o])],
     },
   };
   chain.bySignature.set(signature, tx);
@@ -86,7 +86,7 @@ const stranger = await makeUser();
 const SECRET = "sk-live-" + randomBytes(8).toString("hex");
 const { key, payload } = await encryptContent(new TextEncoder().encode(SECRET));
 const form = new FormData();
-for (const [k, v] of Object.entries({ title: "Alpha Signals API", description: "Private trading signals API key, 30 days.", category: "API", price: "10", kind: "secret", key: Buffer.from(key).toString("base64") })) form.set(k, v);
+for (const [k, v] of Object.entries({ title: "Alpha Signals API", description: "Private trading signals API key, 30 days.", category: "API", price: "1", kind: "secret", key: Buffer.from(key).toString("base64") })) form.set(k, v);
 form.set("payload", new Blob([payload]));
 let res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: form });
 assert.equal(res.status, 200, await res.clone().text());
@@ -110,10 +110,10 @@ step("creator cannot buy own product");
 res = await buyer.json("/api/orders", { productId });
 assert.equal(res.status, 200, await res.clone().text());
 const order = await res.json();
-assert.equal(order.creatorAmount + order.fee, 10_000_000);
-assert.equal(order.fee, 500_000);
+assert.equal(order.creatorAmount + order.fee, 1 * SOL);
+assert.equal(order.fee, 0.05 * SOL);
 assert.equal(order.creator, creator.wallet);
-step("order: 9.5 USDC to creator + 0.5 fee");
+step("order: 0.95 SOL to creator + 0.05 fee");
 
 assert.equal((await buyer.json(`/api/orders/${order.purchaseId}/confirm`)).status, 402);
 assert.equal((await buyer.get(`/api/purchases/${order.purchaseId}/content`)).status, 404);
@@ -125,7 +125,7 @@ step("pressing Buy again reuses the same order");
 
 // underpaid tx (fee skipped)
 let sig = newSig();
-putTx(sig, order.reference, { [order.creator]: 10_000_000 });
+putTx(sig, order.reference, { [order.creator]: 1 * SOL });
 assert.equal((await buyer.json(`/api/orders/${order.purchaseId}/confirm`, { signature: sig })).status, 402);
 // failed tx
 sig = newSig();
@@ -161,15 +161,18 @@ step("nobody else can fetch the content");
 
 // one tx cannot settle two purchases: stranger crafts a tx carrying their reference but reuses goodSig
 const o2 = await (await stranger.json("/api/orders", { productId })).json();
-chain.bySignature.get(goodSig).transaction.message.accountKeys.push({ pubkey: o2.reference, signer: false, writable: false, source: "transaction" });
+const forged = chain.bySignature.get(goodSig);
+forged.transaction.message.accountKeys.push({ pubkey: o2.reference, signer: false, writable: false, source: "transaction" });
+forged.meta.preBalances.push(0);
+forged.meta.postBalances.push(0);
 assert.equal((await stranger.json(`/api/orders/${o2.purchaseId}/confirm`, { signature: goodSig })).status, 402);
 assert.equal((await stranger.get(`/api/purchases/${o2.purchaseId}/content`)).status, 404);
 step("one transaction cannot pay for two purchases");
 
 assert.ok((await (await buyer.get("/purchases")).text()).includes("Alpha Signals API"));
 const dash = await (await creator.get("/dashboard")).text();
-assert.ok(dash.includes("Alpha Signals API") && dash.includes("9.5"));
-step("purchases page and creator dashboard (1 sold, 9.5 USDC)");
+assert.ok(dash.includes("Alpha Signals API") && dash.includes("0.95"));
+step("purchases page and creator dashboard (1 sold, 0.95 SOL)");
 
 assert.equal((await buyer.json("/api/reports", { productId, reason: "looks like a scam" })).status, 200);
 assert.equal((await buyer.json("/api/reports", { productId, reason: "x" })).status, 400);

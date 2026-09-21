@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { RemoveButton } from "@/app/remove-button";
 import { query } from "@/lib/db";
-import { formatUsdc } from "@/lib/money";
+import { formatSol } from "@/lib/money";
 import { sessionWallet } from "@/lib/session";
 
 type Row = { id: string; title: string; status: string; price: number; sales: number; revenue: number };
@@ -23,7 +23,7 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-3xl font-semibold tracking-tight">Creator dashboard</h1>
-        {wallet && <p className="font-mono text-sm">Earned: {formatUsdc(total)} USDC</p>}
+        {wallet && <p className="font-mono text-sm">Earned: {formatSol(total)} SOL</p>}
       </div>
       {!wallet ? (
         <p className="card">Sign in to see your products.</p>
@@ -41,7 +41,7 @@ export default async function DashboardPage() {
                   {r.status === "removed" && <span className="ml-2 text-sm text-red-600">removed</span>}
                 </h2>
                 <p className="font-mono text-xs opacity-60">
-                  {formatUsdc(r.price)} USDC · {r.sales} sold · {formatUsdc(r.revenue)} USDC earned
+                  {formatSol(r.price)} SOL · {r.sales} sold · {formatSol(r.revenue)} SOL earned
                 </p>
               </div>
               {r.status === "live" && <RemoveButton productId={r.id} />}

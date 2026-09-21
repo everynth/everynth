@@ -1,7 +1,7 @@
 import { CATEGORIES, KINDS, MAX_PAYLOAD_BYTES } from "@/lib/config";
 import { query } from "@/lib/db";
 import { masterKey, wrapKey } from "@/lib/keywrap";
-import { parseUsdc } from "@/lib/money";
+import { parseSol } from "@/lib/money";
 import { sessionWallet } from "@/lib/session";
 
 const bad = (error: string, status = 400) => Response.json({ error }, { status });
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const description = text("description");
   const category = text("category");
   const kind = text("kind");
-  const price = parseUsdc(text("price"));
+  const price = parseSol(text("price"));
   const key = Buffer.from(text("key"), "base64");
   const payload = form.get("payload");
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   if (description.length < 10 || description.length > 4000) return bad("description must be 10-4000 characters");
   if (!(CATEGORIES as readonly string[]).includes(category)) return bad("unknown category");
   if (!(KINDS as readonly string[]).includes(kind)) return bad("unknown kind");
-  if (price === null) return bad("price must be a positive USDC amount, max 6 decimals");
+  if (price === null) return bad("price must be between 0.02 and 1,000,000 SOL, max 9 decimals");
   if (key.length !== 32) return bad("content key must be 32 bytes");
   if (!(payload instanceof Blob) || payload.size <= 28) return bad("encrypted payload is missing");
   if (payload.size > MAX_PAYLOAD_BYTES + 28) return bad("payload too large (max 4 MB)", 413);

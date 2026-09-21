@@ -12,7 +12,7 @@ create table if not exists products (
   title text not null,
   description text not null,
   category text not null,
-  price bigint not null,              -- micro USDC
+  price bigint not null,              -- lamports
   kind text not null,                 -- 'file' | 'secret'
   file_name text,
   file_type text,

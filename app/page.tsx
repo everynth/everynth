@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/config";
 import { PRODUCT_COLS, query, type Product } from "@/lib/db";
-import { formatUsdc } from "@/lib/money";
+import { formatSol } from "@/lib/money";
 
 export default async function Market({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
@@ -22,7 +22,7 @@ export default async function Market({ searchParams }: PageProps<"/">) {
         <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">The Private Commerce Layer.</h1>
         <p className="max-w-xl text-lg opacity-70">
           Build it. Launch it. Monetize it. Privately. AI agents, APIs, datasets, tools and digital services — paid in
-          USDC, delivered encrypted.
+          SOL, delivered encrypted.
         </p>
         <div>
           <Link href="/launch" className="btn">
@@ -52,7 +52,7 @@ export default async function Market({ searchParams }: PageProps<"/">) {
                 <span className="font-mono text-xs uppercase tracking-wider opacity-60">{p.category}</span>
                 <h2 className="text-lg font-medium">{p.title}</h2>
                 <p className="line-clamp-3 flex-1 text-sm opacity-70">{p.description}</p>
-                <span className="font-mono text-sm">{formatUsdc(p.price)} USDC</span>
+                <span className="font-mono text-sm">{formatSol(p.price)} SOL</span>
               </Link>
             </li>
           ))}

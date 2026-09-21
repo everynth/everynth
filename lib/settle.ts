@@ -1,5 +1,4 @@
 import { PublicKey } from "@solana/web3.js";
-import { USDC_MINT } from "./config.ts";
 import { query } from "./db.ts";
 import { verifyPayment } from "./payment.ts";
 import { connection } from "./solana.ts";
@@ -29,7 +28,6 @@ export async function settle(p: Purchase, signature?: string): Promise<string | 
     if (!signature) return "payment not found yet";
     const tx = await conn.getParsedTransaction(signature, { maxSupportedTransactionVersion: 0 });
     const error = verifyPayment(tx, {
-      mint: USDC_MINT,
       reference: p.reference,
       creator: p.creator,
       creatorAmount: p.creator_amount,

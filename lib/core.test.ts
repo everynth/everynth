@@ -4,28 +4,29 @@ import { test } from "node:test";
 import { Keypair } from "@solana/web3.js";
 import { decryptContent, encryptContent } from "./content-crypto.ts";
 import { unwrapKey, wrapKey } from "./keywrap.ts";
-import { formatUsdc, parseUsdc, splitPrice } from "./money.ts";
+import { formatSol, parseSol, splitPrice } from "./money.ts";
 import { buildPaymentInstructions, verifyPayment, type Order, type PaidTx } from "./payment.ts";
 
 const addr = () => Keypair.generate().publicKey.toBase58();
+const SOL = 1_000_000_000;
 
-test("parseUsdc accepts plain decimals only", () => {
-  assert.equal(parseUsdc("12.5"), 12_500_000);
-  assert.equal(parseUsdc("0.000001"), 1);
-  assert.equal(parseUsdc(" 3 "), 3_000_000);
-  for (const bad of ["0", "-1", "1e3", "1.0000001", "abc", "", "1,5", "99999999"]) {
-    assert.equal(parseUsdc(bad), null, bad);
+test("parseSol accepts plain decimals inside the allowed range", () => {
+  assert.equal(parseSol("1.25"), 1.25 * SOL);
+  assert.equal(parseSol("0.02"), 0.02 * SOL);
+  assert.equal(parseSol(" 3 "), 3 * SOL);
+  for (const bad of ["0", "0.01", "-1", "1e3", "1.0000000001", "abc", "", "1,5", "99999999"]) {
+    assert.equal(parseSol(bad), null, bad);
   }
-  assert.equal(formatUsdc(12_500_000), "12.5");
+  assert.equal(formatSol(1.25 * SOL), "1.25");
 });
 
-test("splitPrice never loses or invents a micro-unit", () => {
+test("splitPrice never loses or invents a lamport", () => {
   for (const price of [1, 19, 20, 999_999, 12_500_000, 1_000_000_000_000]) {
     const { fee, creatorAmount } = splitPrice(price);
     assert.equal(fee + creatorAmount, price);
     assert.ok(fee >= 0 && fee <= price * 0.05);
   }
-  assert.deepEqual(splitPrice(10_000_000), { fee: 500_000, creatorAmount: 9_500_000 });
+  assert.deepEqual(splitPrice(1 * SOL), { fee: 0.05 * SOL, creatorAmount: 0.95 * SOL });
 });
 
 test("key wrap round-trips and rejects tampering / wrong master", () => {
@@ -48,20 +49,19 @@ test("content encryption round-trips and fails with the wrong key", async () => 
 });
 
 function makeOrder(): Order {
-  return { mint: addr(), reference: addr(), creator: addr(), creatorAmount: 9_500_000, treasury: addr(), fee: 500_000 };
+  return { reference: addr(), creator: addr(), creatorAmount: 0.95 * SOL, treasury: addr(), fee: 0.05 * SOL };
 }
 
-// Fake a parsed tx where `received[owner]` micro-units of `mint` arrived.
-function makeTx(order: Order, received: Record<string, number>, opts: { err?: unknown; keys?: string[]; mint?: string } = {}): PaidTx {
-  const mint = opts.mint ?? order.mint;
-  const owners = Object.keys(received);
+// Fake a parsed tx: buyer first, then reference (or `keys`), then each recipient with its lamport gain.
+function makeTx(order: Order, received: Record<string, number>, opts: { err?: unknown; keys?: string[] } = {}): PaidTx {
+  const buyer = addr();
+  const paid = Object.values(received).reduce((a, b) => a + b, 0);
+  const keys = [buyer, ...(opts.keys ?? [order.reference]), ...Object.keys(received)];
+  const pre = keys.map(() => 10 * SOL);
+  const post = [10 * SOL - paid - 5000, ...(opts.keys ?? [order.reference]).map(() => 10 * SOL), ...Object.values(received).map((v) => 10 * SOL + v)];
   return {
-    meta: {
-      err: opts.err ?? null,
-      preTokenBalances: owners.map((owner) => ({ mint, owner, uiTokenAmount: { amount: "1000" } })),
-      postTokenBalances: owners.map((owner) => ({ mint, owner, uiTokenAmount: { amount: String(1000 + received[owner]) } })),
-    },
-    transaction: { message: { accountKeys: (opts.keys ?? [order.reference]).map((k) => ({ pubkey: { toBase58: () => k } })) } },
+    meta: { err: opts.err ?? null, preBalances: pre, postBalances: post },
+    transaction: { message: { accountKeys: keys.map((k) => ({ pubkey: { toBase58: () => k } })) } },
   };
 }
 
@@ -70,26 +70,15 @@ test("verifyPayment accepts an exact payment", () => {
   assert.equal(verifyPayment(makeTx(o, { [o.creator]: o.creatorAmount, [o.treasury]: o.fee }), o), null);
 });
 
-test("verifyPayment accepts a recipient whose token account was just created (no pre balance)", () => {
-  const o = makeOrder();
-  const tx = makeTx(o, { [o.creator]: o.creatorAmount, [o.treasury]: o.fee });
-  tx.meta!.preTokenBalances = [];
-  tx.meta!.postTokenBalances = [
-    { mint: o.mint, owner: o.creator, uiTokenAmount: { amount: String(o.creatorAmount) } },
-    { mint: o.mint, owner: o.treasury, uiTokenAmount: { amount: String(o.fee) } },
-  ];
-  assert.equal(verifyPayment(tx, o), null);
-});
-
 test("verifyPayment rejects every way of cheating", () => {
   const o = makeOrder();
   const full = { [o.creator]: o.creatorAmount, [o.treasury]: o.fee };
   assert.match(verifyPayment(null, o)!, /not found/);
   assert.match(verifyPayment(makeTx(o, full, { err: { InstructionError: [] } }), o)!, /failed/);
   assert.match(verifyPayment(makeTx(o, full, { keys: [addr()] }), o)!, /reference/); // someone else's tx
-  assert.match(verifyPayment(makeTx(o, full, { mint: addr() }), o)!, /underpaid/); // worthless token
   assert.match(verifyPayment(makeTx(o, { ...full, [o.creator]: o.creatorAmount - 1 }), o)!, /underpaid/);
   assert.match(verifyPayment(makeTx(o, { [o.creator]: o.creatorAmount + o.fee }), o)!, /underpaid/); // fee skipped
+  assert.match(verifyPayment(makeTx(o, {}), o)!, /underpaid/); // reference present, nobody paid
 });
 
 test("creator === treasury needs the full price in one wallet", () => {
@@ -99,9 +88,11 @@ test("creator === treasury needs the full price in one wallet", () => {
   assert.match(verifyPayment(makeTx(o, { [o.creator]: o.creatorAmount }), o)!, /underpaid/);
 });
 
-test("payment instructions carry the reference and both transfers", () => {
+test("payment instructions: two transfers, reference attached", () => {
   const o = makeOrder();
   const ix = buildPaymentInstructions(Keypair.generate().publicKey, o);
-  assert.equal(ix.length, 4);
-  assert.ok(ix.some((i) => i.keys.some((k) => k.pubkey.toBase58() === o.reference && !k.isSigner && !k.isWritable)));
+  assert.equal(ix.length, 2);
+  assert.ok(ix[0].keys.some((k) => k.pubkey.toBase58() === o.reference && !k.isSigner && !k.isWritable));
+  o.treasury = o.creator;
+  assert.equal(buildPaymentInstructions(Keypair.generate().publicKey, o).length, 1);
 });

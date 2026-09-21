@@ -69,8 +69,8 @@ export function LaunchForm() {
           </select>
         </label>
         <label className="flex flex-col gap-1.5 text-sm">
-          Price (USDC)
-          <input name="price" required inputMode="decimal" pattern="\d{1,7}(\.\d{1,6})?" placeholder="25" className="field" />
+          Price (SOL, min 0.02)
+          <input name="price" required inputMode="decimal" pattern="\d{1,7}(\.\d{1,9})?" placeholder="0.5" className="field" />
         </label>
       </div>
 
