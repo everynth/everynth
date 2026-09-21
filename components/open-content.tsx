@@ -85,7 +85,7 @@ export function OpenContent({ purchaseId }: { purchaseId: string }) {
           </button>
         </form>
         {error && (
-          <p role="alert" className="text-red-600">
+          <p role="alert" className="text-red-400">
             {error}
           </p>
         )}
@@ -99,7 +99,7 @@ export function OpenContent({ purchaseId }: { purchaseId: string }) {
         {busy ? "Decrypting…" : "Unlock & open"}
       </button>
       {error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-red-400">
           {error}
         </p>
       )}

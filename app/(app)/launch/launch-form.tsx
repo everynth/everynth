@@ -112,7 +112,7 @@ export function LaunchForm() {
       </fieldset>
 
       {error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-red-400">
           {error}
         </p>
       )}

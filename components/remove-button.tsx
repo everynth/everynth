@@ -19,7 +19,7 @@ export function RemoveButton({ productId, block = false }: { productId: string; 
     router.refresh();
   }
   return (
-    <button onClick={remove} className="btn-ghost text-red-600">
+    <button onClick={remove} className="btn-ghost text-red-400">
       {block ? "Remove + block creator" : "Remove from market"}
     </button>
   );
