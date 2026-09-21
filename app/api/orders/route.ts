@@ -1,5 +1,4 @@
 import { Keypair } from "@solana/web3.js";
-import { USDC_MINT } from "@/lib/config";
 import { PRODUCT_COLS, query, type Product } from "@/lib/db";
 import { splitPrice } from "@/lib/money";
 import { sessionWallet } from "@/lib/session";
@@ -47,7 +46,6 @@ export async function POST(request: Request) {
   }
   return Response.json({
     purchaseId: purchase.id,
-    mint: USDC_MINT,
     reference: purchase.reference,
     creator: purchase.creator,
     creatorAmount: purchase.creator_amount,
