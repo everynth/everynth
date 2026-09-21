@@ -44,7 +44,14 @@ export default async function DashboardPage() {
                   {formatSol(r.price)} SOL · {r.sales} sold · {formatSol(r.revenue)} SOL earned
                 </p>
               </div>
-              {r.status === "live" && <RemoveButton productId={r.id} />}
+              {r.status === "live" && (
+                <div className="flex gap-2">
+                  <Link href={`/p/${r.id}/edit`} className="btn-ghost">
+                    Edit
+                  </Link>
+                  <RemoveButton productId={r.id} />
+                </div>
+              )}
             </li>
           ))}
         </ul>
