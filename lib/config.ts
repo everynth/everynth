@@ -14,6 +14,6 @@ export const MAX_COVER_BYTES = 1024 * 1024; // cover image, stored inline as byt
 // is the only check the server can make; archives are not inspected.
 export const BLOCKED_EXTENSIONS = /\.(exe|msi|bat|cmd|com|scr|pif|vbs|vbe|ps1|dll|dmg|pkg|app|apk|deb|rpm|jar|lnk)$/i;
 export const CATEGORIES = ["AI Agent", "API", "Dataset", "Tool", "Research", "Service", "Community"] as const;
-export const KINDS = ["file", "secret"] as const;
+export const KINDS = ["file", "secret", "github"] as const;
 
 export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL ?? "https://api.devnet.solana.com";

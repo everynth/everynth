@@ -34,7 +34,12 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
         <Link href={`/u/${product.creator}`} className="underline">
           {product.creator.slice(0, 4)}…{product.creator.slice(-4)}
         </Link>{" "}
-        · {product.kind === "file" ? `file: ${product.file_name}` : "secret text"} · delivered encrypted
+        ·{" "}
+        {product.kind === "file"
+          ? `file: ${product.file_name} · delivered encrypted`
+          : product.kind === "github"
+            ? `read access to github.com/${product.github_repo}`
+            : "secret text · delivered encrypted"}
       </p>
       <p className="whitespace-pre-wrap opacity-80">{product.description}</p>
 
