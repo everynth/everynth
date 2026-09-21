@@ -45,3 +45,4 @@ dev.log
 .vercel
 .env*
 .claude/settings.local.json
+e2e-neon.log

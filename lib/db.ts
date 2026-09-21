@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 
-// Production: Postgres via DATABASE_URL (Neon on Vercel). Local dev/tests: embedded PGlite in ./data.
+// Production: Neon Postgres via DATABASE_URL (set by the Vercel integration). Local dev/tests: embedded PGlite in ./data.
 // Same SQL either way; the only difference is who opens the connection.
 
 const SCHEMA = `
@@ -48,7 +48,8 @@ type Client = { query<T>(sql: string, params?: unknown[]): Promise<{ rows: T[] }
 
 async function open(): Promise<Client> {
   if (process.env.DATABASE_URL) {
-    const { Pool } = await import("pg");
+    // Neon over WebSocket (443), pg-compatible API. Works from serverless and from networks that block 5432.
+    const { Pool } = await import("@neondatabase/serverless");
     const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
     await pool.query(SCHEMA);
     return pool as unknown as Client;
