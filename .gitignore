@@ -46,3 +46,4 @@ dev.log
 .env*
 .claude/settings.local.json
 e2e-neon.log
+e2e-local.log

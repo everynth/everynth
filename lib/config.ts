@@ -9,6 +9,9 @@ export const MAX_PRICE_LAMPORTS = 1_000_000 * 10 ** SOL_DECIMALS; // keeps amoun
 // Vercel's 4.5 MB request limit. Move to direct-to-storage signed uploads when bigger files matter.
 export const MAX_PAYLOAD_BYTES = 4 * 1024 * 1024;
 export const MAX_COVER_BYTES = 1024 * 1024; // cover image, stored inline as bytea
+// Executables and installers are refused by file name. Content is encrypted in the browser, so this
+// is the only check the server can make; archives are not inspected.
+export const BLOCKED_EXTENSIONS = /\.(exe|msi|bat|cmd|com|scr|pif|vbs|vbe|ps1|dll|dmg|pkg|app|apk|deb|rpm|jar|lnk)$/i;
 export const CATEGORIES = ["AI Agent", "API", "Dataset", "Tool", "Research", "Service", "Community"] as const;
 export const KINDS = ["file", "secret"] as const;
 
