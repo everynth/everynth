@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { CATEGORIES, MAX_PAYLOAD_BYTES } from "@/lib/config";
+import { ProductFields } from "@/app/product-fields";
+import { MAX_PAYLOAD_BYTES } from "@/lib/config";
 import { encryptContent } from "@/lib/content-crypto";
 
 export function LaunchForm() {
@@ -51,28 +52,7 @@ export function LaunchForm() {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-5">
-      <label className="flex flex-col gap-1.5 text-sm">
-        Title
-        <input name="title" required minLength={3} maxLength={80} className="field" />
-      </label>
-      <label className="flex flex-col gap-1.5 text-sm">
-        Description
-        <textarea name="description" required minLength={10} maxLength={4000} rows={6} className="field" />
-      </label>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5 text-sm">
-          Category
-          <select name="category" required className="field">
-            {CATEGORIES.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm">
-          Price (SOL, min 0.02)
-          <input name="price" required inputMode="decimal" pattern="\d{1,7}(\.\d{1,9})?" placeholder="0.5" className="field" />
-        </label>
-      </div>
+      <ProductFields />
 
       <fieldset className="flex flex-col gap-3 text-sm">
         <legend className="mb-2">What do buyers receive?</legend>
