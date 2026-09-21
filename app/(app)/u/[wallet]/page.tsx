@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { PublicKey } from "@solana/web3.js";
-import { ProductGrid } from "@/app/product-card";
+import { ProductGrid } from "@/components/product-card";
 import { PRODUCT_COLS, query, type Product } from "@/lib/db";
 
 // Public creator page: every live product from one wallet.

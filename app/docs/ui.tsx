@@ -6,7 +6,7 @@ export function H2({ id, children }: { id: string; children: ReactNode }) {
   return (
     <h2 id={id} className="group scroll-mt-24">
       {children}
-      <a href={`#${id}`} aria-label="Permalink" className="ml-2 opacity-0 transition-opacity group-hover:opacity-50">
+      <a href={`#${id}`} aria-label="Permalink" className="ml-2 opacity-0 transition-opacity group-hover:opacity-70">
         #
       </a>
     </h2>

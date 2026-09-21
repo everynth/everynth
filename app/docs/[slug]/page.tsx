@@ -19,15 +19,16 @@ export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {
   const i = DOCS.findIndex((d) => d.slug === slug);
   const next = DOCS[i + 1];
   return (
-    <article>
-      <p className="font-mono text-xs uppercase tracking-widest opacity-60">Docs</p>
-      <h1>{doc.title}</h1>
+    <article className="docs-rise">
+      <p className="docs-kicker">Docs · {String(i + 1).padStart(2, "0")}</p>
+      <h1 className="chrome shimmer">{doc.title}</h1>
       <p className="lead">{doc.summary}</p>
       <Body />
       {next && (
-        <p className="mt-12 border-t border-foreground/10 pt-5 text-sm">
-          Next: <a href={`/docs/${next.slug}`} className="underline">{next.title} →</a>
-        </p>
+        <a href={`/docs/${next.slug}`} className="docs-next no-underline">
+          <span className="docs-kicker">Next</span>
+          <span className="docs-next-title">{next.title} →</span>
+        </a>
       )}
     </article>
   );
