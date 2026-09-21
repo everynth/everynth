@@ -53,11 +53,11 @@ export function BuyButton({ productId, sessionWallet }: { productId: string; ses
   return (
     <div className="flex flex-col items-end gap-2">
       <button onClick={buy} disabled={!!status} className="btn">
-        {status || "Buy with USDC"}
+        {status || "Buy with SOL"}
       </button>
       {error && (
         <p role="alert" className="max-w-xs text-right text-sm text-red-600">
-          {error} {/insufficient|0x1\b/i.test(error) && "Make sure you have enough USDC plus a little SOL for fees."}
+          {error} {/insufficient|0x1\b/i.test(error) && "Make sure you have enough SOL for the price plus fees."}
         </p>
       )}
     </div>

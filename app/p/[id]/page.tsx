@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { OpenContent } from "@/app/open-content";
 import { RemoveButton } from "@/app/remove-button";
 import { PRODUCT_COLS, query, type Product } from "@/lib/db";
-import { formatUsdc } from "@/lib/money";
+import { formatSol } from "@/lib/money";
 import { isAdmin, sessionWallet } from "@/lib/session";
 import { BuyButton } from "./buy-button";
 import { ReportForm } from "./report-form";
@@ -31,7 +31,7 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
       <p className="whitespace-pre-wrap opacity-80">{product.description}</p>
 
       <div className="card flex flex-wrap items-center justify-between gap-4">
-        <span className="font-mono text-xl">{formatUsdc(product.price)} USDC</span>
+        <span className="font-mono text-xl">{formatSol(product.price)} SOL</span>
         {product.status === "removed" && <span className="text-sm text-red-600">Removed from the market</span>}
         {purchase ? (
           <OpenContent purchaseId={purchase.id} />

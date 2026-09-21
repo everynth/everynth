@@ -26,15 +26,15 @@ Lima lapisan, saling mengirim traffic:
 - Privasi v1: isi file dan pesan terenkripsi. Pembayaran tetap terlihat di chain.
 - FUND v1: jual produk jadi saja. Tidak ada presale, tidak ada token per produk.
 - Token: belum ada. Ditambahkan setelah ada pemakaian nyata.
-- Bayar pakai USDC. Harga stabil, dan cocok dengan x402 nanti.
+- Bayar pakai SOL (diputuskan 2026-09-21, sebelumnya USDC). Lebih sederhana: tanpa akun token, tanpa sewa. Harga minimum 0,02 SOL supaya fee 5% tetap di atas batas rent-exempt.
 
 ## 3. Cakupan v1
 
 Satu alur lengkap, dari creator sampai pembeli pegang produknya:
 
-**Creator:** connect wallet → isi halaman produk (judul, deskripsi, gambar, kategori, harga USDC) → unggah isi produk → publish.
+**Creator:** connect wallet → isi halaman produk (judul, deskripsi, gambar, kategori, harga SOL) → unggah isi produk → publish.
 
-**Pembeli:** buka market → cari / pilih kategori → buka halaman produk → bayar USDC → isi produk langsung terbuka di "Pembelian saya".
+**Pembeli:** buka market → cari / pilih kategori → buka halaman produk → bayar SOL → isi produk langsung terbuka di "Pembelian saya".
 
 "Isi produk" di v1 ada dua bentuk, satu mekanisme yang sama:
 
@@ -51,7 +51,7 @@ Dengan dua bentuk ini, hampir semua jenis produk di konsep sudah bisa dijual sej
 Connect wallet, lalu tanda tangan pesan. Gratis, tanpa SOL. Server memverifikasi tanda tangan. Tidak ada email, tidak ada password.
 
 ### Pembayaran — tanpa smart contract
-Satu transaksi berisi dua transfer USDC: sebagian besar ke wallet creator, fee ke treasury EVERYNTH. Dua-duanya jadi atau dua-duanya gagal.
+Satu transaksi berisi dua transfer SOL: sebagian besar ke wallet creator, fee ke treasury EVERYNTH. Dua-duanya jadi atau dua-duanya gagal.
 
 Tiap pembelian punya kode unik yang ditempel di transaksi. Server mengecek transaksi di chain: token benar, jumlah benar, penerima benar, kode cocok, belum pernah dipakai. Lolos → akses dibuka.
 
@@ -67,7 +67,7 @@ File dienkripsi di browser creator sebelum diunggah (AES-GCM, bawaan browser). T
 ### Teknologi
 - Next.js + TypeScript, deploy di Vercel.
 - Supabase: database dan penyimpanan file dalam satu layanan, ada paket gratis.
-- Solana wallet adapter + `@solana/web3.js` + `@solana/spl-token`.
+- Solana wallet adapter + `@solana/web3.js`.
 - RPC Helius.
 
 Sengaja sedikit. Tidak ada program on-chain, tidak ada layanan enkripsi pihak ketiga.
@@ -83,8 +83,8 @@ Sengaja sedikit. Tidak ada program on-chain, tidak ada layanan enkripsi pihak ke
 
 Urutan usulan, satu per satu, tiap tahap baru jalan kalau tahap sebelumnya dipakai orang:
 
-1. **v1** — launch + market + bayar USDC + kiriman terenkripsi.
-2. **x402 / machine layer** — creator pasang API di belakang gerbang bayar-per-panggilan. Agent bayar USDC otomatis. Tidak butuh kontrak sendiri, dan ini pembeda narasi paling kuat, jadi didahulukan.
+1. **v1** — launch + market + bayar SOL + kiriman terenkripsi.
+2. **x402 / machine layer** — creator pasang API di belakang gerbang bayar-per-panggilan. Agent bayar otomatis (x402 di Solana umumnya USDC; bisa ditambah sebagai alat bayar kedua saat tahap ini). Tidak butuh kontrak sendiri, dan ini pembeda narasi paling kuat, jadi didahulukan.
 3. **Chat privat** — pembeli ↔ creator, end-to-end. Kunci diturunkan dari tanda tangan wallet. Sekalian menaikkan enkripsi file ke end-to-end.
 4. **Escrow + sengketa** — untuk jasa yang tidak bisa dikirim instan. Butuh program on-chain dan audit. Paling mahal, jadi belakangan.
 5. **Token** — potongan fee, akses creator, akses premium. Fee platform → buyback → reward holder + burn. Pola Merkle hold-to-earn yang sudah terbukti di mainnet bisa dipakai ulang sebagai contoh.
@@ -94,7 +94,7 @@ Urutan usulan, satu per satu, tiap tahap baru jalan kalau tahap sebelumnya dipak
 1. Kerangka proyek: Next.js, Supabase, login wallet + tanda tangan.
 2. Buat produk: form halaman launch, enkripsi di browser, unggah.
 3. Market: daftar, cari, kategori, halaman produk.
-4. Beli: susun transaksi USDC (creator + fee + kode unik), verifikasi di server, catat pembelian. Bagian uang — wajib ada test.
+4. Beli: susun transaksi SOL (creator + fee + kode unik), verifikasi di server, catat pembelian. Bagian uang — wajib ada test.
 5. Akses: halaman "Pembelian saya", ambil kunci, buka file di browser.
 6. Dashboard creator: daftar produk dan penjualan.
 7. Lapor + takedown admin.
