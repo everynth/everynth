@@ -597,7 +597,8 @@ html.static .step svg .draw{stroke-dashoffset:0}
    Scoped under .stage; card class is .pcard to avoid the hero's .card rule.
    ═══════════════════════════════════════════════════════════════════ */
 .stage{
-  --paper:#ececeb;--ink:#222222;--copy:#4a4a4a;--glass-line:rgba(255,255,255,.36);
+  /* dark variant of the paper stage: same geometry, plate inverted to near-black */
+  --paper:#04070D;--ink:#F2F5FA;--copy:#C7CFDD;--glass-line:rgba(255,255,255,.28);
   --card-ref-w:429;--card-ref-h:554;--card-radius:17;--card-count:3;
   --gap:clamp(8px,1.5vw,23px);--gutter:clamp(14px,3.6vw,54px);
   --content-max:calc(var(--card-count)*var(--card-ref-w)*1px + (var(--card-count) - 1)*var(--gap));
@@ -608,12 +609,15 @@ html.static .step svg .draw{stroke-dashoffset:0}
   color:var(--ink);
   font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   font-optical-sizing:auto;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;
-  background:linear-gradient(rgba(236,236,234,.10),rgba(236,236,234,.10)),
+  background:linear-gradient(rgba(4,7,13,.86),rgba(4,7,13,.86)),
     url("https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/5c3ec08f-2dbf-4c0a-8588-f6106a789443.webp") center / cover no-repeat,
-    #ececeb}
+    #04070D}
 .stage *{box-sizing:border-box}
 .stage button,.stage a{font:inherit}
-.stage-motion{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.stage-motion{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;pointer-events:none;
+  filter:invert(1) brightness(.38) contrast(1.1) saturate(0)}
+.stage::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(70% 55% at 50% 100%,rgba(110,154,214,.14),transparent 70%),linear-gradient(180deg,rgba(4,7,13,.35),rgba(4,7,13,0) 40%)}
 .stage-motion--narrow{display:none}
 .stage .paper-texture{position:absolute;z-index:-1;inset:0;display:none}
 .stage .filter-defs{position:absolute;width:0;height:0;overflow:hidden}
@@ -621,9 +625,13 @@ html.static .step svg .draw{stroke-dashoffset:0}
 
 .stage .masthead,.stage .pcards{width:min(100%,var(--content-max));margin-inline:auto}
 .stage .masthead{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,clamp(260px,32vw,483px));gap:var(--masthead-gap);align-items:start;z-index:2;flex:0 0 auto}
-.stage .headline{margin:0;max-width:100%;color:#202020;font-size:clamp(24px,min(3.1vw,5.9vh),47px);font-weight:400;letter-spacing:.015em;line-height:1.223}
+.stage .headline{margin:0;max-width:100%;color:var(--ink);font-size:clamp(24px,min(3.1vw,5.9vh),47px);font-weight:400;letter-spacing:.015em;line-height:1.223}
 .stage .headline__line{display:flex;align-items:center;white-space:nowrap}
-.stage .dot-word{display:inline-block;flex:0 0 auto;width:4.851em;height:.766em;margin-left:.319em;color:#ad314d;transform:translateY(.085em)}
+.stage .dot-word{display:inline-block;flex:0 0 auto;width:4.851em;height:.766em;margin-left:.319em;color:#A9C4EA;transform:translateY(.085em);filter:drop-shadow(0 0 6px rgba(110,154,214,.55))}
+/* harmonise the three warm plates with the site's blue family; geometry and gradients untouched */
+.stage .pcard--speed{filter:hue-rotate(-128deg) saturate(.92)}
+.stage .pcard--context{filter:hue-rotate(-46deg) saturate(.9)}
+.stage .pcard--connections{filter:hue-rotate(178deg) saturate(.85)}
 .stage .dot-svg{display:block;overflow:visible;color:inherit;width:100%;height:100%}
 .stage .intro{container-type:inline-size;width:100%;margin:.34em 0 0;color:var(--copy);font-size:clamp(13px,min(1.36vw,2.6vh),20.6px);font-weight:400;letter-spacing:-.017em;line-height:1.62}
 .stage .desktop-break{display:none}
@@ -762,9 +770,9 @@ html.static .step svg .draw{stroke-dashoffset:0}
 }
 @media (max-width:767px){
   .stage{height:auto;min-height:100svh;overflow:visible;
-    background:linear-gradient(rgba(236,236,234,.08),rgba(236,236,234,.08)),
+    background:linear-gradient(rgba(4,7,13,.86),rgba(4,7,13,.86)),
       url("https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/0f4926a4-e660-4df2-9195-2bfb3e341bdd.webp") center top / 100% 100% no-repeat,
-      #e8e8e8}
+      #04070D}
   .stage-motion--wide{display:none}
   .stage-motion--narrow{display:block}
   @media (prefers-reduced-motion:reduce){.stage-motion--narrow{display:none}}
