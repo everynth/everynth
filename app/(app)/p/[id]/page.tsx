@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { OpenContent } from "@/app/open-content";
-import { RemoveButton } from "@/app/remove-button";
+import { OpenContent } from "@/components/open-content";
+import { RemoveButton } from "@/components/remove-button";
 import { PRODUCT_COLS, query, type Product } from "@/lib/db";
 import { formatSol } from "@/lib/money";
 import { isAdmin, sessionWallet } from "@/lib/session";

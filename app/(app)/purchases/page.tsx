@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { OpenContent } from "@/app/open-content";
+import { OpenContent } from "@/components/open-content";
 import { query } from "@/lib/db";
 import { sessionWallet } from "@/lib/session";
 
