@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       id, creator, title, description, category, price, kind,
       kind === "file" ? text("fileName").slice(0, 200) || "download" : null,
       kind === "file" ? text("fileType").slice(0, 100) || "application/octet-stream" : null,
-      new Uint8Array(await payload.arrayBuffer()),
+      Buffer.from(await payload.arrayBuffer()), // Buffer, not Uint8Array: pg serializes only Buffer as bytea
       wrapKey(key, masterKey()),
     ],
   );

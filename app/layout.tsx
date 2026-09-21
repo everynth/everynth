@@ -46,6 +46,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             </div>
           </header>
           <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">{children}</main>
+          <footer className="mx-auto flex w-full max-w-5xl gap-5 px-6 py-6 text-xs opacity-60">
+            <span>EVERYNTH — The Private Commerce Layer</span>
+            <Link href="/terms">Terms</Link>
+          </footer>
         </Providers>
       </body>
     </html>
