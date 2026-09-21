@@ -174,6 +174,25 @@ const dash = await (await creator.get("/dashboard")).text();
 assert.ok(dash.includes("Alpha Signals API") && dash.includes("0.95"));
 step("purchases page and creator dashboard (1 sold, 0.95 SOL)");
 
+// cover image + edit listing + creator page
+const png = Buffer.from("89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360000002000154a24f7d0000000049454e44ae426082", "hex");
+const edit = new FormData();
+for (const [k, v] of Object.entries({ title: "Alpha Signals API v2", description: "Private trading signals API key, 60 days.", category: "API", price: "2" })) edit.set(k, v);
+edit.set("cover", new Blob([png], { type: "image/png" }), "c.png");
+assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: stranger.cookie }, body: edit })).status, 404);
+assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: creator.cookie }, body: edit })).status, 200);
+const coverRes = await fetch(BASE + `/api/products/${productId}/cover`);
+assert.equal(coverRes.status, 200);
+assert.equal(coverRes.headers.get("content-type"), "image/png");
+assert.deepEqual(Buffer.from(await coverRes.arrayBuffer()), png);
+const page = await (await fetch(BASE + `/p/${productId}`)).text();
+assert.ok(page.includes("Alpha Signals API v2") && page.includes(`/api/products/${productId}/cover`) && /2(<!-- -->)? SOL/.test(page)); // React puts a text marker between {price} and " SOL"
+assert.ok((await (await fetch(BASE + `/u/${creator.wallet}`)).text()).includes("Alpha Signals API v2"));
+assert.equal((await fetch(BASE + "/u/not-a-wallet")).status, 404);
+edit.set("cover", new Blob([png], { type: "text/html" }), "x.html");
+assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: creator.cookie }, body: edit })).status, 400);
+step("edit listing + cover image + creator page; strangers and non-images refused");
+
 assert.equal((await buyer.json("/api/reports", { productId, reason: "looks like a scam" })).status, 200);
 assert.equal((await buyer.json("/api/reports", { productId, reason: "x" })).status, 400);
 assert.equal((await creator.get("/admin")).status, 404);

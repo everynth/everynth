@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OpenContent } from "@/app/open-content";
 import { RemoveButton } from "@/app/remove-button";
@@ -22,11 +23,18 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
 
   return (
     <article className="mx-auto flex max-w-2xl flex-col gap-6">
+      {product.has_cover && (
+        // eslint-disable-next-line @next/next/no-img-element -- served from our own API route, not optimizable
+        <img src={`/api/products/${product.id}/cover`} alt="" className="aspect-[2/1] w-full rounded-2xl object-cover" />
+      )}
       <span className="font-mono text-xs uppercase tracking-wider opacity-60">{product.category}</span>
       <h1 className="text-3xl font-semibold tracking-tight">{product.title}</h1>
       <p className="font-mono text-xs opacity-60">
-        by {product.creator.slice(0, 4)}…{product.creator.slice(-4)} · {product.kind === "file" ? `file: ${product.file_name}` : "secret text"} ·
-        delivered encrypted
+        by{" "}
+        <Link href={`/u/${product.creator}`} className="underline">
+          {product.creator.slice(0, 4)}…{product.creator.slice(-4)}
+        </Link>{" "}
+        · {product.kind === "file" ? `file: ${product.file_name}` : "secret text"} · delivered encrypted
       </p>
       <p className="whitespace-pre-wrap opacity-80">{product.description}</p>
 
@@ -46,6 +54,11 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
 
       <div className="flex flex-wrap items-start gap-4">
         {wallet && !isCreator && <ReportForm productId={product.id} />}
+        {isCreator && product.status === "live" && (
+          <Link href={`/p/${product.id}/edit`} className="btn-ghost">
+            Edit listing
+          </Link>
+        )}
         {product.status === "live" && (isCreator || isAdmin(wallet)) && <RemoveButton productId={product.id} />}
       </div>
     </article>

@@ -8,6 +8,7 @@ export const MAX_PRICE_LAMPORTS = 1_000_000 * 10 ** SOL_DECIMALS; // keeps amoun
 // ponytail: ciphertext lives in a Postgres bytea and rides through the API route, so stay under
 // Vercel's 4.5 MB request limit. Move to direct-to-storage signed uploads when bigger files matter.
 export const MAX_PAYLOAD_BYTES = 4 * 1024 * 1024;
+export const MAX_COVER_BYTES = 1024 * 1024; // cover image, stored inline as bytea
 export const CATEGORIES = ["AI Agent", "API", "Dataset", "Tool", "Research", "Service", "Community"] as const;
 export const KINDS = ["file", "secret"] as const;
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/config";
+import { ProductGrid } from "@/app/product-card";
 import { PRODUCT_COLS, query, type Product } from "@/lib/db";
-import { formatSol } from "@/lib/money";
 
 export default async function Market({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
@@ -45,18 +45,7 @@ export default async function Market({ searchParams }: PageProps<"/">) {
       {products.length === 0 ? (
         <p className="opacity-60">Nothing here yet. Be the first to launch.</p>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((p) => (
-            <li key={p.id}>
-              <Link href={`/p/${p.id}`} className="card flex h-full flex-col gap-3 transition-colors hover:border-foreground/40">
-                <span className="font-mono text-xs uppercase tracking-wider opacity-60">{p.category}</span>
-                <h2 className="text-lg font-medium">{p.title}</h2>
-                <p className="line-clamp-3 flex-1 text-sm opacity-70">{p.description}</p>
-                <span className="font-mono text-sm">{formatSol(p.price)} SOL</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <ProductGrid products={products} />
       )}
     </div>
   );
