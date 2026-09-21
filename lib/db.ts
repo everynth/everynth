@@ -1,9 +1,7 @@
 import { mkdirSync } from "node:fs";
-import { PGlite } from "@electric-sql/pglite";
 
-// ponytail: embedded Postgres (PGlite) on local disk, single process only. Same SQL as real Postgres,
-// so going to Supabase means swapping this file for a `pg` Pool on DATABASE_URL; nothing else changes.
-// Required before deploying to Vercel (serverless has no persistent disk).
+// Production: Postgres via DATABASE_URL (Neon on Vercel). Local dev/tests: embedded PGlite in ./data.
+// Same SQL either way; the only difference is who opens the connection.
 
 const SCHEMA = `
 create table if not exists products (
@@ -45,24 +43,32 @@ create table if not exists reports (
 );
 `;
 
-// Survive Next.js dev hot reloads: one instance per process.
-const g = globalThis as { __everynthDb?: Promise<PGlite> };
+type Client = { query<T>(sql: string, params?: unknown[]): Promise<{ rows: T[] }> };
 
-function db(): Promise<PGlite> {
-  return (g.__everynthDb ??= (async () => {
-    const dir = process.env.PGLITE_DIR ?? "./data/pg";
-    mkdirSync(dir, { recursive: true }); // PGlite does not create parent folders
-    const pg = new PGlite(dir);
-    await pg.exec(SCHEMA);
-    return pg;
-  })().catch((e) => {
-    delete g.__everynthDb; // do not cache a failed open
-    throw e;
-  }));
+async function open(): Promise<Client> {
+  if (process.env.DATABASE_URL) {
+    const { Pool } = await import("pg");
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
+    await pool.query(SCHEMA);
+    return pool as unknown as Client;
+  }
+  const { PGlite } = await import("@electric-sql/pglite");
+  const dir = process.env.PGLITE_DIR ?? "./data/pg";
+  mkdirSync(dir, { recursive: true }); // PGlite does not create parent folders
+  const pg = new PGlite(dir);
+  await pg.exec(SCHEMA);
+  return pg as unknown as Client;
 }
 
+// Survive Next.js dev hot reloads: one instance per process.
+const g = globalThis as { __everynthDb?: Promise<Client> };
+
 export async function query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
-  return (await (await db()).query<T>(sql, params)).rows;
+  g.__everynthDb ??= open().catch((e) => {
+    delete g.__everynthDb; // do not cache a failed open
+    throw e;
+  });
+  return (await (await g.__everynthDb).query<T>(sql, params)).rows;
 }
 
 export type Product = {
