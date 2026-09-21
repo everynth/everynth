@@ -25,6 +25,34 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Documentation prose (app/docs). Plain CSS: no typography plugin needed. */
+.doc h1 { font-size: 2rem; font-weight: 600; letter-spacing: -0.03em; line-height: 1.15; margin: 0.25rem 0 0.75rem; }
+.doc .lead { font-size: 1.1rem; line-height: 1.6; opacity: 0.75; max-width: 60ch; }
+.doc h2 { font-size: 1.35rem; font-weight: 600; letter-spacing: -0.02em; margin: 2.5rem 0 0.75rem; }
+.doc h3 { font-size: 1.05rem; font-weight: 600; margin: 1.75rem 0 0.5rem; }
+.doc p, .doc li { line-height: 1.65; }
+.doc p { margin: 0.75rem 0; max-width: 68ch; }
+.doc ul:not(.not-list), .doc ol { margin: 0.75rem 0 0.75rem 1.25rem; max-width: 68ch; }
+.doc ul:not(.not-list) { list-style: disc; }
+.doc ol { list-style: decimal; }
+.doc li { margin: 0.3rem 0; }
+.doc li::marker { opacity: 0.5; }
+.doc a:not(.no-underline) { text-decoration: underline; text-underline-offset: 3px; }
+.doc code { font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 0.88em; background: color-mix(in srgb, var(--foreground) 8%, transparent); padding: 0.1em 0.35em; border-radius: 0.3em; }
+.doc pre { margin: 1rem 0; padding: 1rem 1.1rem; border-radius: 0.9rem; border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent); background: color-mix(in srgb, var(--foreground) 5%, transparent); overflow-x: auto; font-size: 0.82rem; line-height: 1.6; max-width: 100%; }
+.doc pre code { background: none; padding: 0; font-size: inherit; }
+.doc table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+.doc th, .doc td { text-align: left; padding: 0.55rem 0.6rem 0.55rem 0; border-bottom: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent); vertical-align: top; }
+.doc th { font-family: var(--font-geist-mono), monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6; font-weight: 500; }
+.doc .callout { margin: 1.25rem 0; padding: 0.9rem 1.1rem; border-radius: 0.9rem; border: 1px solid; max-width: 68ch; font-size: 0.95rem; }
+.doc .callout p { margin: 0.35rem 0; }
+.doc .callout-note { border-color: color-mix(in srgb, #4a78b0 40%, transparent); background: color-mix(in srgb, #4a78b0 10%, transparent); }
+.doc .callout-warn { border-color: color-mix(in srgb, #d99a00 45%, transparent); background: color-mix(in srgb, #d99a00 10%, transparent); }
+.doc .route { margin: 1.75rem 0; padding-top: 1rem; border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent); }
+.doc .route-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin: 0 0 0.5rem; }
+.doc .method { font-family: var(--font-geist-mono), monospace; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; padding: 0.2em 0.5em; border-radius: 0.4em; background: color-mix(in srgb, var(--foreground) 12%, transparent); }
+.doc .auth { font-size: 0.78rem; opacity: 0.6; font-family: var(--font-geist-mono), monospace; }
+
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-85 disabled:opacity-50;

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = { title: "For developers — EVERYNTH" };
 
 const SNIPPET = `// 1. Ask the visitor to connect their wallet and sign a message you choose,
@@ -31,6 +33,12 @@ export default function DevelopersPage() {
         The endpoint is public, CORS-open and unauthenticated: anyone can ask whether a wallet owns a product. That is
         why your app must first prove the visitor controls the wallet (a signed message), exactly as EVERYNTH does at
         sign-in.
+      </p>
+
+      <p className="opacity-80">
+        Full details, including how to verify the wallet signature on your server, are in the docs:{" "}
+        <Link href="/docs/ownership-check" className="underline">Ownership check</Link> and{" "}
+        <Link href="/docs/api" className="underline">API reference</Link>.
       </p>
 
       <h2 className="mt-4 text-xl font-medium">Response</h2>

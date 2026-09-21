@@ -38,6 +38,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               <nav className="flex flex-1 flex-wrap gap-x-5 gap-y-1 text-sm opacity-80">
                 <Link href="/">Market</Link>
                 <Link href="/launch">Launch</Link>
+                <Link href="/docs">Docs</Link>
                 {wallet && <Link href="/purchases">Purchases</Link>}
                 {wallet && <Link href="/dashboard">Dashboard</Link>}
                 {isAdmin(wallet) && <Link href="/admin">Admin</Link>}
@@ -48,6 +49,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">{children}</main>
           <footer className="mx-auto flex w-full max-w-5xl gap-5 px-6 py-6 text-xs opacity-60">
             <span>EVERYNTH — The Private Commerce Layer</span>
+            <Link href="/docs">Docs</Link>
             <Link href="/terms">Terms</Link>
             <Link href="/developers">For developers</Link>
           </footer>

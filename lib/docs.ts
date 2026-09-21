@@ -1,0 +1,42 @@
+// Docs navigation. Each slug is a permalink: /docs/<slug>. Content lives in app/docs/content/<slug>.tsx.
+export type Doc = { slug: string; title: string; summary: string };
+export type DocGroup = { group: string; docs: Doc[] };
+
+export const DOC_GROUPS: DocGroup[] = [
+  {
+    group: "Start here",
+    docs: [
+      { slug: "overview", title: "Overview", summary: "What EVERYNTH is, and the one idea behind it: nobody holds the money or the goods." },
+      { slug: "getting-started", title: "Getting started", summary: "Wallet, sign-in, network and fees. Five minutes from nothing to your first product." },
+      { slug: "faq", title: "FAQ", summary: "Refunds, lost keys, what the platform can and cannot see." },
+    ],
+  },
+  {
+    group: "Using EVERYNTH",
+    docs: [
+      { slug: "selling", title: "Selling", summary: "Launch files, secrets or GitHub access. Pricing, covers, editing, taking a product down." },
+      { slug: "buying", title: "Buying", summary: "How a purchase works, what happens if your browser dies mid-payment, and how to unlock." },
+      { slug: "github-access", title: "GitHub access products", summary: "Sell read access to a private repository. Token requirements and the buyer flow." },
+      { slug: "moderation", title: "Moderation and safety", summary: "Reports, takedowns, blocked creators, refused file types, terms." },
+    ],
+  },
+  {
+    group: "How it works",
+    docs: [
+      { slug: "payments", title: "Payments", summary: "Native SOL, two transfers in one transaction, the reference key, and how the server verifies." },
+      { slug: "encryption", title: "Encryption", summary: "Where the key is made, where it is stored, and the honest limit of v1." },
+      { slug: "architecture", title: "Architecture", summary: "Three layers, who sees what, and the stack that runs it." },
+    ],
+  },
+  {
+    group: "Developers",
+    docs: [
+      { slug: "ownership-check", title: "Ownership check", summary: "Gate your own app, API or agent with one request." },
+      { slug: "api", title: "API reference", summary: "Every route: inputs, outputs, status codes." },
+      { slug: "self-hosting", title: "Running it yourself", summary: "Local setup, environment variables, tests, deploying to Vercel." },
+    ],
+  },
+];
+
+export const DOCS: Doc[] = DOC_GROUPS.flatMap((g) => g.docs);
+export const docBySlug = (slug: string) => DOCS.find((d) => d.slug === slug);
