@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#E6EDF6">
+<title>EVERYNTH — The Private Commerce Layer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=block" rel="stylesheet">
+<style>
+:root{
+  --u: min(100vw / 1280, 100vh / 960);
+  --ink:#020C21; --ink-soft:#0F182F; --muted:#59627E; --muted2:#4D5B77;
+  --frame:#E6EDF6; --cta:#0F1B31; --cta-knob:#384B64; --meet-knob:#1A2B45;
+  --accent:#4A78B0; --track:#DDE4EE;
+}
+@supports (height:100dvh){:root{--u: min(100vw / 1280, 100dvh / 960)}}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--frame);overflow-x:hidden;color:var(--ink);
+  font-family:Inter,"Helvetica Neue",Helvetica,Arial,sans-serif;font-synthesis:none;
+  -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+
+/* ── structure ── */
+.page{position:relative;height:100vh;background:var(--frame);overflow:hidden}
+@supports (height:100dvh){.page{height:100dvh}}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.card{position:absolute;inset:0;isolation:isolate}
+.bg{position:absolute;left:-2px;top:-2px;
+  width:calc(100vw + 4px);height:calc(100vh + 4px);object-fit:cover;object-position:50% 50%;
+  z-index:0;filter:brightness(1.006) saturate(.965);transform:scale(1.002)}
+@supports (height:100dvh){.bg{height:calc(100dvh + 4px)}}
+.tint{position:absolute;inset:0;background:rgba(255,249,240,.05);z-index:1;pointer-events:none}
+
+/* ── absolute-position helpers ── */
+.stack,.row,.hero-blk,.tagrow,.stats,.stat{display:contents}
+.l{position:absolute;z-index:2}
+.t{left:calc((var(--x) + 13)*var(--u));top:calc((var(--y) + 15)*var(--u))}
+.c{left:calc((var(--x) + 13)*var(--u));top:calc(50% + (var(--y) - 2)*var(--u))}
+.b{left:calc((var(--x) + 13)*var(--u));bottom:calc((var(--y) + 19)*var(--u))}
+.r{left:auto;right:calc((var(--x) + 19)*var(--u))}
+.sx{display:inline-block;transform-origin:left top;transform:scaleX(var(--sx,1))}
+
+/* ── brand ── */
+.brand{display:flex;align-items:center;text-decoration:none;color:inherit;height:calc(39*var(--u))}
+.mark{width:calc(39*var(--u));height:calc(39*var(--u));display:block;flex:none}
+.brand b{font-size:calc(22*var(--u));font-weight:520;letter-spacing:-0.03em;line-height:1;
+  margin-left:calc(7.7*var(--u))}
+
+/* ── nav pill ── */
+.nav{position:absolute;left:50%;transform:translateX(calc(-50% - 3*var(--u)));
+  top:calc((31 + 15)*var(--u));width:calc(293*var(--u));height:calc(67*var(--u));
+  border-radius:999px;background:rgba(255,255,255,0.78);
+  border:calc(1*var(--u)) solid rgba(255,255,255,.85);
+  -webkit-backdrop-filter:blur(calc(40*var(--u)));backdrop-filter:blur(calc(40*var(--u)));
+  box-shadow:0 0 0 calc(1.3*var(--u)) rgba(120,145,180,0.2),
+    0 calc(2*var(--u)) calc(10*var(--u)) rgba(28,52,92,.05);z-index:2}
+.nav>*{position:absolute}
+.nav a{text-decoration:none}
+.nav span{font-size:calc(15*var(--u));font-weight:570;letter-spacing:-0.0561em;
+  line-height:1;color:#202940;white-space:nowrap}
+.nav i{display:block}
+.n-home{left:calc(36*var(--u));top:calc(22*var(--u));width:calc(21.3*var(--u));height:calc(22.4*var(--u))}
+.n-explore{left:calc(72*var(--u));top:calc(26*var(--u))}
+.n-div{left:calc(144*var(--u));top:calc(18*var(--u));width:calc(1.5*var(--u));
+  height:calc(31*var(--u));background:#CED5E0;border:0}
+.n-grid{left:calc(168*var(--u));top:calc(24*var(--u));width:calc(20.2*var(--u));height:calc(20.2*var(--u))}
+.n-product{left:calc(203.8*var(--u));top:calc(26*var(--u))}
+.n-home svg,.n-grid svg{width:100%;height:100%;display:block}
+
+/* ── primary CTA ── */
+.cta{width:calc(217*var(--u));height:calc(70*var(--u));border-radius:999px;
+  background:var(--cta);text-decoration:none;display:block;
+  box-shadow:0 calc(10*var(--u)) calc(24*var(--u)) rgba(11,26,50,.18)}
+.cta span{position:absolute;left:calc(34.8*var(--u));top:calc(27.55*var(--u));
+  font-size:calc(17.5*var(--u));font-weight:400;letter-spacing:-0.0442em;line-height:1;
+  color:#fff;white-space:nowrap}
+.knob{position:absolute;border-radius:50%;background:var(--cta-knob);
+  display:flex;align-items:center;justify-content:center}
+.cta .knob{left:calc(156*var(--u));top:calc(10.5*var(--u));
+  width:calc(49*var(--u));height:calc(49*var(--u))}
+.knob svg{width:calc(17*var(--u));height:calc(17*var(--u))}
+
+/* ── hero type ── */
+.eyebrow{font-size:calc(16*var(--u));font-weight:470;letter-spacing:-0.015em;
+  line-height:1;color:var(--muted);white-space:nowrap}
+h1{font-size:calc(98*var(--u));font-weight:360;letter-spacing:-0.035em;
+  line-height:calc(90*var(--u));color:var(--ink);white-space:nowrap}
+.play{width:calc(50.5*var(--u));height:calc(50.5*var(--u));border-radius:50%;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 calc(6*var(--u)) calc(18*var(--u)) rgba(28,52,92,.10)}
+.play svg{width:calc(13*var(--u));height:calc(14*var(--u))}
+.tag{font-size:calc(24*var(--u));font-weight:470;letter-spacing:-0.03em;line-height:1;
+  color:var(--ink-soft);white-space:nowrap}
+
+/* ── glass panel ── */
+.panel{width:calc(275*var(--u));height:calc(271*var(--u));border-radius:calc(28*var(--u));
+  background:linear-gradient(135deg,rgba(255,255,255,0.44),rgba(255,255,255,0.16));
+  border:calc(1*var(--u)) solid rgba(255,255,255,.60);
+  -webkit-backdrop-filter:blur(calc(40*var(--u))) saturate(112%);
+  backdrop-filter:blur(calc(40*var(--u))) saturate(112%);
+  box-shadow:inset calc(1*var(--u)) calc(1*var(--u)) 0 rgba(255,255,255,.55),
+    inset calc(-1*var(--u)) calc(-1*var(--u)) 0 rgba(255,255,255,.18),
+    0 calc(18*var(--u)) calc(40*var(--u)) rgba(28,52,92,.07)}
+.panel>*{position:absolute}
+.p-title{left:calc(29*var(--u));top:calc(44.7*var(--u));font-size:calc(24*var(--u));
+  font-weight:500;letter-spacing:-0.02em;line-height:1;color:var(--ink);white-space:nowrap}
+.dot{left:calc(137*var(--u));top:calc(53*var(--u));width:calc(10*var(--u));
+  height:calc(10*var(--u));border-radius:50%;background:var(--accent)}
+.shield{left:calc(177*var(--u));top:calc(46*var(--u));width:calc(73*var(--u));
+  height:calc(73*var(--u));border-radius:50%;background:rgba(255,255,255,.92);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 calc(26*var(--u)) calc(10*var(--u)) rgba(255,255,255,.5),
+    0 calc(6*var(--u)) calc(16*var(--u)) rgba(28,52,92,.06)}
+.shield svg{width:calc(30*var(--u));height:calc(39*var(--u))}
+.p-sub{left:calc(29*var(--u));top:calc(94.35*var(--u));font-size:calc(18*var(--u));
+  font-weight:400;letter-spacing:-0.02em;line-height:calc(20.4*var(--u));color:var(--muted2)}
+.scale{left:calc(47*var(--u));top:calc(189*var(--u));width:calc(190*var(--u));
+  display:flex;justify-content:space-between;font-size:calc(15*var(--u));font-weight:400;
+  letter-spacing:-0.03em;line-height:1;color:#586580}
+.track{left:calc(46*var(--u));top:calc(221*var(--u));width:calc(190*var(--u));
+  height:calc(8*var(--u));border-radius:999px;background:#DDE4EE;overflow:hidden}
+.track i{display:block;width:calc(59*var(--u));height:100%;border-radius:999px;background:#5F88B4}
+
+/* ── stats row ── */
+.num{font-size:calc(100*var(--u));font-weight:200;letter-spacing:0em;line-height:1;
+  color:var(--ink);white-space:nowrap}
+.lbl{font-size:calc(19*var(--u));font-weight:400;letter-spacing:-0.02em;
+  line-height:calc(23.5*var(--u));color:#39455F}
+.slash{width:calc(23*var(--u));height:calc(75*var(--u));
+  background:linear-gradient(to top left,transparent calc(50% - .85*var(--u)),
+    #A7B4C6 calc(50% - .85*var(--u)),#A7B4C6 calc(50% + .85*var(--u)),
+    transparent calc(50% + .85*var(--u)))}
+
+/* ── meet pill ── */
+.meet{width:calc(269*var(--u));height:calc(86*var(--u));border-radius:999px;display:block;
+  text-decoration:none;background:rgba(255,255,255,0.325);
+  border:calc(1*var(--u)) solid rgba(255,255,255,.62);
+  -webkit-backdrop-filter:blur(calc(40*var(--u)));backdrop-filter:blur(calc(40*var(--u)));
+  box-shadow:0 0 0 calc(1.2*var(--u)) rgba(120,145,180,0.1),
+    inset calc(1*var(--u)) calc(1*var(--u)) 0 rgba(255,255,255,.5),
+    0 calc(8*var(--u)) calc(22*var(--u)) rgba(28,52,92,.035)}
+.meet>*{position:absolute}
+.thumb{left:calc(12*var(--u));top:calc(11*var(--u));width:calc(64*var(--u));
+  height:calc(64*var(--u));border-radius:50%;overflow:hidden;
+  box-shadow:inset 0 0 0 calc(1*var(--u)) rgba(255,255,255,.45)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.meet b{left:calc(89.8*var(--u));top:calc(34.55*var(--u));font-size:calc(17.5*var(--u));
+  font-weight:425;letter-spacing:-0.0681em;line-height:1;color:#1B2A44;white-space:nowrap}
+.meet .knob{left:calc(206*var(--u));top:calc(17*var(--u));width:calc(50*var(--u));
+  height:calc(50*var(--u));background:var(--meet-knob)}
+
+/* ── burger + menu (default state) ── */
+.burger{display:none;align-items:center;justify-content:center;
+  flex-direction:column;gap:calc(6*var(--u));width:calc(56*var(--u));height:calc(56*var(--u));
+  border-radius:999px;padding:0;cursor:pointer;background:rgba(255,255,255,0.78);
+  border:calc(1*var(--u)) solid rgba(255,255,255,.85);
+  -webkit-backdrop-filter:blur(calc(40*var(--u)));backdrop-filter:blur(calc(40*var(--u)));
+  box-shadow:0 0 0 calc(1.3*var(--u)) rgba(120,145,180,0.2),
+    0 calc(2*var(--u)) calc(10*var(--u)) rgba(28,52,92,.05)}
+.burger i{display:block;width:calc(20*var(--u));height:calc(1.8*var(--u));border-radius:999px;
+  background:#202940;transition:transform .3s cubic-bezier(.2,.7,.3,1),opacity .3s}
+.burger[aria-expanded="true"] i:first-child{transform:translateY(calc(3.9*var(--u))) rotate(45deg)}
+.burger[aria-expanded="true"] i:last-child{transform:translateY(calc(-3.9*var(--u))) rotate(-45deg)}
+.burger:focus-visible{outline:calc(2*var(--u)) solid #2f5f9e;outline-offset:calc(3*var(--u))}
+.menu{display:contents}
+
+/* ── motion ── */
+@media (prefers-reduced-motion:no-preference){
+  .cta,.meet{transition:transform .35s cubic-bezier(.2,.7,.3,1)}
+  .cta:hover,.meet:hover{transform:translateY(calc(-2*var(--u)))}
+}
+a:focus-visible{outline:calc(2*var(--u)) solid #2f5f9e;outline-offset:calc(3*var(--u))}
+
+/* ── dark theme (default; ?theme=light for the pale comp) — rentnode-style plate:
+   near-black ground, the plate colour-inverted into dark glass, accent glow rising from the bottom ── */
+html.dark{--ink:#F2F5FA;--ink-soft:#E3E9F3;--muted:#9AA6BF;--muted2:#A6B1C8;--frame:#04070D;
+  --cta:#F2F5FA;--cta-knob:#C9D3E3;--meet-knob:#2A3A55;--accent:#6E9AD6;--track:#1C2537}
+html.dark .bg{filter:invert(1) hue-rotate(180deg) brightness(.72) contrast(1.06) saturate(.85);background:#04070D}
+html.dark .tint{background:
+  radial-gradient(70% 55% at 50% 100%, rgba(110,154,214,.22), transparent 70%),
+  linear-gradient(180deg, rgba(4,7,13,.35), rgba(4,7,13,0) 30%, rgba(4,7,13,0) 70%, rgba(4,7,13,.45))}
+html.dark .nav,html.dark .burger,html.dark .menu{background:rgba(20,26,40,.62);
+  border-color:rgba(255,255,255,.14);
+  box-shadow:0 0 0 calc(1.3*var(--u)) rgba(255,255,255,.06),0 calc(2*var(--u)) calc(10*var(--u)) rgba(0,0,0,.35)}
+html.dark .nav span{color:#E8EDF6}
+html.dark .nav svg [stroke]{stroke:#E8EDF6}
+html.dark .n-div{background:#3A4660}
+html.dark .burger i{background:#E8EDF6}
+html.dark .cta{box-shadow:0 calc(10*var(--u)) calc(24*var(--u)) rgba(0,0,0,.45)}
+html.dark .cta span{color:#0B1526}
+html.dark .cta .knob svg path{stroke:#0B1526}
+html.dark .play{background:#161D2C;box-shadow:0 calc(6*var(--u)) calc(18*var(--u)) rgba(0,0,0,.4)}
+html.dark .play svg path{fill:#F2F5FA}
+html.dark .panel{background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.03));
+  border-color:rgba(255,255,255,.16);
+  box-shadow:inset calc(1*var(--u)) calc(1*var(--u)) 0 rgba(255,255,255,.12),
+    inset calc(-1*var(--u)) calc(-1*var(--u)) 0 rgba(255,255,255,.04),
+    0 calc(18*var(--u)) calc(40*var(--u)) rgba(0,0,0,.4)}
+html.dark .shield{background:rgba(255,255,255,.10);
+  box-shadow:0 0 calc(26*var(--u)) calc(10*var(--u)) rgba(255,255,255,.06),0 calc(6*var(--u)) calc(16*var(--u)) rgba(0,0,0,.3)}
+html.dark .shield svg path{stroke:#F2F5FA}
+html.dark .scale{color:#8E9AB4}
+html.dark .track{background:var(--track)}
+html.dark .track i{background:var(--accent)}
+html.dark .lbl{color:#B3BDD2}
+html.dark .slash{background:linear-gradient(to top left,transparent calc(50% - .85*var(--u)),
+  #3F4B63 calc(50% - .85*var(--u)),#3F4B63 calc(50% + .85*var(--u)),transparent calc(50% + .85*var(--u)))}
+html.dark .meet{background:rgba(20,26,40,.5);border-color:rgba(255,255,255,.14);
+  box-shadow:0 0 0 calc(1.2*var(--u)) rgba(255,255,255,.05),
+    inset calc(1*var(--u)) calc(1*var(--u)) 0 rgba(255,255,255,.1),0 calc(8*var(--u)) calc(22*var(--u)) rgba(0,0,0,.35)}
+html.dark .meet b{color:#E8EDF6}
+html.dark .thumb{box-shadow:inset 0 0 0 calc(1*var(--u)) rgba(255,255,255,.2)}
+html.dark .thumb img{filter:invert(1) hue-rotate(180deg) brightness(.85)}
+html.dark .mark [stroke]{stroke:#F2F5FA}
+
+html.pre .brand,html.pre .nav,html.pre .cta,html.pre .burger,
+html.pre .eyebrow,html.pre .play,html.pre .tag,
+html.pre .panel,html.pre .lbl,html.pre .meet{opacity:0}
+html.pre h1 .sx,html.pre .num{clip-path:inset(100% 0 -14% 0)}
+html.pre .slash{scale:1 0}
+html.pre .track i{scale:0 1}
+html.pre .dot{scale:0}
+.track i{transform-origin:left center}
+
+/* ══ TIER 2 · COMPACT ══ */
+@media (max-aspect-ratio: 87/80), (max-width: 899px), (max-height: 639px){
+  :root{--u: min(100vw / 880, 100vh / 1220); --pad: 52}
+  @supports (height:100dvh){:root{--u: min(100vw / 880, 100dvh / 1220)}}
+  .card{inset:0;border-radius:0}
+  .bg{left:-2px;top:-2px}
+  .stack{display:flex;flex-direction:column;justify-content:space-between;
+    position:absolute;inset:0;z-index:2;padding:calc(var(--pad)*var(--u))}
+  .row,.hero-blk,.stats,.stat,.tagrow{display:flex}
+  .row{align-items:center;justify-content:space-between;width:100%}
+  .hero-blk{flex-direction:column;align-items:flex-start;width:100%;margin:calc(30*var(--u)) 0}
+  .tagrow{align-items:center;gap:calc(16*var(--u));margin-top:calc(28*var(--u))}
+  .stats{align-items:flex-end;gap:calc(26*var(--u));flex-wrap:wrap}
+  .stat{align-items:flex-end;gap:calc(16*var(--u))}
+  .l,.t,.c,.b,.r{position:relative;left:auto;right:auto;top:auto;bottom:auto}
+  h1{margin-top:calc(16*var(--u))}
+  .play{flex:none}
+  .panel{align-self:flex-end;margin-top:calc(36*var(--u))}
+  .row:last-child{flex-wrap:wrap;row-gap:calc(24*var(--u))}
+  .meet{margin-left:auto}
+  .nav{position:relative;left:auto;top:auto;transform:none;flex:none}
+
+  @media (min-aspect-ratio: 1/1){
+    :root{--u: min(100vw / 1240, 100vh / 820); --pad: 46}
+    @supports (height:100dvh){:root{--u: min(100vw / 1240, 100dvh / 820)}}
+    @media (max-height: 520px){
+      :root{--u: min(100vw / 900, 100vh / 560); --pad: 30}
+      @supports (height:100dvh){:root{--u: min(100vw / 900, 100dvh / 560)}}
+    }
+    .hero-blk{display:grid;grid-template-columns:minmax(0,1fr) auto;
+      column-gap:calc(46*var(--u));align-items:end;margin:calc(24*var(--u)) 0}
+    .eyebrow{grid-column:1;grid-row:1}
+    h1{grid-column:1;grid-row:2}
+    .tagrow{grid-column:1;grid-row:3}
+    .panel{grid-column:2;grid-row:1 / span 3;align-self:center;margin-top:0}
+    .row:last-child{flex-wrap:nowrap}
+  }
+
+  /* ══ TIER 3 · MOBILE ══ */
+  @media (max-width: 640px) and (max-aspect-ratio: 1/1){
+    :root{--u: min(100vw / 600, 100vh / 940);
+          --t: max(var(--u), min(0.85px, 100vh / 780));
+          --pad: 40}
+    @supports (height:100dvh){:root{--u: min(100vw / 600, 100dvh / 940);
+          --t: max(var(--u), min(0.85px, 100dvh / 780))}}
+    .sx{transform:none}
+    .brand{height:auto}
+    .mark{width:calc(36*var(--t));height:calc(36*var(--t))}
+    .brand b{font-size:calc(21*var(--t));margin-left:calc(8*var(--t))}
+    h1{font-size:calc(66*var(--u));line-height:calc(64*var(--u));margin-top:calc(12*var(--u))}
+    .eyebrow{font-size:calc(16*var(--t))}
+    .hero-blk{margin:calc(24*var(--u)) 0}
+    .tagrow{gap:calc(14*var(--t));margin-top:calc(22*var(--u))}
+    .tag{font-size:calc(19*var(--t));line-height:calc(25*var(--t));white-space:normal}
+    .play{width:calc(48*var(--t));height:calc(48*var(--t))}
+    .play svg{width:calc(12*var(--t));height:calc(13*var(--t))}
+    .panel{width:100%;align-self:stretch;height:calc(212*var(--t));margin-top:calc(24*var(--u))}
+    .p-title{left:calc(30*var(--t));top:calc(30*var(--t));font-size:calc(24*var(--t))}
+    .dot{left:calc(137*var(--t));top:calc(40*var(--t));width:calc(10*var(--t));height:calc(10*var(--t))}
+    .shield{left:auto;right:calc(26*var(--t));top:calc(22*var(--t));
+      width:calc(64*var(--t));height:calc(64*var(--t))}
+    .shield svg{width:calc(26*var(--t));height:calc(34*var(--t))}
+    .p-sub{left:calc(31*var(--t));top:calc(80*var(--t));font-size:calc(17*var(--t));
+      line-height:calc(21*var(--t))}
+    .scale{left:calc(31*var(--t));top:calc(150*var(--t));width:calc(100% - 62*var(--t));
+      font-size:calc(14*var(--t))}
+    .track{left:calc(31*var(--t));top:calc(178*var(--t));width:calc(100% - 62*var(--t));
+      height:calc(8*var(--t))}
+    .track i{width:31%}
+    .stats{gap:calc(18*var(--u));align-items:center;flex-wrap:nowrap}
+    .stat{flex-direction:column;align-items:flex-start;gap:calc(6*var(--t))}
+    .num{font-size:calc(76*var(--u))}
+    .lbl{font-size:calc(15*var(--t));line-height:calc(19*var(--t))}
+    .slash{height:calc(92*var(--t));width:calc(29*var(--t));align-self:center}
+    .meet{width:100%;height:calc(72*var(--t))}
+    .thumb{left:calc(9*var(--t));top:calc(5*var(--t));width:calc(62*var(--t));height:calc(62*var(--t))}
+    .meet b{left:calc(84*var(--t));top:calc(28*var(--t));font-size:calc(17*var(--t))}
+    .meet .knob{left:auto;right:calc(11*var(--t));top:calc(11*var(--t));
+      width:calc(50*var(--t));height:calc(50*var(--t))}
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTIONS BELOW THE HERO — dark, same glass language, width-scaled
+   --v is a width unit with a floor so type never collapses on short screens.
+   ═══════════════════════════════════════════════════════════════════ */
+:root{--v:clamp(0.62px, 100vw / 1280, 1px);
+  --s-bg:#04070D;--s-bg2:#070B14;--s-ink:#F2F5FA;--s-ink2:#C7CFDD;--s-mute:#8E9AB4;--s-dim:#5F6B86;
+  --s-acc:#6E9AD6;--s-acc2:#A9C4EA;--s-line:rgba(255,255,255,.10);--s-hair:rgba(255,255,255,.06);
+  --s-glass:rgba(255,255,255,.045);--s-glass2:rgba(255,255,255,.08);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --gut:clamp(18px, 4.5vw, 72px);--maxw:1240px;--r:calc(26*var(--v))}
+.below{background:var(--s-bg);color:var(--s-ink);position:relative;z-index:3}
+.below ::selection{background:rgba(110,154,214,.35)}
+.sec{position:relative;padding:calc(120*var(--v)) var(--gut);border-top:1px solid var(--s-hair)}
+.sec-in{max-width:var(--maxw);margin:0 auto}
+.sec-head{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:calc(40*var(--v)) calc(64*var(--v));align-items:end;margin-bottom:calc(64*var(--v))}
+.kicker{font-family:var(--mono);font-size:calc(12*var(--v));letter-spacing:.14em;text-transform:uppercase;color:var(--s-acc);margin-bottom:calc(22*var(--v));display:flex;align-items:center;gap:calc(12*var(--v))}
+.kicker::before{content:"";width:calc(28*var(--v));height:1px;background:var(--s-acc);opacity:.7}
+.display{font-size:calc(58*var(--v));font-weight:300;letter-spacing:-0.035em;line-height:1.02;color:var(--s-ink);text-wrap:balance}
+.display em{font-style:normal;font-weight:470;color:var(--s-acc2)}
+.display.xs{font-size:calc(24*var(--v));font-weight:470;letter-spacing:-0.02em;line-height:1.15}
+.lede{font-size:calc(18*var(--v));line-height:1.55;font-weight:360;color:var(--s-ink2);max-width:52ch}
+.lede + .lede{margin-top:1em}
+.mono{font-family:var(--mono)}
+
+/* reveal on scroll */
+.rv{opacity:0;translate:0 calc(22*var(--v));transition:opacity .9s cubic-bezier(.16,1,.3,1),translate .9s cubic-bezier(.16,1,.3,1);transition-delay:calc(var(--i,0)*90ms)}
+.rv.in{opacity:1;translate:0 0}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1;translate:none;transition:none}}
+html.static{scroll-behavior:auto}
+html.static .page{height:640px}
+html.static .rv{opacity:1;translate:none;transition:none}
+html.static .step svg .draw{stroke-dashoffset:0}
+
+/* glass card with pointer-follow glow */
+.g{position:relative;border-radius:var(--r);background:linear-gradient(160deg,var(--s-glass2),var(--s-glass));border:1px solid var(--s-line);
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.08),0 calc(18*var(--v)) calc(40*var(--v)) rgba(0,0,0,.35);overflow:hidden;
+  transition:border-color .3s,transform .5s cubic-bezier(.16,1,.3,1)}
+.g::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s;
+  background:radial-gradient(calc(320*var(--v)) circle at var(--mx,50%) var(--my,50%),rgba(110,154,214,.22),transparent 60%)}
+.g:hover{border-color:rgba(169,196,234,.35)}
+.g:hover::before{opacity:1}
+@media (hover:hover){.g.lift:hover{transform:translateY(calc(-4*var(--v)))}}
+
+/* sticky nav after hero */
+.snav{position:fixed;top:calc(14*var(--v));left:50%;translate:-50% calc(-140*var(--v));z-index:20;display:flex;align-items:center;gap:calc(4*var(--v));
+  padding:calc(6*var(--v));border-radius:999px;background:rgba(10,14,24,.72);border:1px solid var(--s-line);
+  -webkit-backdrop-filter:blur(24px) saturate(140%);backdrop-filter:blur(24px) saturate(140%);
+  box-shadow:0 calc(10*var(--v)) calc(30*var(--v)) rgba(0,0,0,.45);transition:translate .6s cubic-bezier(.16,1,.3,1),opacity .4s;opacity:0}
+.snav.on{translate:-50% 0;opacity:1}
+.snav a{font-size:calc(13*var(--v));font-weight:500;letter-spacing:-0.01em;color:var(--s-mute);text-decoration:none;padding:calc(8*var(--v)) calc(14*var(--v));border-radius:999px;transition:color .2s,background .2s;white-space:nowrap}
+.snav a:hover,.snav a.act{color:var(--s-ink);background:rgba(255,255,255,.08)}
+.snav a.go{background:var(--s-ink);color:#0B1526;font-weight:520}
+.snav a.go:hover{background:#fff}
+.snav .sb{font-weight:600;letter-spacing:.12em;color:var(--s-ink);font-size:calc(12*var(--v));padding-left:calc(16*var(--v))}
+@media (max-width:760px){.snav a:not(.go):not(.sb){display:none}}
+
+/* ── strip / ticker ── */
+.strip{border-top:1px solid var(--s-hair);border-bottom:1px solid var(--s-hair);background:var(--s-bg2);overflow:hidden;padding:calc(18*var(--v)) 0;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.ticker{display:flex;width:max-content;gap:calc(56*var(--v));animation:tick 38s linear infinite}
+.ticker span{font-family:var(--mono);font-size:calc(12.5*var(--v));letter-spacing:.12em;text-transform:uppercase;color:var(--s-mute);white-space:nowrap;display:flex;align-items:center;gap:calc(14*var(--v))}
+.ticker span::before{content:"";width:calc(6*var(--v));height:calc(6*var(--v));border-radius:50%;background:var(--s-acc);box-shadow:0 0 calc(10*var(--v)) var(--s-acc)}
+.ticker b{color:var(--s-ink);font-weight:500}
+@keyframes tick{to{transform:translateX(-50%)}}
+.strip:hover .ticker{animation-play-state:paused}
+@media (prefers-reduced-motion:reduce){.ticker{animation:none}}
+
+/* ── §00 live checkout demo ── */
+.demo{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:calc(28*var(--v))}
+.term{padding:calc(28*var(--v));font-family:var(--mono);font-size:calc(13.5*var(--v));line-height:1.75;color:var(--s-ink2);min-height:calc(400*var(--v));display:flex;flex-direction:column}
+.term #termlines{flex:1}
+.term-bar{display:flex;align-items:center;gap:calc(10*var(--v));margin-bottom:calc(18*var(--v));font-size:calc(11.5*var(--v));letter-spacing:.12em;text-transform:uppercase;color:var(--s-dim)}
+.term-bar i{width:calc(9*var(--v));height:calc(9*var(--v));border-radius:50%;background:#2A3448}
+.term-bar i:nth-child(1){background:#5B6478}
+.term-bar .live{margin-left:auto;color:var(--s-acc);display:flex;align-items:center;gap:calc(8*var(--v))}
+.term-bar .live::before{content:"";width:calc(7*var(--v));height:calc(7*var(--v));border-radius:50%;background:var(--s-acc);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.term .ln{display:flex;gap:calc(14*var(--v));opacity:0;translate:0 6px;transition:opacity .35s,translate .35s}
+.term .ln.on{opacity:1;translate:0 0}
+.term .k{color:var(--s-acc);min-width:calc(92*var(--v))}
+.term .ok{color:#8FD6A8}
+.term .dim{color:var(--s-dim)}
+.term .cur::after{content:"▍";color:var(--s-acc);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.term-foot{margin-top:calc(22*var(--v));display:flex;align-items:center;gap:calc(14*var(--v));flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:calc(10*var(--v));height:calc(44*var(--v));padding:0 calc(20*var(--v));border-radius:999px;border:1px solid var(--s-line);
+  background:rgba(255,255,255,.06);color:var(--s-ink);font-family:Inter,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:calc(14*var(--v));font-weight:500;cursor:pointer;text-decoration:none;line-height:1;
+  transition:background .2s,border-color .2s,transform .4s cubic-bezier(.16,1,.3,1)}
+.btn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);transform:translateY(-2px)}
+.btn.solid{background:var(--s-ink);color:#0B1526;border-color:transparent}
+.btn.solid:hover{background:#fff}
+.btn:focus-visible,.snav a:focus-visible,.tab:focus-visible{outline:2px solid var(--s-acc);outline-offset:3px}
+.split{padding:calc(28*var(--v));display:flex;flex-direction:column;gap:calc(22*var(--v))}
+.split .lab{font-family:var(--mono);font-size:calc(11.5*var(--v));letter-spacing:.12em;text-transform:uppercase;color:var(--s-dim)}
+.split .big{font-size:calc(46*var(--v));font-weight:200;letter-spacing:-0.02em;line-height:1;color:var(--s-ink)}
+.split .big small{font-size:calc(16*var(--v));color:var(--s-mute);margin-left:.4em;font-weight:400}
+.bar{height:calc(14*var(--v));border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden;display:flex}
+.bar i{display:block;height:100%;width:0;transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+.bar .c{background:linear-gradient(90deg,#6E9AD6,#A9C4EA)}
+.bar .f{background:#2E3C58}
+.legend{display:flex;justify-content:space-between;font-family:var(--mono);font-size:calc(12*var(--v));color:var(--s-mute)}
+.legend b{color:var(--s-ink);font-weight:500}
+.kv{display:grid;grid-template-columns:1fr auto;gap:calc(10*var(--v)) calc(18*var(--v));font-size:calc(14*var(--v));border-top:1px solid var(--s-hair);padding-top:calc(18*var(--v))}
+.kv dt{color:var(--s-mute)}
+.kv dd{font-family:var(--mono);color:var(--s-ink);text-align:right}
+.kv dd.z{color:#8FD6A8}
+
+/* ── §01 steps ── */
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:calc(18*var(--v))}
+.step{padding:calc(30*var(--v)) calc(26*var(--v)) calc(34*var(--v));min-height:calc(280*var(--v));display:flex;flex-direction:column}
+.step .n{font-family:var(--mono);font-size:calc(12*var(--v));letter-spacing:.14em;color:var(--s-acc)}
+.step h3{margin:calc(56*var(--v)) 0 calc(12*var(--v));font-size:calc(28*var(--v));font-weight:470;letter-spacing:-0.025em}
+.step p{font-size:calc(15*var(--v));line-height:1.55;color:var(--s-mute);margin-top:auto}
+.step svg{position:absolute;right:calc(22*var(--v));top:calc(22*var(--v));width:calc(46*var(--v));height:calc(46*var(--v));opacity:.85}
+.step svg [stroke]{stroke:var(--s-acc2)}
+.step svg .draw{stroke-dasharray:180;stroke-dashoffset:180;transition:stroke-dashoffset 1.4s cubic-bezier(.16,1,.3,1) .2s}
+.step.in svg .draw{stroke-dashoffset:0}
+
+/* ── §02 what you can sell: tabs ── */
+.sell{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:calc(28*var(--v));align-items:start}
+.tabs{display:flex;flex-direction:column;gap:calc(8*var(--v))}
+.tab{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:calc(16*var(--v));text-align:left;padding:calc(18*var(--v)) calc(20*var(--v));border-radius:calc(18*var(--v));
+  background:transparent;border:1px solid transparent;color:var(--s-ink);font:inherit;cursor:pointer;transition:background .25s,border-color .25s}
+.tab:hover{background:rgba(255,255,255,.04)}
+.tab[aria-selected="true"]{background:var(--s-glass2);border-color:var(--s-line)}
+.tab .ic{width:calc(40*var(--v));height:calc(40*var(--v));border-radius:calc(12*var(--v));background:rgba(110,154,214,.14);display:grid;place-items:center}
+.tab .ic svg{width:calc(20*var(--v));height:calc(20*var(--v))}
+.tab .ic svg [stroke]{stroke:var(--s-acc2)}
+.tab b{display:block;font-weight:500;font-size:calc(16*var(--v));letter-spacing:-0.01em}
+.tab small{display:block;color:var(--s-mute);font-size:calc(13*var(--v));margin-top:2px}
+.tab .arw{color:var(--s-dim);transition:translate .3s,color .3s}
+.tab[aria-selected="true"] .arw{translate:4px 0;color:var(--s-acc)}
+.pane{padding:calc(30*var(--v));min-height:calc(380*var(--v))}
+.pane[hidden]{display:none}
+.pane .lab{font-family:var(--mono);font-size:calc(11.5*var(--v));letter-spacing:.12em;text-transform:uppercase;color:var(--s-dim);margin-bottom:calc(12*var(--v))}
+.pane h4{font-size:calc(26*var(--v));font-weight:470;letter-spacing:-0.025em;margin-bottom:calc(14*var(--v))}
+.pane p{color:var(--s-ink2);line-height:1.6;font-size:calc(15.5*var(--v))}
+.pane .recv{margin-top:calc(24*var(--v));padding:calc(18*var(--v)) calc(20*var(--v));border-radius:calc(16*var(--v));background:rgba(0,0,0,.28);border:1px solid var(--s-hair);font-family:var(--mono);font-size:calc(13*var(--v));line-height:1.7;color:var(--s-ink2);white-space:pre-wrap}
+.pane .recv b{color:#8FD6A8;font-weight:500}
+.pane ul{margin-top:calc(20*var(--v));display:grid;gap:calc(8*var(--v));list-style:none}
+.pane li{display:flex;gap:calc(10*var(--v));font-size:calc(14*var(--v));color:var(--s-mute)}
+.pane li::before{content:"—";color:var(--s-acc)}
+.pane.enter{animation:pane .5s cubic-bezier(.16,1,.3,1)}
+@keyframes pane{from{opacity:0;translate:0 10px}}
+
+/* ── §03 encryption diagram ── */
+.enc{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:calc(28*var(--v));align-items:stretch}
+.diagram{padding:calc(24*var(--v));display:flex;align-items:center}
+.diagram svg{width:100%;height:auto;display:block}
+.diagram text{font-family:var(--mono);font-size:11px;fill:var(--s-mute);letter-spacing:.08em}
+.diagram .node{fill:rgba(255,255,255,.05);stroke:rgba(255,255,255,.16)}
+.diagram .node.hot{stroke:var(--s-acc);fill:rgba(110,154,214,.14)}
+.diagram .lbl{fill:var(--s-ink);font-size:12.5px;letter-spacing:.02em;font-family:Inter,sans-serif}
+.diagram .path{fill:none;stroke:rgba(169,196,234,.35);stroke-width:1.2;stroke-dasharray:4 5}
+.diagram .pkt{fill:var(--s-acc2);filter:drop-shadow(0 0 6px rgba(169,196,234,.9))}
+.diagram .key{fill:#F5C842;filter:drop-shadow(0 0 6px rgba(245,200,66,.9))}
+.diagram .cap{fill:var(--s-dim);font-size:10.5px}
+.enc-side{padding:calc(28*var(--v));display:flex;flex-direction:column;gap:calc(14*var(--v))}
+.enc-side .row2{display:grid;grid-template-columns:auto 1fr;gap:calc(12*var(--v)) calc(16*var(--v));align-items:start;font-size:calc(14.5*var(--v));line-height:1.5;color:var(--s-ink2);padding:calc(12*var(--v)) 0;border-top:1px solid var(--s-hair)}
+.enc-side .row2:first-of-type{border-top:0}
+.enc-side .row2 i{font-family:var(--mono);font-style:normal;font-size:calc(11.5*var(--v));letter-spacing:.1em;color:var(--s-acc);padding-top:.35em}
+.enc-side .honest{margin-top:auto;padding:calc(16*var(--v)) calc(18*var(--v));border-radius:calc(16*var(--v));background:rgba(245,200,66,.07);border:1px solid rgba(245,200,66,.22);font-size:calc(13.5*var(--v));line-height:1.55;color:var(--s-ink2)}
+.enc-side .honest b{color:#F5C842;font-weight:500}
+@media (prefers-reduced-motion:reduce){.diagram animateMotion{display:none}}
+
+/* ── §04 lifecycle ── */
+.life{position:relative;padding-top:calc(26*var(--v))}
+.rail{position:absolute;left:0;right:0;top:calc(46*var(--v));height:1px;background:var(--s-hair)}
+.rail i{position:absolute;left:0;top:0;height:100%;width:calc(var(--p,0)*100%);background:linear-gradient(90deg,var(--s-acc),var(--s-acc2));box-shadow:0 0 calc(12*var(--v)) rgba(110,154,214,.7);transition:width .2s linear}
+.moments{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:calc(18*var(--v))}
+.moment{position:relative;padding-top:calc(48*var(--v))}
+.moment::before{content:"";position:absolute;left:0;top:calc(14*var(--v));width:calc(13*var(--v));height:calc(13*var(--v));border-radius:50%;background:var(--s-bg);border:1.5px solid var(--s-dim);transition:border-color .3s,box-shadow .3s,background .3s}
+.moment.lit::before{border-color:var(--s-acc2);background:var(--s-acc);box-shadow:0 0 calc(14*var(--v)) rgba(110,154,214,.8)}
+.moment .idx{font-family:var(--mono);font-size:calc(11.5*var(--v));letter-spacing:.14em;color:var(--s-dim)}
+.moment .fn{font-family:var(--mono);font-size:calc(19*var(--v));color:var(--s-ink);margin:calc(10*var(--v)) 0 calc(4*var(--v))}
+.moment .who{font-size:calc(12*var(--v));letter-spacing:.1em;text-transform:uppercase;color:var(--s-acc);margin-bottom:calc(12*var(--v))}
+.moment p{font-size:calc(14*var(--v));line-height:1.55;color:var(--s-mute)}
+
+/* ── §05 api table + snippet ── */
+.api{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:calc(28*var(--v));align-items:start}
+.tbl{width:100%;border-collapse:collapse;font-size:calc(14*var(--v))}
+.tbl th{text-align:left;font-family:var(--mono);font-weight:500;font-size:calc(11.5*var(--v));letter-spacing:.12em;text-transform:uppercase;color:var(--s-dim);padding:0 calc(14*var(--v)) calc(14*var(--v)) 0;border-bottom:1px solid var(--s-line)}
+.tbl td{padding:calc(15*var(--v)) calc(14*var(--v)) calc(15*var(--v)) 0;border-bottom:1px solid var(--s-hair);vertical-align:top;color:var(--s-ink2);line-height:1.45}
+.tbl td:first-child{font-family:var(--mono);color:var(--s-ink);white-space:nowrap}
+.tbl td:last-child{color:var(--s-mute);white-space:nowrap}
+.tbl tr{transition:background .2s}
+.tbl tbody tr:hover{background:rgba(255,255,255,.025)}
+.code{padding:calc(24*var(--v)) calc(26*var(--v));position:relative}
+.code pre{font-family:var(--mono);font-size:calc(13*var(--v));line-height:1.7;color:var(--s-ink2);overflow-x:auto;white-space:pre}
+.code .c{color:var(--s-dim)}
+.code .s{color:#8FD6A8}
+.code .kw{color:var(--s-acc2)}
+.code .copy{position:absolute;right:calc(16*var(--v));top:calc(16*var(--v));height:calc(34*var(--v));padding:0 calc(14*var(--v));font-size:calc(12.5*var(--v))}
+
+/* ── §06 facts + settlement ── */
+.facts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:calc(28*var(--v))}
+.fact-list{padding:calc(10*var(--v)) calc(28*var(--v))}
+.fact{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:calc(18*var(--v));padding:calc(18*var(--v)) 0;border-top:1px solid var(--s-hair);font-size:calc(14.5*var(--v))}
+.fact:first-child{border-top:0}
+.fact dt{color:var(--s-mute)}
+.fact dd{font-family:var(--mono);color:var(--s-ink);letter-spacing:.02em}
+.fact dd.ok{color:#8FD6A8}
+.fact dd.warn{color:#F5C842}
+.settle{padding:calc(28*var(--v));display:flex;flex-direction:column;gap:calc(18*var(--v))}
+.settle .eq{font-family:var(--mono);font-size:calc(22*var(--v));color:var(--s-ink);display:flex;flex-wrap:wrap;gap:.5em .7em;align-items:baseline}
+.settle .eq b{font-weight:400;color:var(--s-acc2)}
+.settle .eq .z{color:#8FD6A8}
+.settle .rowx{display:flex;justify-content:space-between;font-size:calc(14.5*var(--v));color:var(--s-ink2);padding:calc(10*var(--v)) 0;border-top:1px solid var(--s-hair)}
+.settle .rowx span:last-child{font-family:var(--mono);color:var(--s-ink)}
+.settle .note{font-size:calc(13px);color:var(--s-mute);line-height:1.55}
+.settle input[type=range]{width:100%;accent-color:var(--s-acc)}
+
+/* ── §07 point + roadmap ── */
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(18*var(--v))}
+.point{padding:calc(28*var(--v));display:flex;flex-direction:column;gap:calc(12*var(--v));min-height:calc(260*var(--v))}
+.point .st{font-family:var(--mono);font-size:calc(11.5*var(--v));letter-spacing:.14em;text-transform:uppercase;display:flex;justify-content:space-between;color:var(--s-dim)}
+.point .st b{color:var(--s-acc);font-weight:500}
+.point p{color:var(--s-mute);font-size:calc(14.5*var(--v));line-height:1.55;margin-top:auto}
+.road{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:calc(14*var(--v))}
+.rd{padding:calc(24*var(--v)) calc(22*var(--v));display:flex;flex-direction:column;gap:calc(14*var(--v));min-height:calc(300*var(--v))}
+.rd .tag2{font-family:var(--mono);font-size:calc(11.5*var(--v));letter-spacing:.14em;display:flex;justify-content:space-between;color:var(--s-dim)}
+.rd .tag2 b{color:var(--s-acc2);font-weight:500}
+.rd.live .tag2 b{color:#8FD6A8}
+.rd h4{font-size:calc(21*var(--v));font-weight:470;letter-spacing:-0.02em}
+.rd ul{list-style:none;display:grid;gap:calc(8*var(--v));font-size:calc(13.5*var(--v));color:var(--s-mute);line-height:1.45}
+.rd li{display:flex;gap:calc(8*var(--v))}
+.rd li::before{content:"—";color:var(--s-acc);flex:none}
+.rd.live li::before{content:"✓";color:#8FD6A8}
+
+/* ── §09 stack chips ── */
+.chips{display:flex;flex-wrap:wrap;gap:calc(10*var(--v));margin-top:calc(34*var(--v))}
+.chip{font-family:var(--mono);font-size:calc(12.5*var(--v));letter-spacing:.12em;padding:calc(12*var(--v)) calc(18*var(--v));border-radius:999px;border:1px solid var(--s-line);color:var(--s-ink2);background:rgba(255,255,255,.03);transition:border-color .2s,background .2s,transform .4s cubic-bezier(.16,1,.3,1)}
+.chip:hover{border-color:var(--s-acc);background:rgba(110,154,214,.12);transform:translateY(-2px)}
+.chip + .chip::before{content:"→";margin-right:calc(18*var(--v));margin-left:calc(-8*var(--v));color:var(--s-dim)}
+.cta-row{display:flex;flex-wrap:wrap;gap:calc(12*var(--v));margin-top:calc(40*var(--v))}
+
+/* ── footer ── */
+.foot{padding:calc(56*var(--v)) var(--gut) calc(44*var(--v));border-top:1px solid var(--s-hair);background:var(--s-bg2)}
+.foot-in{max-width:var(--maxw);margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:calc(20*var(--v)) calc(36*var(--v))}
+.foot .fb{font-weight:600;letter-spacing:.14em;font-size:calc(13*var(--v))}
+.foot nav{display:flex;flex-wrap:wrap;gap:calc(22*var(--v))}
+.foot nav a{color:var(--s-mute);text-decoration:none;font-size:calc(13.5*var(--v));transition:color .2s}
+.foot nav a:hover{color:var(--s-ink)}
+.foot .fine{margin-left:auto;font-family:var(--mono);font-size:calc(11.5*var(--v));letter-spacing:.1em;text-transform:uppercase;color:var(--s-dim)}
+.foot .grid-bg{position:relative}
+
+/* responsive collapse for sections */
+@media (max-width:980px){
+  .sec-head,.demo,.sell,.enc,.api,.facts{grid-template-columns:1fr}
+  .steps,.three{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .moments,.road{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rail{display:none}
+  .display{font-size:calc(46*var(--v))}
+}
+@media (max-width:640px){
+  .sec{padding:calc(88*var(--v)) var(--gut)}
+  .steps,.three,.moments,.road{grid-template-columns:1fr}
+  .display{font-size:40px}
+  .lede{font-size:16px}
+  .term{font-size:12px}
+  .tbl td:last-child{white-space:normal}
+  .foot .fine{margin-left:0}
+}
+
+/* ══ NAV COLLAPSE — keyed only to frame shape ══ */
+@media (max-aspect-ratio: 1/1){
+  .burger{display:flex}
+  .menu{display:block;position:absolute;z-index:9;
+    top:calc((var(--pad) + 68)*var(--u));right:calc(var(--pad)*var(--u));
+    width:calc(304*var(--u));padding:calc(16*var(--u));border-radius:calc(30*var(--u));
+    background:rgba(255,255,255,.82);border:calc(1*var(--u)) solid rgba(255,255,255,.85);
+    -webkit-backdrop-filter:blur(calc(40*var(--u)));backdrop-filter:blur(calc(40*var(--u)));
+    box-shadow:0 0 0 calc(1.3*var(--u)) rgba(120,145,180,.2),
+      0 calc(16*var(--u)) calc(34*var(--u)) rgba(28,52,92,.10);
+    opacity:0;visibility:hidden;transform:translateY(calc(-10*var(--u))) scale(.97);
+    transform-origin:top right;
+    transition:opacity .26s cubic-bezier(.2,.7,.3,1),
+      transform .26s cubic-bezier(.2,.7,.3,1),visibility .26s}
+  .menu[data-open]{opacity:1;visibility:visible;transform:none}
+  .menu .nav{position:relative;left:auto;top:auto;transform:none;width:100%;height:auto;
+    display:grid;grid-template-columns:auto 1fr;align-items:center;
+    column-gap:calc(16*var(--u));row-gap:calc(16*var(--u));
+    padding:calc(8*var(--u)) calc(10*var(--u));border:0;background:none;box-shadow:none;
+    -webkit-backdrop-filter:none;backdrop-filter:none}
+  .menu .nav>*{position:relative;left:auto;top:auto}
+  .menu .nav span{font-size:calc(19*var(--u))}
+  .menu .n-home{width:calc(21*var(--u));height:calc(22*var(--u))}
+  .menu .n-grid{width:calc(21*var(--u));height:calc(21*var(--u))}
+  .menu .n-div{grid-column:1 / -1;width:100%;height:calc(1.2*var(--u));margin:calc(2*var(--u)) 0}
+  .menu .cta{position:relative;left:auto;top:auto;width:100%;height:calc(64*var(--u));
+    margin-top:calc(14*var(--u))}
+  .menu .cta span{left:calc(28*var(--u));top:calc(23*var(--u));font-size:calc(19*var(--u))}
+  .menu .cta .knob{left:auto;right:calc(9*var(--u));top:calc(7*var(--u));
+    width:calc(50*var(--u));height:calc(50*var(--u))}
+
+  @media (max-width: 640px){
+    .burger{width:calc(56*var(--t));height:calc(56*var(--t));gap:calc(6*var(--t))}
+    .burger i{width:calc(20*var(--t));height:calc(1.8*var(--t))}
+    .burger[aria-expanded="true"] i:first-child{transform:translateY(calc(3.9*var(--t))) rotate(45deg)}
+    .burger[aria-expanded="true"] i:last-child{transform:translateY(calc(-3.9*var(--t))) rotate(-45deg)}
+    .menu{width:auto;left:calc(var(--pad)*var(--u));right:calc(var(--pad)*var(--u));
+      top:calc(var(--pad)*var(--u) + 68*var(--t));padding:calc(14*var(--t));
+      border-radius:calc(28*var(--t))}
+    .menu .nav{column-gap:calc(15*var(--t));row-gap:calc(15*var(--t));
+      padding:calc(6*var(--t)) calc(8*var(--t))}
+    .menu .nav span{font-size:calc(18*var(--t))}
+    .menu .n-home{width:calc(21*var(--t));height:calc(22*var(--t))}
+    .menu .n-grid{width:calc(21*var(--t));height:calc(21*var(--t))}
+    .menu .cta{height:calc(60*var(--t));margin-top:calc(12*var(--t))}
+    .menu .cta span{left:calc(26*var(--t));top:calc(21*var(--t));font-size:calc(18*var(--t))}
+    .menu .cta .knob{right:calc(7*var(--t));top:calc(6*var(--t));
+      width:calc(48*var(--t));height:calc(48*var(--t))}
+  }
+}
+</style>
+<script>
+(function(){var d=document.documentElement;
+  if(new URLSearchParams(location.search).has('static')) d.classList.add('static'); /* test hook: no smooth scroll, everything revealed */
+  if(new URLSearchParams(location.search).get('theme')!=='light'){
+    d.classList.add('dark');
+    var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content','#04070D');
+  }
+  if(!('animate' in Element.prototype))return;
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  d.classList.add('pre');
+  setTimeout(function(){d.classList.remove('pre')},4000);
+})();
+</script>
+</head>
+<body>
+<div class="page" id="top">
+  <div class="card">
+    <video class="bg" autoplay muted loop playsinline preload="auto" disablepictureinpicture
+           aria-hidden="true"
+           poster="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260912_105822_bf7c2d53-9957-4521-bbbf-7c1ab7a70130.png"
+           src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260912_105953_21ad8049-9088-4a00-bad3-aee6b5575a2b.mp4"></video>
+    <div class="tint"></div>
+
+    <div class="stack">
+      <!-- header -->
+      <div class="row">
+        <a class="brand l t" style="--x:68;--y:47" href="/">
+          <svg class="mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+            <defs><clipPath id="gclip"><circle cx="20" cy="20" r="18.2"/></clipPath></defs>
+            <circle cx="20" cy="20" r="18.4" stroke="#0d1b30" stroke-width="1.1"/>
+            <g clip-path="url(#gclip)" stroke="#0d1b30" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13.2 4.6c3-.9 6.2-1 9.2-.1" stroke-width="1.7"/>
+              <path d="M5.6 9.2c3.8-1.9 8-2.4 11.7-1.2 2.5.8 4.3 2.1 6.6 2.3 2 .2 4.2-.4 6.4-1.5" stroke-width="2.3"/>
+              <path d="M2.6 13.9c4.4-2.4 9.4-3 13.6-1.5 2.4.9 4.1 2.3 6.4 2.4 2.3.1 4.7-1 7.1-2.4 1.6-.9 3.4-1.4 5.3-1.4" stroke-width="2.7"/>
+              <path d="M1.6 18.7c4.8-2.7 10.1-3.2 14.4-1.6 1.8.7 3.2 1.6 4.7 2.1-1.7 1.3-3.4 2.2-5.1 2.6 2.9.5 5.9-.1 8.8-1.5 1.5-.7 2.9-1.6 4.4-2.3 1.9-.9 3.9-1.3 5.9-1.1" stroke-width="2.9"/>
+              <path d="M1.9 24.1c4.5-2.4 9.6-3 13.9-1.6 2.3.7 4 1.9 6.2 2 2.4.1 5-.9 7.5-2.3 1.6-.9 3.3-1.4 5-1.4" stroke-width="2.8"/>
+              <path d="M3.7 28.8c4.1-2 8.7-2.5 12.6-1.3 2.2.7 3.8 1.8 5.9 1.8 2.3.1 4.8-.8 7.1-2.1 1.2-.7 2.5-1.1 3.8-1.2" stroke-width="2.4"/>
+              <path d="M7.6 32.9c3.5-1.5 7.4-1.9 10.6-.9 1.9.6 3.3 1.4 5 1.5 1.6.1 3.3-.3 5-1.1" stroke-width="1.9"/>
+              <path d="M13.6 35.8c2.8-.9 5.8-1 8.6-.2" stroke-width="1.5"/>
+            </g>
+          </svg>
+          <b class="sx" style="--sx:0.894">EVERYNTH</b>
+        </a>
+
+        <button class="burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-menu"><i></i><i></i></button>
+
+        <div class="menu" id="site-menu">
+          <nav class="nav" aria-label="Primary">
+            <i class="n-home"><svg viewBox="0 0 20 21" fill="none" aria-hidden="true"><path d="M2 8.4 10 2l8 6.4V18a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" stroke="#202940" stroke-width="1.7" stroke-linejoin="round"/></svg></i>
+            <a class="n-explore" href="/"><span>Market</span></a>
+            <hr class="n-div">
+            <i class="n-grid"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="1" y="1" width="7.4" height="7.4" rx="1.7" stroke="#202940" stroke-width="1.7"/><rect x="11.6" y="1" width="7.4" height="7.4" rx="1.7" stroke="#202940" stroke-width="1.7"/><rect x="1" y="11.6" width="7.4" height="7.4" rx="1.7" stroke="#202940" stroke-width="1.7"/><rect x="11.6" y="11.6" width="7.4" height="7.4" rx="1.7" stroke="#202940" stroke-width="1.7"/></svg></i>
+            <a class="n-product" href="/launch"><span>Launch</span></a>
+          </nav>
+          <a class="cta l t r" style="--x:58;--y:30" href="/launch">
+            <span>Start selling</span>
+            <span class="knob"><svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="m6.6 3.6 6 5.4-6 5.4" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </a>
+        </div>
+      </div>
+
+      <!-- hero -->
+      <div class="hero-blk">
+        <p class="eyebrow l c sx" style="--x:65.7;--y:-209.2;--sx:0.9293">Private commerce on Solana</p>
+        <h1 class="l c" style="--x:62.6;--y:-167.3">
+          <span class="sx" style="--sx:0.9431">The Private</span><br>
+          <span class="sx" style="--sx:0.9792">Commerce Layer</span></h1>
+        <div class="tagrow">
+          <span class="play l c" style="--x:66;--y:34"><svg viewBox="0 0 13 14" aria-hidden="true"><path d="M1.4 1.3 11.6 7 1.4 12.7z" fill="#0b1526"/></svg></span>
+          <span class="tag l c sx" style="--x:131;--y:48.7;--sx:0.8973">Build it. Launch it. Monetize it. Privately.</span>
+        </div>
+        <aside class="panel l c r" style="--x:58;--y:-165">
+          <span class="p-title sx" style="--sx:0.8707">Encrypted</span>
+          <span class="dot"></span>
+          <span class="shield"><svg viewBox="0 0 30 39" fill="none" aria-hidden="true"><path d="M15 1.2 1.6 6.6v13.1c0 6.6 5.1 12.6 13.4 17.9 8.3-5.3 13.4-11.3 13.4-17.9V6.6z" stroke="#101c33" stroke-width="2" stroke-linejoin="round"/><path d="M2.1 18.9c4.6-1.1 8.9-1.6 12.9-1.6s8.3.5 12.9 1.6" stroke="#101c33" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <p class="p-sub sx" style="--sx:0.8899">Files, keys<br>and access,<br>paid in SOL</p>
+          <div class="scale"><span>1K</span><span>10K</span><span>50K</span><span>100K</span></div>
+          <div class="track"><i></i></div>
+        </aside>
+      </div>
+
+      <!-- stats + meet -->
+      <div class="row">
+        <div class="stats">
+          <div class="stat">
+            <span class="num l b sx" style="--x:64;--y:60.4;--sx:1">95%</span>
+            <span class="lbl l b sx" style="--x:295;--y:73.2;--sx:0.9634">Of every sale<br>goes straight<br>to the creator</span>
+          </div>
+          <span class="slash l b" style="--x:418;--y:76"></span>
+          <div class="stat">
+            <span class="num l b sx" style="--x:480;--y:60.4;--sx:0.9858">0</span>
+            <span class="lbl l b sx" style="--x:560;--y:96.7;--sx:0.9209">Funds held<br>by the platform</span>
+          </div>
+        </div>
+        <a class="meet l b r" style="--x:59;--y:66" href="/developers">
+          <span class="thumb"><img alt="" style="object-position:60% 50%"
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260912_105822_bf7c2d53-9957-4521-bbbf-7c1ab7a70130.png"></span>
+          <b>How it works</b>
+          <span class="knob"><svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="m6.6 3.6 6 5.4-6 5.4" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- sticky nav, appears once the hero is scrolled past -->
+<nav class="snav" aria-label="Sections">
+  <a class="sb" href="#top">EVERYNTH</a>
+  <a href="#demo">Checkout</a>
+  <a href="#how">Mechanism</a>
+  <a href="#sell">Sell</a>
+  <a href="#enc">Encryption</a>
+  <a href="#api">API</a>
+  <a href="#roadmap">Roadmap</a>
+  <a class="go" href="/launch">Launch</a>
+</nav>
+
+<div class="below">
+
+  <!-- ticker strip -->
+  <div class="strip" aria-hidden="true">
+    <div class="ticker" id="ticker">
+      <span><b>Live</b> Solana mainnet</span>
+      <span><b>95%</b> to the creator</span>
+      <span><b>5%</b> flat fee, nothing else</span>
+      <span><b>0</b> funds held by the platform</span>
+      <span><b>No contract</b> of ours — two plain SOL transfers</span>
+      <span><b>AES-256-GCM</b> in your browser before upload</span>
+      <span><b>No account</b> — wallet signature is the login</span>
+      <span><b>Files</b> up to 200 MB · secrets · GitHub access</span>
+    </div>
+  </div>
+
+  <!-- §00 live checkout demo -->
+  <section class="sec" id="demo">
+    <div class="sec-in">
+      <div class="sec-head">
+        <div>
+          <p class="kicker rv">Live · Solana mainnet · no custody</p>
+          <h2 class="display rv" style="--i:1">The checkout, <em>verified</em> by the chain.</h2>
+        </div>
+        <p class="lede rv" style="--i:2">A purchase in front of you: the buyer signs one transaction carrying two transfers and a reference key. The server reads the balances that changed and only then releases the key. Same arithmetic as production — 95 / 5, nothing parked in between.</p>
+      </div>
+      <div class="demo">
+        <div class="g term rv" id="term">
+          <div class="term-bar"><i></i><i></i><i></i><span>purchase · demonstration</span><span class="live">running</span></div>
+          <div id="termlines"></div>
+          <div class="term-foot">
+            <button class="btn" type="button" id="rerun">Run it again</button>
+            <a class="btn solid" href="/launch">Launch a product</a>
+          </div>
+        </div>
+        <div class="g split rv" style="--i:1">
+          <span class="lab">Settlement · always sums to the price</span>
+          <div class="big"><span id="bigPrice">1.000</span><small>SOL</small></div>
+          <div class="bar" aria-hidden="true"><i class="c" id="barC"></i><i class="f" id="barF"></i></div>
+          <div class="legend"><span>creator <b id="legC">0.950</b></span><span>fee <b id="legF">0.050</b></span></div>
+          <dl class="kv">
+            <dt>Balance delta · creator</dt><dd id="dC">+0.000</dd>
+            <dt>Balance delta · treasury</dt><dd id="dT">+0.000</dd>
+            <dt>Reference key in tx</dt><dd id="dR">—</dd>
+            <dt>Held by platform</dt><dd class="z">0.000 SOL</dd>
+            <dt>Key released</dt><dd id="dK">locked</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §01 mechanism -->
+  <section class="sec" id="how">
+    <div class="sec-in">
+      <div class="sec-head">
+        <div>
+          <p class="kicker rv">§01 — The mechanism</p>
+          <h2 class="display rv" style="--i:1">Four steps, and the platform never touches the money.</h2>
+        </div>
+        <p class="lede rv" style="--i:2">A marketplace normally holds the payment and the goods, and then has to be trusted with both. Here the goods are encrypted before they leave the creator's device and the payment goes wallet to wallet. What is left for the platform is bookkeeping: did the chain move what the order says it should?</p>
+      </div>
+      <div class="steps">
+        <article class="g step rv" style="--i:0">
+          <span class="n">01</span>
+          <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path class="draw" d="M10 34 24 8l14 26" stroke-width="1.6" stroke-linejoin="round"/><path class="draw" d="M16 34h16" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <h3>Launch</h3><p>A creator lists a file, a secret, or access to a repository, with a price in SOL. No approval queue: the listing is live the moment it is published.</p>
+        </article>
+        <article class="g step rv" style="--i:1">
+          <span class="n">02</span>
+          <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect class="draw" x="11" y="20" width="26" height="18" rx="4" stroke-width="1.6"/><path class="draw" d="M17 20v-5a7 7 0 0 1 14 0v5" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <h3>Encrypt</h3><p>The browser generates a key and encrypts the content before upload. Storage only ever sees ciphertext; a leaked URL is useless.</p>
+        </article>
+        <article class="g step rv" style="--i:2">
+          <span class="n">03</span>
+          <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path class="draw" d="M8 24h24m0 0-8-8m8 8-8 8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle class="draw" cx="38" cy="24" r="4" stroke-width="1.6"/></svg>
+          <h3>Pay</h3><p>One transaction, two transfers: 95% to the creator, 5% to the treasury, plus a reference key unique to this order. Either both land or neither does.</p>
+        </article>
+        <article class="g step rv" style="--i:3">
+          <span class="n">04</span>
+          <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path class="draw" d="M12 26l8 8 16-18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h3>Unlock</h3><p>The server reads the confirmed transaction, checks every balance that changed, and releases the key. Decryption happens on the buyer's device.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- §02 what you can sell -->
+  <section class="sec" id="sell">
+    <div class="sec-in">
+      <div class="sec-head">
+        <div>
+          <p class="kicker rv">§02 — What you can sell</p>
+          <h2 class="display rv" style="--i:1">Anything that fits in a file, a secret, or a door.</h2>
+        </div>
+        <p class="lede rv" style="--i:2">Datasets, research, source code, API keys, private community links, repository access — and apps you host yourself, gated by a single ownership check. Pick what the buyer receives; the checkout is the same every time.</p>
+      </div>
+      <div class="sell">
+        <div class="tabs rv" role="tablist" aria-label="Product kinds">
+          <button class="tab" role="tab" aria-selected="true" aria-controls="pane-file" id="tab-file">
+            <span class="ic"><svg viewBox="0 0 20 20" fill="none"><path d="M5 2h7l4 4v12H5z" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 2v4h4" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+            <span><b>A file</b><small>Dataset, research, template, code — up to 200 MB</small></span><span class="arw">→</span>
+          </button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="pane-secret" id="tab-secret" tabindex="-1">
+            <span class="ic"><svg viewBox="0 0 20 20" fill="none"><circle cx="7" cy="10" r="4" stroke-width="1.5"/><path d="M11 10h7m-3 0v3" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            <span><b>Secret text</b><small>API key, invite link, credentials</small></span><span class="arw">→</span>
+          </button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="pane-github" id="tab-github" tabindex="-1">
+            <span class="ic"><svg viewBox="0 0 20 20" fill="none"><path d="M6 3v14M6 8a4 4 0 0 0 4 4h1a3 3 0 0 1 3 3" stroke-width="1.5" stroke-linecap="round"/><circle cx="6" cy="3" r="1.5" stroke-width="1.5"/><circle cx="14" cy="5" r="1.5" stroke-width="1.5"/><path d="M14 6.5V8a3 3 0 0 1-3 3" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            <span><b>GitHub repository</b><small>Buyer is invited as a read-only collaborator</small></span><span class="arw">→</span>
+          </button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="pane-app" id="tab-app" tabindex="-1">
+            <span class="ic"><svg viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke-width="1.5"/><path d="M2 8h16M7 12h6" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            <span><b>Your own app or agent</b><small>Hosted by you, gated by one ownership check</small></span><span class="arw">→</span>
+          </button>
+        </div>
+        <div class="rv" style="--i:1">
+          <div class="g pane" id="pane-file" role="tabpanel" aria-labelledby="tab-file">
+            <p class="lab">The buyer receives</p><h4>The exact bytes you uploaded, decrypted on their device.</h4>
+            <p>Encrypted in your browser with a fresh AES-256-GCM key, then uploaded straight to blob storage — it never passes through the API. After payment the buyer fetches the ciphertext and unlocks it locally; the download starts in their browser.</p>
+            <div class="recv">dataset.zip.enc   142.6 MB   ciphertext
+key               32 bytes   <b>released after payment</b>
+decrypt           local      AES-GCM · WebCrypto
+download          dataset.zip</div>
+            <ul><li>Executables and installers are refused by name</li><li>Only ciphertext ever reaches storage</li><li>Re-downloadable from Purchases at any time</li></ul>
+          </div>
+          <div class="g pane" id="pane-secret" role="tabpanel" aria-labelledby="tab-secret" hidden>
+            <p class="lab">The buyer receives</p><h4>A string only they can read.</h4>
+            <p>Up to 64 KB of text: an API key, a private invite link, credentials, a licence. Stored inline as ciphertext, shown to the buyer after the chain confirms the purchase.</p>
+            <div class="recv">sk-live-9f2a…c41e
+<b>shown once unlocked · re-openable from Purchases</b></div>
+            <ul><li>Right fit for services you already run somewhere</li><li>Pair with the ownership check to stop key sharing</li></ul>
+          </div>
+          <div class="g pane" id="pane-github" role="tabpanel" aria-labelledby="tab-github" hidden>
+            <p class="lab">The buyer receives</p><h4>A collaborator invitation, sent by EVERYNTH on your behalf.</h4>
+            <p>You give a repository and a token with admin rights to it; the token is checked against GitHub at launch and stored wrapped. The buyer types their GitHub username and is invited read-only. One account per purchase.</p>
+            <div class="recv">PUT /repos/acme/private-sdk/collaborators/octocat
+permission: pull
+<b>201 · invitation sent</b></div>
+            <ul><li>Buyers always get the current version</li><li>You can revoke access from GitHub at any time</li><li>Your token is never shown to anyone</li></ul>
+          </div>
+          <div class="g pane" id="pane-app" role="tabpanel" aria-labelledby="tab-app" hidden>
+            <p class="lab">The buyer receives</p><h4>Access that follows their wallet, not a code they can forward.</h4>
+            <p>Host your app, API or agent wherever you like. Sell "access" as a product, then have your app ask EVERYNTH whether the visitor's wallet bought it. Public, CORS-open, one request.</p>
+            <div class="recv">GET /api/verify?product=…&amp;wallet=…
+<b>{ "owned": true, "since": "2026-09-21T10:00:00Z" }</b></div>
+            <ul><li>Your app proves wallet control first (signed message)</li><li>No EVERYNTH SDK to install</li><li>Same checkout, same 95 / 5 split</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §03 encryption -->
+  <section class="sec" id="enc">
+    <div class="sec-in">
+      <div class="sec-head">
+        <div>
+          <p class="kicker rv">§03 — The encryption</p>
+          <h2 class="display rv" style="--i:1">Where the plaintext exists, and where it never does.</h2>
+        </div>
+        <p class="lede rv" style="--i:2">Three parties, one key. The creator's browser makes it, the buyer's browser uses it, and the platform holds it wrapped so that a purchase at 3 a.m. can be delivered without the creator being awake. Follow the packets.</p>
+      </div>
+      <div class="enc">
+        <div class="g diagram rv">
+          <svg viewBox="0 0 760 340" aria-label="Key and ciphertext flow between creator, storage, EVERYNTH and buyer">
+            <defs>
+              <path id="pCT" d="M160 120 C 260 120, 300 80, 380 80"/>
+              <path id="pKEY" d="M160 140 C 260 140, 300 230, 380 230"/>
+              <path id="pCT2" d="M500 80 C 560 80, 590 120, 640 120"/>
+              <path id="pKEY2" d="M500 230 C 560 230, 590 140, 640 140"/>
+              <path id="pTX" d="M640 170 C 560 190, 520 300, 400 300 C 330 300, 300 260, 300 260"/>
+            </defs>
+            <!-- nodes -->
+            <g>
+              <rect class="node hot" x="30" y="90" width="130" height="80" rx="16"/>
+              <text class="lbl" x="95" y="124" text-anchor="middle">Creator</text>
+              <text x="95" y="146" text-anchor="middle">plaintext · key</text>
+            </g>
+            <g>
+              <rect class="node" x="380" y="40" width="120" height="80" rx="16"/>
+              <text class="lbl" x="440" y="74" text-anchor="middle">Storage</text>
+              <text x="440" y="96" text-anchor="middle">ciphertext</text>
+            </g>
+            <g>
+              <rect class="node" x="380" y="190" width="120" height="80" rx="16"/>
+              <text class="lbl" x="440" y="224" text-anchor="middle">EVERYNTH</text>
+              <text x="440" y="246" text-anchor="middle">key, wrapped</text>
+            </g>
+            <g>
+              <rect class="node hot" x="640" y="90" width="100" height="80" rx="16"/>
+              <text class="lbl" x="690" y="124" text-anchor="middle">Buyer</text>
+              <text x="690" y="146" text-anchor="middle">plaintext</text>
+            </g>
+            <!-- paths -->
+            <use href="#pCT" class="path"/><use href="#pKEY" class="path"/><use href="#pCT2" class="path"/><use href="#pKEY2" class="path"/><use href="#pTX" class="path"/>
+            <text class="cap" x="270" y="72">ciphertext</text>
+            <text class="cap" x="270" y="210">key (TLS)</text>
+            <text class="cap" x="560" y="72">ciphertext</text>
+            <text class="cap" x="560" y="212">key, after payment</text>
+            <text class="cap" x="470" y="322">paid SOL · wallet → wallet · chain verifies</text>
+            <!-- packets -->
+            <circle class="pkt" r="4"><animateMotion dur="3s" repeatCount="indefinite" begin="0s"><mpath href="#pCT"/></animateMotion></circle>
+            <circle class="key" r="4"><animateMotion dur="3s" repeatCount="indefinite" begin="0.6s"><mpath href="#pKEY"/></animateMotion></circle>
+            <circle class="pkt" r="4"><animateMotion dur="3s" repeatCount="indefinite" begin="4.2s"><mpath href="#pCT2"/></animateMotion></circle>
+            <circle class="key" r="4"><animateMotion dur="3s" repeatCount="indefinite" begin="4.8s"><mpath href="#pKEY2"/></animateMotion></circle>
+            <circle class="pkt" r="4" style="fill:#8FD6A8;filter:drop-shadow(0 0 6px rgba(143,214,168,.9))"><animateMotion dur="3s" repeatCount="indefinite" begin="2.6s"><mpath href="#pTX"/></animateMotion></circle>
+          </svg>
+        </div>
+        <div class="g enc-side rv" style="--i:1">
+          <div class="row2"><i>KEY</i><span>Generated per product by the creator's browser (WebCrypto, AES-256-GCM). Never derived from anything guessable.</span></div>
+          <div class="row2"><i>CT</i><span>Ciphertext = 12-byte IV + AES-GCM output. Files go straight to blob storage; secrets sit inline in the database.</span></div>
+          <div class="row2"><i>WRAP</i><span>EVERYNTH stores the key wrapped with a master key that lives only in the server environment. Losing it makes every product undecryptable — so it is backed up like money.</span></div>
+          <div class="row2"><i>OPEN</i><span>After the chain confirms payment, the buyer's browser fetches ciphertext + key and decrypts locally. The plaintext is never assembled on a server.</span></div>
+          <div class="honest"><b>Honest limit.</b> In v1 the platform can technically unwrap a key. That is what lets a purchase be delivered while the creator is offline, and what lets a reported product be inspected. Full end-to-end keys arrive with private chat on the roadmap.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §04 lifecycle -->
+  <section class="sec" id="life">
+    <div class="sec-in">
+      <div class="sec-head">
+        <div>
+          <p class="kicker rv">§04 — Lifecycle</p>
+          <h2 class="display rv" style="--i:1">From listing to unlocked. Five moments.</h2>
+        </div>
+        <p class="lede rv" style="--i:2">Two are signatures from the creator, two from the buyer, and one is the chain doing what it does. The invariant across all five: nothing is released until a confirmed transaction moves exactly what the order froze.</p>
+      </div>
+      <div class="life" id="life-track">
+        <div class="rail" aria-hidden="true"><i id="railFill"></i></div>
+        <div class="moments">
+          <div class="moment rv" style="--i:0"><span class="idx">0 1</span><div class="fn">launch()</div><div class="who">Creator</div><p>Content encrypted in the browser, ciphertext uploaded, key wrapped and stored. Price in lamports, minimum 0.02 SOL so the fee clears rent.</p></div>
+          <div class="moment rv" style="--i:1"><span class="idx">0 2</span><div class="fn">order()</div><div class="who">Buyer</div><p>The server freezes the payout terms — creator, amounts, treasury — and mints a reference key unique to this order. Pressing Buy again reuses it.</p></div>
+          <div class="moment rv" style="--i:2"><span class="idx">0 3</span><div class="fn">pay</div><div class="who">Wallet · chain</div><p>Two SystemProgram transfers in one transaction, reference attached. Confirmed at "confirmed" commitment by the buyer's own RPC.</p></div>
+          <div class="moment rv" style="--i:3"><span class="idx">0 4</span><div class="fn">settle()</div><div class="who">Server</div><p>Fetches the transaction, checks the reference, then the lamport delta of every recipient. One signature can settle one purchase, ever.</p></div>
+          <div class="moment rv" style="--i:4"><span class="idx">0 5</span><div class="fn">unlock()</div><div class="who">Buyer</div><p>Key and ciphertext handed to the buyer only. Decrypt, download, or be invited to the repository. Re-openable from Purchases.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §05 API -->
+  <section class="sec" id="api">
+    <div class="sec-in">
+      <div class="sec-head">
+        <div>
+          <p class="kicker rv">§05 — The surface</p>
+          <h2 class="display rv" style="--i:1">Nine routes. The whole external surface.</h2>
+        </div>
+        <p class="lede rv" style="--i:2">Nothing is admin-only except takedowns. There is no upgrade switch on the payment path because there is no program to upgrade: the transaction is two transfers anyone can inspect on Solscan.</p>
+      </div>
+      <div class="api">
+        <div class="g rv" style="padding:calc(10*var(--v)) calc(28*var(--v)) calc(6*var(--v))">
+          <table class="tbl">
+            <thead><tr><th>Route</th><th>Effect</th><th>Caller</th></tr></thead>
+            <tbody>
+              <tr><td>POST /api/session</td><td>Sign in with a wallet signature; sets an HMAC session cookie</td><td>anyone</td></tr>
+              <tr><td>POST /api/upload</td><td>Short-lived token for a direct encrypted upload to storage</td><td>signed in</td></tr>
+              <tr><td>POST /api/products</td><td>Launch a file, secret or GitHub product</td><td>creator</td></tr>
+              <tr><td>PATCH /api/products/:id</td><td>Edit listing details and cover; content is immutable</td><td>creator</td></tr>
+              <tr><td>POST /api/orders</td><td>Freeze payout terms and mint a reference key</td><td>buyer</td></tr>
+              <tr><td>POST /api/orders/:id/confirm</td><td>Ask the server to verify the chain; never trusted, only checked</td><td>buyer</td></tr>
+              <tr><td>GET /api/purchases/:id/content</td><td>Key + ciphertext (or its URL) for a paid purchase</td><td>buyer</td></tr>
+              <tr><td>POST /api/purchases/:id/github</td><td>Invite the buyer's GitHub account read-only</td><td>buyer</td></tr>
+              <tr><td>GET /api/verify</td><td>Does this wallet own this product? Public, CORS-open</td><td>anyone</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="g code rv" style="--i:1">
+          <button class="btn copy" type="button" id="copyBtn">Copy</button>
+<pre id="snippet"><span class="c">// gate your own app with one request</span>
+<span class="kw">const</span> res = <span class="kw">await</span> fetch(
+  <span class="s">"https://everynth.vercel.app/api/verify?product="</span>
+  + PRODUCT_ID + <span class="s">"&amp;wallet="</span> + wallet
+);
+<span class="kw">const</span> { owned, since } = <span class="kw">await</span> res.json();
+<span class="kw">if</span> (!owned) location.href =
+  <span class="s">"https://everynth.vercel.app/p/"</span> + PRODUCT_ID;
+
+<span class="c">// prove wallet control first — a signed message,</span>
+<span class="c">// exactly as EVERYNTH does at sign-in.</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §06 deployment facts + settlement -->
+  <section class="sec" id="facts">
+    <div class="sec-in">
+      <div class="sec-head">
+        <div>
+          <p class="kicker rv">§06 — Deployment</p>
+          <h2 class="display rv" style="--i:1">Nobody holds the money, so nobody can lose it.</h2>
+        </div>
+        <p class="lede rv" style="--i:2">The payment path has no program of ours and therefore no admin key, no pause, no upgrade. What can go wrong is bounded to the one order in front of you — and a paid order that failed to verify recovers itself from the chain on the next click.</p>
+      </div>
+      <div class="facts">
+        <div class="g fact-list rv">
+          <dl>
+            <div class="fact"><dt>Status</dt><dd class="ok">LIVE</dd></div>
+            <div class="fact"><dt>Network</dt><dd>SOLANA MAINNET</dd></div>
+            <div class="fact"><dt>Payment</dt><dd>NATIVE SOL · 2 TRANSFERS · 1 TX</dd></div>
+            <div class="fact"><dt>Program</dt><dd class="ok">NONE · SYSTEMPROGRAM ONLY</dd></div>
+            <div class="fact"><dt>Custody</dt><dd class="ok">NONE · WALLET → WALLET</dd></div>
+            <div class="fact"><dt>Fee</dt><dd>5% FLAT · FROM CREATOR SHARE</dd></div>
+            <div class="fact"><dt>Minimum price</dt><dd>0.02 SOL · FEE CLEARS RENT</dd></div>
+            <div class="fact"><dt>Content</dt><dd>AES-256-GCM · BROWSER SIDE</dd></div>
+            <div class="fact"><dt>Files</dt><dd>≤ 200 MB · CIPHERTEXT IN BLOB</dd></div>
+            <div class="fact"><dt>Key custody</dt><dd class="warn">PLATFORM-WRAPPED · V1</dd></div>
+            <div class="fact"><dt>Refunds</dt><dd>NONE · DELIVERY IS INSTANT</dd></div>
+          </dl>
+        </div>
+        <div class="g settle rv" style="--i:1">
+          <span class="lab" style="font-family:var(--mono);font-size:calc(11.5*var(--v));letter-spacing:.12em;text-transform:uppercase;color:var(--s-dim)">Settlement · drag the price</span>
+          <input type="range" id="priceRange" min="0.02" max="10" step="0.01" value="1" aria-label="Price in SOL">
+          <div class="eq"><span id="eqP">1.000</span><span>=</span><b id="eqC">0.950</b><span>+</span><b id="eqF">0.050</b><span class="mono" style="color:var(--s-dim);font-size:.7em">SOL</span></div>
+          <div class="rowx"><span>Creator receives</span><span id="rC">0.950 SOL</span></div>
+          <div class="rowx"><span>Treasury receives</span><span id="rF">0.050 SOL</span></div>
+          <div class="rowx"><span>Buyer pays</span><span id="rP">1.000 SOL + network fee</span></div>
+          <div class="rowx"><span>Platform balance after</span><span class="z" style="color:#8FD6A8">0.000 SOL</span></div>
+          <p class="note">Fee = floor(price × 500 / 10 000) lamports; creator share = price − fee. The two always sum to the price exactly, there is no rounding residue for anyone to keep.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §07 the point -->
+  <section class="sec" id="point">
+    <div class="sec-in">
+      <div class="sec-head">
+        <div>
+          <p class="kicker rv">§07 — The point</p>
+          <h2 class="display rv" style="--i:1">It settles a sale. It does not judge the goods.</h2>
+        </div>
+        <p class="lede rv" style="--i:2">Worth saying plainly: EVERYNTH cannot see whether a dataset is good or an API key still works. A listing is a claim its creator makes. Your protection is that the amount at risk is one price, the description is public, and a report reaches a human who can take the listing down.</p>
+      </div>
+      <div class="three">
+        <article class="g point lift rv" style="--i:0"><span class="st"><b>NOW</b><span>shipped</span></span><h3 class="display xs">A private checkout rail</h3><p>Encrypted delivery, wallet-to-wallet SOL, chain-verified unlock, files, secrets, GitHub access, ownership check. Live on mainnet.</p></article>
+        <article class="g point lift rv" style="--i:1"><span class="st"><b>NEXT</b><span>planned</span></span><h3 class="display xs">Machines as buyers</h3><p>x402: creators put an API behind a pay-per-call gate, and an agent pays for exactly the calls it makes. Same rail, no human in the loop.</p></article>
+        <article class="g point lift rv" style="--i:2"><span class="st"><b>GOAL</b><span>research</span></span><h3 class="display xs">Keys the platform cannot open</h3><p>Per-wallet keys derived from signatures, so delivery is end-to-end and private chat between buyer and creator is possible without a readable server copy.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- §08 roadmap -->
+  <section class="sec" id="roadmap">
+    <div class="sec-in">
+      <div class="sec-head">
+        <div>
+          <p class="kicker rv">§08 — Roadmap</p>
+          <h2 class="display rv" style="--i:1">What ships, in order.</h2>
+        </div>
+        <p class="lede rv" style="--i:2">R1 is live. Everything after it adds a capability to the rail without adding a party who can hold your money or read your goods.</p>
+      </div>
+      <div class="road">
+        <article class="g rd live rv" style="--i:0"><span class="tag2"><b>R1</b><span>live</span></span><h4>The market opens</h4><ul><li>Launch, encrypt, pay, unlock</li><li>Files, secrets, GitHub access</li><li>Ownership check for own apps</li><li>Reports, takedowns, blocks</li></ul></article>
+        <article class="g rd rv" style="--i:1"><span class="tag2"><b>R2</b><span>next</span></span><h4>Machine commerce</h4><ul><li>x402 pay-per-call gate for APIs</li><li>Agents buying datasets and access</li><li>USDC as a second rail for agents</li></ul></article>
+        <article class="g rd rv" style="--i:2"><span class="tag2"><b>R3</b><span>planned</span></span><h4>Private chat</h4><ul><li>Buyer ↔ creator, end-to-end</li><li>Keys derived from wallet signatures</li><li>Content delivery goes end-to-end too</li></ul></article>
+        <article class="g rd rv" style="--i:3"><span class="tag2"><b>R4</b><span>planned</span></span><h4>Escrow for services</h4><ul><li>On-chain program, audited</li><li>Milestones and disputes</li><li>For work that cannot be delivered instantly</li></ul></article>
+        <article class="g rd rv" style="--i:4"><span class="tag2"><b>R5</b><span>later</span></span><h4>Token economy</h4><ul><li>Fee discounts and creator access</li><li>Platform revenue → buyback</li><li>Holder rewards + burn</li></ul></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- §09 design -->
+  <section class="sec" id="design">
+    <div class="sec-in">
+      <div class="sec-head">
+        <div>
+          <p class="kicker rv">§09 — The design</p>
+          <h2 class="display rv" style="--i:1">Short, because the idea is short.</h2>
+        </div>
+        <p class="lede rv" style="--i:2">No smart contract to audit, because two transfers do not need one. Encryption from the browser's own crypto. One Next.js app, one Postgres, one blob store. The stack is the whole security argument: less to trust.</p>
+      </div>
+      <div class="chips rv" style="--i:1">
+        <span class="chip">NEXT.JS</span><span class="chip">WEB CRYPTO · AES-GCM</span><span class="chip">SOLANA WEB3</span><span class="chip">SYSTEMPROGRAM</span><span class="chip">VERCEL BLOB</span><span class="chip">NEON POSTGRES</span><span class="chip">GITHUB REST</span>
+      </div>
+      <div class="cta-row rv" style="--i:2">
+        <a class="btn solid" href="/launch">Launch a product →</a>
+        <a class="btn" href="/">Browse the market</a>
+        <a class="btn" href="/developers">Gate your own app ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="foot-in">
+      <span class="fb">EVERYNTH</span>
+      <nav aria-label="Footer"><a href="/">Market</a><a href="/launch">Launch</a><a href="/developers">Developers</a><a href="/terms">Terms</a></nav>
+      <span class="fine">Non-custodial · no program · 5% flat · encrypted in your browser</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+/* entrance timeline — WAAPI only, runs once, then removes itself */
+(()=>{
+  const d=document.documentElement;
+  if(!d.classList.contains('pre')) return;
+  const EXPO='cubic-bezier(.16,1,.3,1)', SOFT='cubic-bezier(.22,.7,.25,1)', GLASS='cubic-bezier(.2,.75,.28,1)';
+  const s = matchMedia('(max-width: 640px)').matches ? .86 : 1;
+  const running=[];
+  const $=(q)=>typeof q==='string'?document.querySelector(q):q;
+  const animate=(q,frames,delay,dur,ease)=>{
+    const el=$(q); if(!el) return;
+    running.push(el.animate(frames,{duration:dur*s,delay:delay*s,easing:ease,fill:'both'}));
+  };
+  const rise=(el,delay,dur)=>animate(el,[{clipPath:'inset(100% 0 -14% 0)',translate:'0 .16em'},
+    {clipPath:'inset(-18% 0 -14% 0)',translate:'0 0'}],delay,dur,EXPO);
+  const lift=(el,delay,dist='.7em',dur=560)=>animate(el,[{opacity:0,translate:'0 '+dist},
+    {opacity:1,translate:'0 0'}],delay,dur,SOFT);
+  const settle=(el,delay,dur=760,from=.985,dist='1.1em')=>animate(el,[{opacity:0,scale:from,translate:'0 '+dist},
+    {opacity:1,scale:1,translate:'0 0'}],delay,dur,GLASS);
+
+  const h1sx=document.querySelectorAll('h1 .sx');
+  const nums=document.querySelectorAll('.num');
+  const lbls=document.querySelectorAll('.lbl');
+
+  lift('.brand',60,'.55em',600);
+  settle('.nav',150,700,.99,'.5em');
+  settle('.cta',200,700,.985,'.5em');
+  settle('.burger',150,700,.9,'.4em');
+  lift('.eyebrow',300,'.8em',520);
+  rise(h1sx[0],380,980);  rise(h1sx[1],470,980);
+  settle('.play',720,640,.88,'.3em');
+  lift('.tag',770,'.7em',560);
+  settle('.panel',800,880,.982,'1.4em');
+  animate('.shield',[{scale:.86},{scale:1}],700,1020,EXPO);
+  animate('.dot',[{scale:0},{scale:1}],520,1080,EXPO);
+  animate('.track i',[{scale:'0 1'},{scale:'1 1'}],820,1120,EXPO);
+  rise(nums[0],920,860);  rise(nums[1],990,860);
+  lift(lbls[0],1030,'.6em',520);  lift(lbls[1],1075,'.6em',520);
+  animate('.slash',[{scale:'1 0'},{scale:'1 1'}],700,1010,EXPO);
+  settle('.meet',1140,820,.985,'1.2em');
+
+  Promise.all(running.map(a=>a.finished.catch(()=>{}))).then(()=>{
+    d.classList.remove('pre');
+    running.forEach(a=>a.cancel());
+    running.length=0;
+  });
+})();
+
+/* burger menu */
+(()=>{
+  const btn=document.querySelector('.burger'), menu=document.getElementById('site-menu');
+  if(!btn||!menu) return;
+  const set=(open)=>{btn.setAttribute('aria-expanded',String(open)); if(open) menu.setAttribute('data-open',''); else menu.removeAttribute('data-open');};
+  const isOpen=()=>btn.getAttribute('aria-expanded')==='true';
+  btn.addEventListener('click',(e)=>{e.stopPropagation(); set(!isOpen());});
+  menu.addEventListener('click',(e)=>{ if(e.target.closest('a')) set(false); else e.stopPropagation(); });
+  document.addEventListener('click',(e)=>{ if(isOpen()&&!btn.contains(e.target)&&!menu.contains(e.target)) set(false); });
+  document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'&&isOpen()){set(false); btn.focus();} });
+  const land=matchMedia('(min-aspect-ratio: 1/1)');
+  land.addEventListener('change',(e)=>{ if(e.matches) set(false); });
+})();
+
+/* ── sections: reveal, glow, sticky nav, ticker, demo, tabs, copy, settlement, lifecycle ── */
+(()=>{
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $=(q,r=document)=>r.querySelector(q), $$=(q,r=document)=>[...r.querySelectorAll(q)];
+
+  /* reveal on scroll */
+  const io=new IntersectionObserver((es)=>es.forEach(e=>{ if(e.isIntersecting){e.target.classList.add('in'); io.unobserve(e.target);} }),{rootMargin:'0px 0px -10% 0px',threshold:.12});
+  $$('.rv').forEach(el=>io.observe(el));
+
+  /* pointer-follow glow on glass cards */
+  $$('.g').forEach(g=>g.addEventListener('pointermove',(e)=>{
+    const r=g.getBoundingClientRect();
+    g.style.setProperty('--mx',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+    g.style.setProperty('--my',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
+  }));
+
+  /* sticky nav + active section */
+  const snav=$('.snav'), links=$$('.snav a[href^="#"]');
+  const hero=$('.page');
+  const onScroll=()=>{ snav.classList.toggle('on', window.scrollY>hero.offsetHeight*.7); };
+  addEventListener('scroll',onScroll,{passive:true}); onScroll();
+  const secObs=new IntersectionObserver((es)=>es.forEach(e=>{ if(e.isIntersecting){ links.forEach(a=>a.classList.toggle('act',a.getAttribute('href')==='#'+e.target.id)); } }),{rootMargin:'-40% 0px -55% 0px'});
+  $$('.sec[id]').forEach(s=>secObs.observe(s));
+
+  /* ticker: duplicate once so the loop is seamless */
+  const t=$('#ticker'); if(t) t.innerHTML+=t.innerHTML;
+
+  /* live checkout demo */
+  const lines=[
+    ['sign in','wallet 7uNq…UV8h · message signed','ok'],
+    ['order','ref 9kQd…3FaR · price 1.000 SOL · terms frozen',''],
+    ['transfer','0.950 SOL → creator  GfdY…9NsY',''],
+    ['transfer','0.050 SOL → treasury  n4Xb…H7Pt',''],
+    ['confirm','tx 5586…TyRw · commitment confirmed','ok'],
+    ['verify','ref ✓  Δcreator +0.950 ✓  Δtreasury +0.050 ✓','ok'],
+    ['unlock','key released → decrypting on device','ok'],
+  ];
+  const box=$('#termlines'); let run=0, timers=[];
+  const set=(id,v,cls)=>{const el=$('#'+id); if(!el) return; el.textContent=v; if(cls!==undefined) el.className=cls;};
+  const reset=()=>{ timers.forEach(clearTimeout); timers=[]; box.innerHTML=''; set('dC','+0.000'); set('dT','+0.000'); set('dR','—'); set('dK','locked',''); $('#barC').style.width='0'; $('#barF').style.width='0'; };
+  const type=(el,text,done)=>{ if(reduce){el.textContent=text; done&&done(); return;} let i=0; el.classList.add('cur'); const tick=()=>{ el.textContent=text.slice(0,++i); if(i<text.length) timers.push(setTimeout(tick,14+Math.random()*22)); else { el.classList.remove('cur'); done&&done(); } }; tick(); };
+  const play=()=>{
+    reset(); const me=++run;
+    lines.forEach((l,i)=>{
+      timers.push(setTimeout(()=>{
+        if(me!==run) return;
+        const row=document.createElement('div'); row.className='ln';
+        row.innerHTML='<span class="k">'+l[0]+'</span><span class="'+(l[2]||'')+'"></span>';
+        box.appendChild(row); requestAnimationFrame(()=>row.classList.add('on'));
+        type(row.lastChild,l[1]);
+        if(i===2){ $('#barC').style.width='95%'; set('dC','+0.950'); }
+        if(i===3){ $('#barF').style.width='5%'; set('dT','+0.050'); }
+        if(i===5){ set('dR','9kQd…3FaR ✓'); }
+        if(i===6){ set('dK','released','z'); }
+      }, (reduce?120:900)*i+200));
+    });
+    timers.push(setTimeout(()=>{ if(me===run) play(); }, reduce?4000:11000));   // loop
+  };
+  const term=$('#term');
+  const demoObs=new IntersectionObserver((es)=>{ if(es[0].isIntersecting){ play(); demoObs.disconnect(); } },{threshold:.35});
+  demoObs.observe(term);
+  $('#rerun').addEventListener('click',play);
+
+  /* tabs */
+  const tabs=$$('.tab'); const panes=$$('.pane');
+  const select=(tab)=>{ tabs.forEach(t=>{const on=t===tab; t.setAttribute('aria-selected',String(on)); t.tabIndex=on?0:-1;}); panes.forEach(p=>{const on=p.id===tab.getAttribute('aria-controls'); p.hidden=!on; if(on){p.classList.remove('enter'); void p.offsetWidth; p.classList.add('enter');}}); };
+  tabs.forEach((t,i)=>{ t.addEventListener('click',()=>select(t)); t.addEventListener('keydown',(e)=>{ const d=e.key==='ArrowDown'||e.key==='ArrowRight'?1:e.key==='ArrowUp'||e.key==='ArrowLeft'?-1:0; if(!d) return; e.preventDefault(); const n=tabs[(i+d+tabs.length)%tabs.length]; n.focus(); select(n); }); });
+
+  /* copy snippet */
+  const cb=$('#copyBtn'); cb.addEventListener('click',async()=>{ try{ await navigator.clipboard.writeText($('#snippet').innerText); cb.textContent='Copied'; setTimeout(()=>cb.textContent='Copy',1600);}catch{ cb.textContent='Select & copy'; } });
+
+  /* settlement calculator: exact integer lamport math, like the server */
+  const f=(l)=>(l/1e9).toFixed(3);
+  const calc=()=>{ const price=Math.round(parseFloat($('#priceRange').value)*1e9); const fee=Math.floor(price*500/10000); const c=price-fee;
+    set('eqP',f(price)); set('eqC',f(c)); set('eqF',f(fee)); set('rC',f(c)+' SOL'); set('rF',f(fee)+' SOL'); set('rP',f(price)+' SOL + network fee'); };
+  $('#priceRange').addEventListener('input',calc); calc();
+
+  /* lifecycle rail: scroll-driven fill + lit nodes */
+  const track=$('#life-track'), fill=$('#railFill'), moments=$$('.moment');
+  const rail=()=>{ const r=track.getBoundingClientRect(); const vh=innerHeight; const p=Math.min(1,Math.max(0,(vh*.75-r.top)/(r.height*.9))); fill.style.setProperty('--p',p.toFixed(3)); moments.forEach((m,i)=>m.classList.toggle('lit',p>=(i+.5)/moments.length)); };
+  addEventListener('scroll',rail,{passive:true}); addEventListener('resize',rail); rail();
+})();
+
+/* video plate follows the motion preference */
+(()=>{
+  const v=document.querySelector('video.bg'); if(!v) return;
+  const q=matchMedia('(prefers-reduced-motion: reduce)');
+  const sync=()=>{ if(q.matches){v.pause(); v.currentTime=0;} else v.play().catch(()=>{}); };
+  q.addEventListener('change',sync);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden) sync()});
+  v.addEventListener('canplay',sync); sync();
+})();
+</script>
+</body>
+</html>
