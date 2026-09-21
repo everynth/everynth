@@ -3,7 +3,7 @@
 import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ProductFields } from "@/app/product-fields";
+import { ProductFields } from "@/components/product-fields";
 import { BLOCKED_EXTENSIONS, MAX_PAYLOAD_BYTES, MAX_SECRET_BYTES } from "@/lib/config";
 import { encryptContent } from "@/lib/content-crypto";
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { RemoveButton } from "@/app/remove-button";
+import { RemoveButton } from "@/components/remove-button";
 import { query } from "@/lib/db";
 import { formatSol } from "@/lib/money";
 import { sessionWallet } from "@/lib/session";

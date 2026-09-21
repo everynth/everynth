@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { RemoveButton } from "@/app/remove-button";
+import { RemoveButton } from "@/components/remove-button";
 import { query } from "@/lib/db";
 import { isAdmin, sessionWallet } from "@/lib/session";
 import { UnblockButton } from "./unblock-button";

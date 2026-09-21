@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ProductFields } from "@/app/product-fields";
+import { ProductFields } from "@/components/product-fields";
 import type { Product } from "@/lib/db";
 
 export function EditForm({ product }: { product: Product }) {

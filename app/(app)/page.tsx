@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/config";
-import { ProductGrid } from "@/app/product-card";
+import { ProductGrid } from "@/components/product-card";
 import { PRODUCT_COLS, query, type Product } from "@/lib/db";
 
 export default async function Market({ searchParams }: PageProps<"/">) {
