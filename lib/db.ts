@@ -34,6 +34,11 @@ create table if not exists purchases (
 );
 create index if not exists purchases_buyer on purchases (buyer, status);
 alter table products add column if not exists cover bytea, add column if not exists cover_type text;
+create table if not exists blocked_wallets (
+  wallet text primary key,
+  reason text not null,
+  created_at timestamptz not null default now()
+);
 create table if not exists reports (
   id text primary key,
   product_id text not null references products(id),
@@ -47,10 +52,11 @@ create table if not exists reports (
 type Client = { query<T>(sql: string, params?: unknown[]): Promise<{ rows: T[] }> };
 
 async function open(): Promise<Client> {
-  if (process.env.DATABASE_URL) {
+  const url = process.env.DATABASE_URL?.trim(); // blank = local PGlite (lets tests override .env.local)
+  if (url) {
     // Neon over WebSocket (443), pg-compatible API. Works from serverless and from networks that block 5432.
     const { Pool } = await import("@neondatabase/serverless");
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
+    const pool = new Pool({ connectionString: url, max: 3 });
     await pool.query(SCHEMA);
     return pool as unknown as Client;
   }

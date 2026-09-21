@@ -2,17 +2,25 @@
 
 import { useRouter } from "next/navigation";
 
-export function RemoveButton({ productId }: { productId: string }) {
+// block=true (admins only): also bans the creator and unlists everything they sell.
+export function RemoveButton({ productId, block = false }: { productId: string; block?: boolean }) {
   const router = useRouter();
   async function remove() {
-    if (!confirm("Remove this product from the market? Existing buyers keep their access.")) return;
-    const res = await fetch(`/api/products/${productId}/remove`, { method: "POST" });
+    const msg = block
+      ? "Remove this product AND block its creator from launching again? All their products are unlisted."
+      : "Remove this product from the market? Existing buyers keep their access.";
+    if (!confirm(msg)) return;
+    const res = await fetch(`/api/products/${productId}/remove`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ block }),
+    });
     if (!res.ok) alert((await res.json()).error);
     router.refresh();
   }
   return (
     <button onClick={remove} className="btn-ghost text-red-600">
-      Remove from market
+      {block ? "Remove + block creator" : "Remove from market"}
     </button>
   );
 }

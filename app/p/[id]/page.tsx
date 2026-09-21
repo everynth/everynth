@@ -60,6 +60,7 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
           </Link>
         )}
         {product.status === "live" && (isCreator || isAdmin(wallet)) && <RemoveButton productId={product.id} />}
+        {product.status === "live" && !isCreator && isAdmin(wallet) && <RemoveButton productId={product.id} block />}
       </div>
     </article>
   );

@@ -3,10 +3,11 @@
 //
 // Run (PowerShell), against a fresh throwaway database:
 //   npm run build
-//   $env:RPC_URL="http://127.0.0.1:3199"; $env:PGLITE_DIR="$env:TEMP\everynth-e2e"; npx next start -p 3100
+//   $env:RPC_URL="http://127.0.0.1:3199"; $env:PGLITE_DIR="$env:TEMP\everynth-e2e"
+//   $env:ADMIN_WALLETS=(node scripts/e2e.mjs --admin-wallet); npx next start -p 3100
 //   node scripts/e2e.mjs        (in a second terminal)
 import assert from "node:assert/strict";
-import { generateKeyPairSync, randomBytes, sign } from "node:crypto";
+import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, randomBytes, sign } from "node:crypto";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -63,8 +64,17 @@ const rpc = createServer(async (req, res) => {
 const newSig = () => bs58.encode(randomBytes(64));
 
 // ---- helpers ----
-async function makeUser() {
-  const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+// Fixed-seed admin so the server can be started with ADMIN_WALLETS=<its address> (printed below).
+const ADMIN_SEED = createHash("sha256").update("everynth-e2e-admin").digest();
+const adminKeys = () => {
+  const privateKey = createPrivateKey({ key: Buffer.concat([Buffer.from("302e020100300506032b657004220420", "hex"), ADMIN_SEED]), format: "der", type: "pkcs8" });
+  return { privateKey, publicKey: createPublicKey(privateKey) };
+};
+export const ADMIN_WALLET = new PublicKey(Buffer.from(adminKeys().publicKey.export({ format: "jwk" }).x, "base64url")).toBase58();
+if (process.argv.includes("--admin-wallet")) { console.log(ADMIN_WALLET); process.exit(0); }
+
+async function makeUser(admin = false) {
+  const { publicKey, privateKey } = admin ? adminKeys() : generateKeyPairSync("ed25519");
   const wallet = new PublicKey(Buffer.from(publicKey.export({ format: "jwk" }).x, "base64url")).toBase58();
   const issuedAt = Date.now();
   const signature = sign(null, Buffer.from(loginMessage("localhost:3100", wallet, issuedAt)), privateKey).toString("base64");
@@ -203,6 +213,45 @@ assert.equal((await fetch(BASE + `/p/${productId}`)).status, 404);
 assert.equal((await buyer.get(`/p/${productId}`)).status, 200);
 assert.equal((await buyer.get(`/api/purchases/${order.purchaseId}/content`)).status, 200);
 step("report + takedown: gone from market, buyer keeps access, strangers cannot remove");
+
+// ownership check for creator-hosted apps
+const verify = async (w) => fetch(BASE + `/api/verify?product=${productId}&wallet=${w}`);
+let v = await verify(buyer.wallet);
+assert.equal(v.headers.get("access-control-allow-origin"), "*");
+assert.deepEqual((await v.json()).owned, true);
+assert.equal((await (await verify(stranger.wallet)).json()).owned, false);
+assert.equal((await fetch(BASE + "/api/verify")).status, 400);
+step("ownership check: owned only by the buyer, CORS open");
+
+// executables refused by name
+const exeForm = new FormData();
+for (const [k, val] of Object.entries({ title: "Bad tool", description: "Definitely not malware, trust me.", category: "Tool", price: "1", kind: "file", fileName: "setup.exe", key: Buffer.from(key).toString("base64") })) exeForm.set(k, val);
+exeForm.set("payload", new Blob([payload]));
+res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: exeForm });
+assert.equal(res.status, 400);
+assert.match((await res.json()).error, /executables/i);
+step("executables and installers refused");
+
+// admin: block a creator, everything they sell disappears, they cannot launch again, unblock restores launching
+if (process.env.SKIP_ADMIN !== "1") {
+  const admin = await makeUser(true);
+  const adminPage = await admin.get("/admin");
+  assert.equal(adminPage.status, 200, "start the server with ADMIN_WALLETS=" + ADMIN_WALLET);
+  form.set("price", "1");
+  res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: form });
+  const { id: p2 } = await res.json();
+  assert.equal((await stranger.json(`/api/products/${p2}/remove`, { block: true })).status, 404);
+  assert.equal((await admin.json(`/api/products/${p2}/remove`, { block: true })).status, 200);
+  assert.equal((await fetch(BASE + `/p/${p2}`)).status, 404);
+  res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: form });
+  assert.equal(res.status, 403);
+  assert.ok((await (await admin.get("/admin")).text()).includes(creator.wallet));
+  assert.equal((await stranger.json("/api/admin/unblock", { wallet: creator.wallet })).status, 404);
+  assert.equal((await admin.json("/api/admin/unblock", { wallet: creator.wallet })).status, 200);
+  res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: form });
+  assert.equal(res.status, 200);
+  step("admin block: creator unlisted + cannot launch; unblock restores");
+}
 
 rpc.close();
 console.log("\nALL E2E CHECKS PASSED");
