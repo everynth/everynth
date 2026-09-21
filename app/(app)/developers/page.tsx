@@ -14,7 +14,8 @@ if (!owned) location.href = "https://everynth.vercel.app/p/YOUR_PRODUCT_ID";`;
 export default function DevelopersPage() {
   return (
     <article className="mx-auto flex max-w-2xl flex-col gap-4">
-      <h1 className="text-3xl font-semibold tracking-tight">Gate your own app with EVERYNTH</h1>
+      <p className="kicker rise">Developers</p>
+      <h1 className="chrome shimmer rise rise-2 text-3xl font-medium tracking-tight sm:text-5xl">Gate your own app with EVERYNTH</h1>
       <p className="opacity-80">
         Sell access to an app, API or agent you host yourself. Instead of handing out a code that can be shared,
         your app asks EVERYNTH whether the visitor&apos;s wallet actually bought the product. Access follows the

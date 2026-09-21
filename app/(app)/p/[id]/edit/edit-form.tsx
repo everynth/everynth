@@ -24,7 +24,7 @@ export function EditForm({ product }: { product: Product }) {
     <form onSubmit={submit} className="flex flex-col gap-5">
       <ProductFields defaults={product} />
       {error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-red-400">
           {error}
         </p>
       )}

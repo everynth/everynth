@@ -56,7 +56,7 @@ export function BuyButton({ productId, sessionWallet }: { productId: string; ses
         {status || "Buy with SOL"}
       </button>
       {error && (
-        <p role="alert" className="max-w-xs text-right text-sm text-red-600">
+        <p role="alert" className="max-w-xs text-right text-sm text-red-400">
           {error} {/insufficient|0x1\b/i.test(error) && "Make sure you have enough SOL for the price plus fees."}
         </p>
       )}

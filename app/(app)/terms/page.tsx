@@ -3,7 +3,8 @@ export const metadata = { title: "Terms — EVERYNTH" };
 export default function TermsPage() {
   return (
     <article className="mx-auto flex max-w-2xl flex-col gap-4">
-      <h1 className="text-3xl font-semibold tracking-tight">Terms of use</h1>
+      <p className="kicker rise">Legal</p>
+      <h1 className="chrome shimmer rise rise-2 text-3xl font-medium tracking-tight sm:text-5xl">Terms of use</h1>
       <p className="text-sm opacity-60">Last updated: 2026-09-21</p>
 
       <h2 className="mt-4 text-xl font-medium">What EVERYNTH is</h2>

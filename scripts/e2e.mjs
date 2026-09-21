@@ -219,7 +219,7 @@ assert.equal(coverRes.status, 200);
 assert.equal(coverRes.headers.get("content-type"), "image/png");
 assert.deepEqual(Buffer.from(await coverRes.arrayBuffer()), png);
 const page = await (await fetch(BASE + `/p/${productId}`)).text();
-assert.ok(page.includes("Alpha Signals API v2") && page.includes(`/api/products/${productId}/cover`) && /2(<!-- -->)? SOL/.test(page)); // React puts a text marker between {price} and " SOL"
+assert.ok(page.includes("Alpha Signals API v2") && page.includes(`/api/products/${productId}/cover`) && />2<\/span>[\s\S]{0,120}SOL/.test(page)); // price digit sits in its own span before the SOL unit
 assert.ok((await (await fetch(BASE + `/u/${creator.wallet}`)).text()).includes("Alpha Signals API v2"));
 assert.equal((await fetch(BASE + "/u/not-a-wallet")).status, 404);
 edit.set("cover", new Blob([png], { type: "text/html" }), "x.html");

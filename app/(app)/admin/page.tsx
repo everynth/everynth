@@ -19,7 +19,8 @@ export default async function AdminPage() {
   return (
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-4">
-        <h1 className="text-3xl font-semibold tracking-tight">Reports</h1>
+        <p className="kicker rise">Admin · Moderation</p>
+        <h1 className="chrome shimmer rise rise-2 text-3xl font-medium tracking-tight sm:text-5xl">Reports</h1>
         {reports.length === 0 && <p className="opacity-60">No reports.</p>}
         <ul className="flex flex-col gap-3">
           {reports.map((r) => (
@@ -27,7 +28,7 @@ export default async function AdminPage() {
               <div className="min-w-0 flex-1">
                 <h2 className="font-medium">
                   <Link href={`/p/${r.product_id}`}>{r.title}</Link>
-                  {r.status === "removed" && <span className="ml-2 text-sm text-red-600">removed</span>}
+                  {r.status === "removed" && <span className="ml-2 text-sm text-red-400">removed</span>}
                 </h2>
                 <p className="text-sm opacity-80">{r.reason}</p>
                 <p className="font-mono text-xs opacity-60">
@@ -46,7 +47,7 @@ export default async function AdminPage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-2xl font-semibold tracking-tight">Blocked wallets</h2>
+        <h2 className="chrome text-2xl font-medium tracking-tight">Blocked wallets</h2>
         {blocked.length === 0 && <p className="opacity-60">None.</p>}
         <ul className="flex flex-col gap-3">
           {blocked.map((b) => (
