@@ -557,11 +557,32 @@ html.static .step svg .draw{stroke-dashoffset:0}
 .point .st{font-family:var(--mono);font-size:calc(11.5*var(--v));letter-spacing:.14em;text-transform:uppercase;display:flex;justify-content:space-between;color:var(--s-dim)}
 .point .st b{color:var(--s-acc);font-weight:500}
 .point p{color:var(--s-mute);font-size:calc(14.5*var(--v));line-height:1.55;margin-top:auto}
-/* ── §09 stack chips ── */
-.chips{display:flex;flex-wrap:wrap;gap:calc(10*var(--v));margin-top:calc(34*var(--v))}
-.chip{font-family:var(--mono);font-size:calc(12.5*var(--v));letter-spacing:.12em;padding:calc(12*var(--v)) calc(18*var(--v));border-radius:999px;border:1px solid var(--s-line);color:var(--s-ink2);background:rgba(255,255,255,.03);transition:border-color .2s,background .2s,transform .4s cubic-bezier(.16,1,.3,1)}
-.chip:hover{border-color:var(--s-acc);background:rgba(110,154,214,.12);transform:translateY(-2px)}
-.chip + .chip::before{content:"→";margin-right:calc(18*var(--v));margin-left:calc(-8*var(--v));color:var(--s-dim)}
+/* ── §08 three layers: who sees what ── */
+.trace{display:block;width:100%;height:auto;margin-bottom:calc(-6*var(--v))}
+.trace .tp{fill:none;stroke:rgba(169,196,234,.28);stroke-width:1.2;stroke-dasharray:3 6}
+.trace .tn circle{fill:var(--s-bg);stroke:rgba(169,196,234,.45);stroke-width:1.2}
+.trace .td{fill:var(--s-acc2);filter:drop-shadow(0 0 6px rgba(169,196,234,.9))}
+.trace .td.tg{fill:#8FD6A8;filter:drop-shadow(0 0 6px rgba(143,214,168,.9))}
+.trace .tt{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;fill:var(--s-dim);text-transform:uppercase}
+.trace .tt.tg{fill:#8FD6A8}
+.layers{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--s-line);border:1px solid var(--s-line);border-radius:var(--r);overflow:hidden}
+.layer{position:relative;z-index:1;background:var(--s-bg);padding:calc(30*var(--v)) calc(26*var(--v)) calc(30*var(--v));display:flex;flex-direction:column;gap:calc(20*var(--v));transition:background .35s}
+.layer:hover,.layer:focus-within{background:rgba(110,154,214,.10)}
+.ly-head{display:flex;flex-direction:column;gap:calc(6*var(--v))}
+.ly-n{font-family:var(--mono);font-size:calc(11.5*var(--v));letter-spacing:.14em;color:var(--s-acc)}
+.ly-head h3{font-size:calc(26*var(--v));font-weight:470;letter-spacing:-0.025em}
+.ly-tag{font-size:calc(13px);color:var(--s-mute)}
+.layer ul{list-style:none;display:grid;gap:calc(7*var(--v));font-size:calc(14*var(--v));line-height:1.45;color:var(--s-ink2)}
+.layer ul::before{font-family:var(--mono);font-size:calc(10.5*var(--v));letter-spacing:.14em;text-transform:uppercase;color:var(--s-dim);margin-bottom:calc(2*var(--v))}
+.ly-sees::before{content:"can see"}
+.ly-does::before{content:"does"}
+.layer li{display:flex;gap:calc(10*var(--v))}
+.ly-sees li::before{content:"◌";color:var(--s-acc);flex:none}
+.ly-does li::before{content:"—";color:var(--s-dim);flex:none}
+.layer[data-layer="device"] .ly-sees li:first-child::before{content:"●";color:#F5C842}
+.layer[data-layer="everynth"] .ly-sees li:first-child::before,.layer[data-layer="solana"] .ly-sees li:last-child::before{content:"○";color:#8FD6A8}
+@media (max-width:980px){.layers{grid-template-columns:1fr}.trace{display:none}}
+@media (prefers-reduced-motion:reduce){.trace animateMotion{display:none}}
 .cta-row{display:flex;flex-wrap:wrap;gap:calc(12*var(--v));margin-top:calc(40*var(--v))}
 
 /* ── footer ── */
@@ -1509,13 +1530,46 @@ permission: pull
       <div class="sec-head">
         <div>
           <p class="kicker rv">§08 — The design</p>
-          <h2 class="display rv" style="--i:1">Short, because the idea is short.</h2>
+          <h2 class="display rv" style="--i:1">Three places. Each sees only what it must.</h2>
         </div>
-        <p class="lede rv" style="--i:2">No smart contract to audit, because two transfers do not need one. Encryption from the browser's own crypto. One Next.js app, one Postgres, one blob store. The stack is the whole security argument: less to trust.</p>
+        <p class="lede rv" style="--i:2">There is no smart contract to audit, because two transfers do not need one. What there is instead is a strict split of who knows what: your device, our server, and the chain. Hover a layer to see its view of a purchase.</p>
       </div>
-      <div class="chips rv" style="--i:1">
-        <span class="chip">NEXT.JS</span><span class="chip">WEB CRYPTO · AES-GCM</span><span class="chip">SOLANA WEB3</span><span class="chip">SYSTEMPROGRAM</span><span class="chip">VERCEL BLOB</span><span class="chip">NEON POSTGRES</span><span class="chip">GITHUB REST</span>
+
+      <!-- one purchase traced across the three layers: out along the top line, back along the bottom -->
+      <svg class="trace rv" style="--i:1" viewBox="0 0 1200 120" aria-hidden="true">
+        <defs>
+          <path id="tr1" d="M200 40 H 600"/><path id="tr2" d="M600 40 H 1000"/>
+          <path id="tr3" d="M1000 80 H 600"/><path id="tr4" d="M600 80 H 200"/>
+        </defs>
+        <use href="#tr1" class="tp"/><use href="#tr2" class="tp"/><use href="#tr3" class="tp"/><use href="#tr4" class="tp"/>
+        <g class="tn"><circle cx="200" cy="40" r="5"/><circle cx="600" cy="40" r="5"/><circle cx="1000" cy="40" r="5"/><circle cx="200" cy="80" r="5"/><circle cx="600" cy="80" r="5"/><circle cx="1000" cy="80" r="5"/></g>
+        <circle class="td" r="4"><animateMotion dur="1.6s" begin="0s;8s" fill="freeze"><mpath href="#tr1"/></animateMotion></circle>
+        <circle class="td" r="4"><animateMotion dur="1.6s" begin="1.8s;9.8s" fill="freeze"><mpath href="#tr2"/></animateMotion></circle>
+        <circle class="td tg" r="4"><animateMotion dur="1.6s" begin="3.8s;11.8s" fill="freeze"><mpath href="#tr3"/></animateMotion></circle>
+        <circle class="td tg" r="4"><animateMotion dur="1.6s" begin="5.6s;13.6s" fill="freeze"><mpath href="#tr4"/></animateMotion></circle>
+        <text class="tt" x="400" y="28" text-anchor="middle">encrypted upload · signed order</text>
+        <text class="tt" x="800" y="28" text-anchor="middle">two transfers, one tx</text>
+        <text class="tt tg" x="800" y="104" text-anchor="middle">confirmed · deltas read</text>
+        <text class="tt tg" x="400" y="104" text-anchor="middle">key released · decrypt locally</text>
+      </svg>
+      <div class="layers rv" style="--i:2">
+        <div class="layer" data-layer="device">
+          <div class="ly-head"><span class="ly-n">01</span><h3>Your device</h3><span class="ly-tag">plaintext lives here, and only here</span></div>
+          <ul class="ly-sees"><li>plaintext file or secret</li><li>the content key it generated</li><li>your wallet's private key</li></ul>
+          <ul class="ly-does"><li>AES-256-GCM in the browser</li><li>signs the login and the payment</li><li>decrypts after unlock</li></ul>
+        </div>
+        <div class="layer" data-layer="everynth">
+          <div class="ly-head"><span class="ly-n">02</span><h3>EVERYNTH</h3><span class="ly-tag">bookkeeping, never custody</span></div>
+          <ul class="ly-sees"><li>ciphertext, never plaintext</li><li>content key, wrapped by the master key</li><li>orders, references, session cookies</li></ul>
+          <ul class="ly-does"><li>freezes payout terms per order</li><li>reads confirmed balance deltas</li><li>releases the key, invites on GitHub</li></ul>
+        </div>
+        <div class="layer" data-layer="solana">
+          <div class="ly-head"><span class="ly-n">03</span><h3>Solana</h3><span class="ly-tag">public by nature</span></div>
+          <ul class="ly-sees"><li>wallet addresses and amounts</li><li>the order's reference key</li><li>nothing about the goods</li></ul>
+          <ul class="ly-does"><li>two SystemProgram transfers, one tx</li><li>confirms in seconds</li><li>no program of ours to upgrade or pause</li></ul>
+        </div>
       </div>
+
       <div class="cta-row rv" style="--i:2">
         <a class="btn solid" href="/launch">Launch a product →</a>
         <a class="btn" href="/">Browse the market</a>
