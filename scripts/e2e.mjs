@@ -4,7 +4,7 @@
 // Run (PowerShell), against a fresh throwaway database:
 //   npm run build
 //   $env:RPC_URL="http://127.0.0.1:3199"; $env:PGLITE_DIR="$env:TEMP\everynth-e2e"
-//   $env:ADMIN_WALLETS=(node scripts/e2e.mjs --admin-wallet); npx next start -p 3100
+//   $env:GITHUB_API="http://127.0.0.1:3198"; $env:ADMIN_WALLETS=(node scripts/e2e.mjs --admin-wallet); npx next start -p 3100
 //   node --env-file=.env.local scripts/e2e.mjs        (in a second terminal; env gives the blob token for cleanup)
 import assert from "node:assert/strict";
 import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, randomBytes, sign } from "node:crypto";
@@ -64,6 +64,27 @@ const rpc = createServer(async (req, res) => {
   res.end(JSON.stringify({ jsonrpc: "2.0", id, result }));
 }).listen(3199);
 const newSig = () => bs58.encode(randomBytes(64));
+
+// ---- stub GitHub (server started with GITHUB_API=http://127.0.0.1:3198) ----
+const invites = [];
+const gh = createServer(async (req, res) => {
+  let raw = "";
+  for await (const chunk of req) raw += chunk;
+  const token = (req.headers.authorization ?? "").replace("Bearer ", "");
+  const collab = /^\/repos\/([^/]+\/[^/]+)\/collaborators\/([^/]+)$/.exec(req.url);
+  const repo = /^\/repos\/([^/]+\/[^/]+)$/.exec(req.url);
+  res.setHeader("content-type", "application/json");
+  if (!["ghp_good", "ghp_weak"].includes(token)) { res.statusCode = 401; return res.end("{}"); }
+  if (req.method === "GET" && repo) return res.end(JSON.stringify({ full_name: repo[1], permissions: { admin: token === "ghp_good", push: true, pull: true } }));
+  if (req.method === "PUT" && collab) {
+    if (collab[2] === "nobody") { res.statusCode = 404; return res.end("{}"); }
+    invites.push({ repo: collab[1], user: collab[2], token, permission: JSON.parse(raw).permission });
+    res.statusCode = 201;
+    return res.end("{}");
+  }
+  res.statusCode = 404;
+  res.end("{}");
+}).listen(3198);
 
 // ---- helpers ----
 // Fixed-seed admin so the server can be started with ADMIN_WALLETS=<its address> (printed below).
@@ -261,6 +282,36 @@ assert.deepEqual(Buffer.from(filePlain), fileBytes);
 if (process.env.BLOB_READ_WRITE_TOKEN) await del(blob.url, { token: process.env.BLOB_READ_WRITE_TOKEN });
 step("file product via blob storage: upload, buy, fetch, decrypt byte-for-byte");
 
+// github product: token checked at launch, buyer invited as read-only collaborator
+const ghForm = (token, repo = "acme/private-sdk") => {
+  const f = new FormData();
+  for (const [k, val] of Object.entries({ title: "Private SDK repo", description: "Read access to our private SDK repository.", category: "Tool", price: "1", kind: "github", repo, token })) f.set(k, val);
+  return f;
+};
+const ghLaunch = (f) => fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: f });
+assert.equal((await ghLaunch(ghForm("ghp_bad"))).status, 400);
+assert.match((await (await ghLaunch(ghForm("ghp_weak"))).json()).error, /admin/);
+assert.equal((await ghLaunch(ghForm("ghp_good", "not a repo"))).status, 400);
+res = await ghLaunch(ghForm("ghp_good"));
+assert.equal(res.status, 200, await res.clone().text());
+const { id: ghProduct } = await res.json();
+assert.ok((await (await fetch(BASE + `/p/${ghProduct}`)).text()).includes("github.com/acme/private-sdk"));
+const go = await (await buyer.json("/api/orders", { productId: ghProduct })).json();
+assert.equal((await buyer.json(`/api/purchases/${go.purchaseId}/github`, { username: "octocat" })).status, 404); // unpaid
+putTx(newSig(), go.reference, { [go.creator]: go.creatorAmount, [go.treasury]: go.fee });
+assert.equal((await buyer.json(`/api/orders/${go.purchaseId}/confirm`)).status, 200);
+const gc = await (await buyer.get(`/api/purchases/${go.purchaseId}/content`)).json();
+assert.deepEqual(gc, { kind: "github", repo: "acme/private-sdk", githubUser: null }); // no key/token leaks
+assert.equal((await buyer.json(`/api/purchases/${go.purchaseId}/github`, { username: "bad user!" })).status, 400);
+assert.equal((await buyer.json(`/api/purchases/${go.purchaseId}/github`, { username: "nobody" })).status, 502);
+assert.equal((await stranger.json(`/api/purchases/${go.purchaseId}/github`, { username: "octocat" })).status, 404);
+assert.equal((await buyer.json(`/api/purchases/${go.purchaseId}/github`, { username: "octocat" })).status, 200);
+assert.deepEqual(invites, [{ repo: "acme/private-sdk", user: "octocat", token: "ghp_good", permission: "pull" }]);
+assert.equal((await buyer.json(`/api/purchases/${go.purchaseId}/github`, { username: "someone-else" })).status, 409);
+assert.equal((await buyer.json(`/api/purchases/${go.purchaseId}/github`, { username: "OctoCat" })).status, 200); // resend ok
+assert.equal((await (await buyer.get(`/api/purchases/${go.purchaseId}/content`)).json()).githubUser, "OctoCat");
+step("github product: token validated, buyer invited read-only, one account per purchase");
+
 // admin: block a creator, everything they sell disappears, they cannot launch again, unblock restores launching
 if (process.env.SKIP_ADMIN !== "1") {
   const admin = await makeUser(true);
@@ -283,4 +334,5 @@ if (process.env.SKIP_ADMIN !== "1") {
 }
 
 rpc.close();
+gh.close();
 console.log("\nALL E2E CHECKS PASSED");
