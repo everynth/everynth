@@ -1,4 +1,4 @@
-import { KINDS, MAX_PAYLOAD_BYTES } from "@/lib/config";
+import { BLOCKED_EXTENSIONS, KINDS, MAX_PAYLOAD_BYTES } from "@/lib/config";
 import { query } from "@/lib/db";
 import { masterKey, wrapKey } from "@/lib/keywrap";
 import { formText, parseCover, parseFields } from "@/lib/product-form";
@@ -10,6 +10,9 @@ const bad = (error: string, status = 400) => Response.json({ error }, { status }
 export async function POST(request: Request) {
   const creator = await sessionWallet();
   if (!creator) return bad("sign in first", 401);
+  if ((await query(`select 1 from blocked_wallets where wallet = $1`, [creator])).length) {
+    return bad("this wallet is blocked from launching", 403);
+  }
 
   const form = await request.formData().catch(() => null);
   if (!form) return bad("expected multipart form data");
@@ -22,6 +25,9 @@ export async function POST(request: Request) {
   const key = Buffer.from(formText(form, "key"), "base64");
   const payload = form.get("payload");
   if (!(KINDS as readonly string[]).includes(kind)) return bad("unknown kind");
+  if (kind === "file" && BLOCKED_EXTENSIONS.test(formText(form, "fileName"))) {
+    return bad("executables and installers cannot be sold here; zip source code or documents instead");
+  }
   if (key.length !== 32) return bad("content key must be 32 bytes");
   if (!(payload instanceof Blob) || payload.size <= 28) return bad("encrypted payload is missing");
   if (payload.size > MAX_PAYLOAD_BYTES + 28) return bad("payload too large (max 4 MB)", 413);

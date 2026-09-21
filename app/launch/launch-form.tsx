@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ProductFields } from "@/app/product-fields";
-import { MAX_PAYLOAD_BYTES } from "@/lib/config";
+import { BLOCKED_EXTENSIONS, MAX_PAYLOAD_BYTES } from "@/lib/config";
 import { encryptContent } from "@/lib/content-crypto";
 
 export function LaunchForm() {
@@ -27,6 +27,7 @@ export function LaunchForm() {
       if (kind === "file") {
         if (!(file instanceof File) || file.size === 0) throw new Error("Choose a file");
         if (file.size > MAX_PAYLOAD_BYTES) throw new Error("File is larger than 4 MB");
+        if (BLOCKED_EXTENSIONS.test(file.name)) throw new Error("Executables and installers cannot be sold here. Zip source code or documents instead.");
         plain = new Uint8Array(await file.arrayBuffer());
         form.set("fileName", file.name);
         form.set("fileType", file.type);
