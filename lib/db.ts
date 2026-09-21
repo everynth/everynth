@@ -34,6 +34,8 @@ create table if not exists purchases (
 );
 create index if not exists purchases_buyer on purchases (buyer, status);
 alter table products add column if not exists cover bytea, add column if not exists cover_type text;
+alter table products add column if not exists payload_url text; -- files: ciphertext in Vercel Blob
+alter table products alter column payload drop not null;           -- secrets: ciphertext inline
 create table if not exists blocked_wallets (
   wallet text primary key,
   reason text not null,
