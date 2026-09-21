@@ -36,6 +36,8 @@ create index if not exists purchases_buyer on purchases (buyer, status);
 alter table products add column if not exists cover bytea, add column if not exists cover_type text;
 alter table products add column if not exists payload_url text; -- files: ciphertext in Vercel Blob
 alter table products alter column payload drop not null;           -- secrets: ciphertext inline
+alter table products add column if not exists github_repo text;   -- kind 'github': wrapped_key holds the creator's wrapped token
+alter table purchases add column if not exists github_user text;  -- who was invited
 create table if not exists blocked_wallets (
   wallet text primary key,
   reason text not null,
@@ -88,12 +90,13 @@ export type Product = {
   description: string;
   category: string;
   price: number;
-  kind: "file" | "secret";
+  kind: "file" | "secret" | "github";
   file_name: string | null;
+  github_repo: string | null;
   status: "live" | "removed";
   has_cover: boolean;
   created_at: Date;
 };
 // Listing columns only: never select payload / wrapped_key unless delivering content.
 export const PRODUCT_COLS =
-  "id, creator, title, description, category, price::float8 as price, kind, file_name, status, (cover is not null) as has_cover, created_at";
+  "id, creator, title, description, category, price::float8 as price, kind, file_name, github_repo, status, (cover is not null) as has_cover, created_at";

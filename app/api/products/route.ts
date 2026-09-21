@@ -1,5 +1,6 @@
 import { BLOCKED_EXTENSIONS, KINDS, MAX_SECRET_BYTES } from "@/lib/config";
 import { query } from "@/lib/db";
+import { checkRepoAdmin, REPO_RE } from "@/lib/github";
 import { masterKey, wrapKey } from "@/lib/keywrap";
 import { formText, parseCover, parseFields } from "@/lib/product-form";
 import { sessionWallet } from "@/lib/session";
@@ -33,21 +34,34 @@ export async function POST(request: Request) {
   if (typeof cover === "string") return bad(cover);
 
   const kind = formText(form, "kind");
-  const key = Buffer.from(formText(form, "key"), "base64");
   if (!(KINDS as readonly string[]).includes(kind)) return bad("unknown kind");
-  if (key.length !== 32) return bad("content key must be 32 bytes");
 
+  // What gets wrapped with the master key: the content key, or (github) the creator's token.
+  let secret: Buffer;
   let payload: Buffer | null = null;
   let payloadUrl: string | null = null;
   let fileName: string | null = null;
   let fileType: string | null = null;
+  let githubRepo: string | null = null;
+  if (kind === "github") {
+    githubRepo = formText(form, "repo");
+    const token = formText(form, "token");
+    if (!REPO_RE.test(githubRepo)) return bad("repository must look like owner/name");
+    if (!token) return bad("a GitHub token is required");
+    const problem = await checkRepoAdmin(githubRepo, token);
+    if (problem) return bad(problem);
+    secret = Buffer.from(token);
+  } else {
+    secret = Buffer.from(formText(form, "key"), "base64");
+    if (secret.length !== 32) return bad("content key must be 32 bytes");
+  }
   if (kind === "file") {
     fileName = formText(form, "fileName").slice(0, 200) || "download";
     fileType = formText(form, "fileType").slice(0, 100) || "application/octet-stream";
     payloadUrl = formText(form, "payloadUrl");
     if (BLOCKED_EXTENSIONS.test(fileName)) return bad("executables and installers cannot be sold here; zip source code or documents instead");
     if (!isOurBlob(payloadUrl)) return bad("encrypted file upload is missing");
-  } else {
+  } else if (kind === "secret") {
     const blob = form.get("payload");
     if (!(blob instanceof Blob) || blob.size <= 28) return bad("encrypted payload is missing");
     if (blob.size > MAX_SECRET_BYTES + 28) return bad("secret text is too long", 413);
@@ -56,11 +70,11 @@ export async function POST(request: Request) {
 
   const id = crypto.randomUUID();
   await query(
-    `insert into products (id, creator, title, description, category, price, kind, file_name, file_type, payload, payload_url, wrapped_key, cover, cover_type)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+    `insert into products (id, creator, title, description, category, price, kind, file_name, file_type, payload, payload_url, github_repo, wrapped_key, cover, cover_type)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
     [
       id, creator, fields.title, fields.description, fields.category, fields.price, kind,
-      fileName, fileType, payload, payloadUrl, wrapKey(key, masterKey()), cover?.bytes ?? null, cover?.type ?? null,
+      fileName, fileType, payload, payloadUrl, githubRepo, wrapKey(secret, masterKey()), cover?.bytes ?? null, cover?.type ?? null,
     ],
   );
   return Response.json({ id });
