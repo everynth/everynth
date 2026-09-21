@@ -351,6 +351,12 @@ html.static .step svg .draw{stroke-dashoffset:0}
 .g:hover::before{opacity:1}
 @media (hover:hover){.g.lift:hover{transform:translateY(calc(-4*var(--v)))}}
 
+/* hairline grid: one bordered frame, cells divided by 1px lines — no card per item */
+.gridl{display:grid;gap:1px;background:var(--s-line);border:1px solid var(--s-line);border-radius:var(--r);overflow:hidden}
+.gridl>*{background:var(--s-bg);position:relative}
+.gridl>*::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s;background:radial-gradient(calc(260*var(--v)) circle at var(--mx,50%) var(--my,50%),rgba(110,154,214,.14),transparent 60%)}
+.gridl>*:hover::after{opacity:1}
+
 /* sticky nav after hero */
 .snav{position:fixed;top:calc(14*var(--v));left:50%;translate:-50% calc(-140*var(--v));z-index:20;display:flex;align-items:center;gap:calc(4*var(--v));
   padding:calc(6*var(--v));border-radius:999px;background:rgba(10,14,24,.72);border:1px solid var(--s-line);
@@ -416,15 +422,18 @@ html.static .step svg .draw{stroke-dashoffset:0}
 .kv dd.z{color:#8FD6A8}
 
 /* ── §01 steps ── */
-.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:calc(18*var(--v))}
+.steps{grid-template-columns:repeat(4,minmax(0,1fr))}
 .step{padding:calc(30*var(--v)) calc(26*var(--v)) calc(34*var(--v));min-height:calc(280*var(--v));display:flex;flex-direction:column}
 .step .n{font-family:var(--mono);font-size:calc(12*var(--v));letter-spacing:.14em;color:var(--s-acc)}
 .step h3{margin:calc(56*var(--v)) 0 calc(12*var(--v));font-size:calc(28*var(--v));font-weight:470;letter-spacing:-0.025em}
 .step p{font-size:calc(15*var(--v));line-height:1.55;color:var(--s-mute);margin-top:auto}
 .step svg{position:absolute;right:calc(22*var(--v));top:calc(22*var(--v));width:calc(46*var(--v));height:calc(46*var(--v));opacity:.85}
-.step svg [stroke]{stroke:var(--s-acc2)}
+.step svg :is(path,circle,rect){stroke:var(--s-acc2)}
 .step svg .draw{stroke-dasharray:180;stroke-dashoffset:180;transition:stroke-dashoffset 1.4s cubic-bezier(.16,1,.3,1) .2s}
-.step.in svg .draw{stroke-dashoffset:0}
+.steps.in .step svg .draw{stroke-dashoffset:0}
+.steps.in .step:nth-child(2) svg .draw{transition-delay:.35s}
+.steps.in .step:nth-child(3) svg .draw{transition-delay:.5s}
+.steps.in .step:nth-child(4) svg .draw{transition-delay:.65s}
 
 /* ── §02 what you can sell: tabs ── */
 .sell{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:calc(28*var(--v));align-items:start}
@@ -433,9 +442,30 @@ html.static .step svg .draw{stroke-dashoffset:0}
   background:transparent;border:1px solid transparent;color:var(--s-ink);font:inherit;cursor:pointer;transition:background .25s,border-color .25s}
 .tab:hover{background:rgba(255,255,255,.04)}
 .tab[aria-selected="true"]{background:var(--s-glass2);border-color:var(--s-line)}
-.tab .ic{width:calc(40*var(--v));height:calc(40*var(--v));border-radius:calc(12*var(--v));background:rgba(110,154,214,.14);display:grid;place-items:center}
-.tab .ic svg{width:calc(20*var(--v));height:calc(20*var(--v))}
-.tab .ic svg [stroke]{stroke:var(--s-acc2)}
+.tab .ic{width:calc(46*var(--v));height:calc(46*var(--v));border-radius:calc(14*var(--v));background:rgba(110,154,214,.14);display:grid;place-items:center;overflow:hidden;position:relative}
+.tab .ic::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(169,196,234,.18)}
+.tab .ic svg{width:calc(26*var(--v));height:calc(26*var(--v));overflow:visible}
+.tab .ic svg :is(path,circle,rect){stroke:var(--s-acc2)}
+.tab[aria-selected="true"] .ic{background:rgba(110,154,214,.24)}
+
+/* looping icon animations — each icon tells its own story in ~3 s */
+.ic-file .w{stroke-dasharray:8;stroke-dashoffset:8;animation:write 3.2s ease-in-out infinite}
+.ic-file .w2{animation-delay:.35s}
+.ic-file .w3{animation-delay:.7s}
+@keyframes write{0%{stroke-dashoffset:8;opacity:0}18%{stroke-dashoffset:0;opacity:1}62%{stroke-dashoffset:0;opacity:1}75%,100%{opacity:0;stroke-dashoffset:8}}
+.ic-file .lock{transform-origin:17.5px 17px;animation:lockin 3.2s cubic-bezier(.16,1,.3,1) infinite}
+@keyframes lockin{0%,55%{opacity:0;transform:translateY(4px) scale(.7)}68%,88%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(0) scale(1)}}
+.ic-key .key{transform-origin:8px 12px;animation:turn 3s cubic-bezier(.16,1,.3,1) infinite}
+@keyframes turn{0%,30%{transform:rotate(0)}45%,70%{transform:rotate(-22deg)}85%,100%{transform:rotate(0)}}
+.ic-key .star{transform-origin:18.5px 6px;animation:spark 3s ease-in-out infinite}
+@keyframes spark{0%,40%{opacity:0;transform:scale(.4) rotate(0)}52%{opacity:1;transform:scale(1.15) rotate(20deg)}70%{opacity:1;transform:scale(1) rotate(45deg)}85%,100%{opacity:0;transform:scale(.4) rotate(90deg)}}
+.ic-app .scan{stroke-dasharray:12;stroke-dashoffset:12;animation:scan 2.8s ease-in-out infinite}
+.ic-app .s2{animation-delay:.3s}
+@keyframes scan{0%{stroke-dashoffset:12;opacity:.2}25%,60%{stroke-dashoffset:0;opacity:1}80%,100%{stroke-dashoffset:0;opacity:.2}}
+.ic-app .check{transform-origin:17.5px 14.5px;animation:pop 2.8s cubic-bezier(.16,1,.3,1) infinite}
+.tab .ic svg .check :is(path,circle){stroke:#8FD6A8}
+@keyframes pop{0%,45%{opacity:0;transform:scale(.4)}60%,85%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.6)}}
+@media (prefers-reduced-motion:reduce){.ic-file .w,.ic-file .lock,.ic-key .key,.ic-key .star,.ic-app .scan,.ic-app .check{animation:none;opacity:1;stroke-dashoffset:0;transform:none}.ic-git animateMotion{display:none}}
 .tab b{display:block;font-weight:500;font-size:calc(16*var(--v));letter-spacing:-0.01em}
 .tab small{display:block;color:var(--s-mute);font-size:calc(13*var(--v));margin-top:2px}
 .tab .arw{color:var(--s-dim);transition:translate .3s,color .3s}
@@ -455,7 +485,7 @@ html.static .step svg .draw{stroke-dashoffset:0}
 
 /* ── §03 encryption diagram ── */
 .enc{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:calc(28*var(--v));align-items:stretch}
-.diagram{padding:calc(24*var(--v));display:flex;align-items:center}
+.diagram{padding:0;display:flex;align-items:center}
 .diagram svg{width:100%;height:auto;display:block}
 .diagram text{font-family:var(--mono);font-size:11px;fill:var(--s-mute);letter-spacing:.08em}
 .diagram .node{fill:rgba(255,255,255,.05);stroke:rgba(255,255,255,.16)}
@@ -465,7 +495,7 @@ html.static .step svg .draw{stroke-dashoffset:0}
 .diagram .pkt{fill:var(--s-acc2);filter:drop-shadow(0 0 6px rgba(169,196,234,.9))}
 .diagram .key{fill:#F5C842;filter:drop-shadow(0 0 6px rgba(245,200,66,.9))}
 .diagram .cap{fill:var(--s-dim);font-size:10.5px}
-.enc-side{padding:calc(28*var(--v));display:flex;flex-direction:column;gap:calc(14*var(--v))}
+.enc-side{padding:0 calc(6*var(--v));display:flex;flex-direction:column;gap:calc(14*var(--v))}
 .enc-side .row2{display:grid;grid-template-columns:auto 1fr;gap:calc(12*var(--v)) calc(16*var(--v));align-items:start;font-size:calc(14.5*var(--v));line-height:1.5;color:var(--s-ink2);padding:calc(12*var(--v)) 0;border-top:1px solid var(--s-hair)}
 .enc-side .row2:first-of-type{border-top:0}
 .enc-side .row2 i{font-family:var(--mono);font-style:normal;font-size:calc(11.5*var(--v));letter-spacing:.1em;color:var(--s-acc);padding-top:.35em}
@@ -503,8 +533,8 @@ html.static .step svg .draw{stroke-dashoffset:0}
 .code .copy{position:absolute;right:calc(16*var(--v));top:calc(16*var(--v));height:calc(34*var(--v));padding:0 calc(14*var(--v));font-size:calc(12.5*var(--v))}
 
 /* ── §06 facts + settlement ── */
-.facts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:calc(28*var(--v))}
-.fact-list{padding:calc(10*var(--v)) calc(28*var(--v))}
+.facts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:calc(28*var(--v));align-items:start}
+.fact-list{padding:0 calc(6*var(--v))}
 .fact{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:calc(18*var(--v));padding:calc(18*var(--v)) 0;border-top:1px solid var(--s-hair);font-size:calc(14.5*var(--v))}
 .fact:first-child{border-top:0}
 .fact dt{color:var(--s-mute)}
@@ -521,21 +551,27 @@ html.static .step svg .draw{stroke-dashoffset:0}
 .settle input[type=range]{width:100%;accent-color:var(--s-acc)}
 
 /* ── §07 point + roadmap ── */
-.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(18*var(--v))}
+.three{grid-template-columns:repeat(3,minmax(0,1fr))}
 .point{padding:calc(28*var(--v));display:flex;flex-direction:column;gap:calc(12*var(--v));min-height:calc(260*var(--v))}
 .point .st{font-family:var(--mono);font-size:calc(11.5*var(--v));letter-spacing:.14em;text-transform:uppercase;display:flex;justify-content:space-between;color:var(--s-dim)}
 .point .st b{color:var(--s-acc);font-weight:500}
 .point p{color:var(--s-mute);font-size:calc(14.5*var(--v));line-height:1.55;margin-top:auto}
-.road{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:calc(14*var(--v))}
-.rd{padding:calc(24*var(--v)) calc(22*var(--v));display:flex;flex-direction:column;gap:calc(14*var(--v));min-height:calc(300*var(--v))}
-.rd .tag2{font-family:var(--mono);font-size:calc(11.5*var(--v));letter-spacing:.14em;display:flex;justify-content:space-between;color:var(--s-dim)}
-.rd .tag2 b{color:var(--s-acc2);font-weight:500}
-.rd.live .tag2 b{color:#8FD6A8}
-.rd h4{font-size:calc(21*var(--v));font-weight:470;letter-spacing:-0.02em}
-.rd ul{list-style:none;display:grid;gap:calc(8*var(--v));font-size:calc(13.5*var(--v));color:var(--s-mute);line-height:1.45}
-.rd li{display:flex;gap:calc(8*var(--v))}
-.rd li::before{content:"—";color:var(--s-acc);flex:none}
-.rd.live li::before{content:"✓";color:#8FD6A8}
+/* §07 motion graphic: the rail sees the payment, never the goods */
+.rail-art{margin:calc(-16*var(--v)) 0 calc(48*var(--v))}
+.rail-art svg{width:100%;height:auto;display:block}
+.rail-art text{font-family:var(--mono);font-size:11px;letter-spacing:.1em;fill:var(--s-dim)}
+.rail-art .who{font-family:Inter,sans-serif;font-size:13px;letter-spacing:.01em;fill:var(--s-ink)}
+.rail-art .lane{stroke:rgba(255,255,255,.10);stroke-width:1;stroke-dasharray:3 6}
+.rail-art .node{fill:rgba(255,255,255,.04);stroke:rgba(255,255,255,.16)}
+.rail-art .gate{fill:rgba(110,154,214,.10);stroke:var(--s-acc)}
+.rail-art .coin{fill:var(--s-acc2);filter:drop-shadow(0 0 6px rgba(169,196,234,.9))}
+.rail-art .box{fill:#0B1220;stroke:#5F6B86;stroke-width:1.2}
+.rail-art .box .lid{stroke:#F5C842}
+.rail-art .stamp{fill:none;stroke:#8FD6A8;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.rail-art .ring{fill:none;stroke:#8FD6A8;stroke-width:1;opacity:0}
+.rail-art .noeye{fill:none;stroke:#F5C842;stroke-width:1.4;stroke-linecap:round;opacity:0}
+.rail-art .cap{fill:var(--s-mute)}
+@media (prefers-reduced-motion:reduce){.rail-art animateMotion,.rail-art animate{display:none}.rail-art .stamp,.rail-art .noeye{opacity:1}}
 
 /* ── §09 stack chips ── */
 .chips{display:flex;flex-wrap:wrap;gap:calc(10*var(--v));margin-top:calc(34*var(--v))}
@@ -558,13 +594,13 @@ html.static .step svg .draw{stroke-dashoffset:0}
 @media (max-width:980px){
   .sec-head,.demo,.sell,.enc,.api,.facts{grid-template-columns:1fr}
   .steps,.three{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .moments,.road{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .moments{grid-template-columns:repeat(2,minmax(0,1fr))}
   .rail{display:none}
   .display{font-size:calc(46*var(--v))}
 }
 @media (max-width:640px){
   .sec{padding:calc(88*var(--v)) var(--gut)}
-  .steps,.three,.moments,.road{grid-template-columns:1fr}
+  .steps,.three,.moments{grid-template-columns:1fr}
   .display{font-size:40px}
   .lede{font-size:16px}
   .term{font-size:12px}
@@ -736,7 +772,6 @@ html.static .step svg .draw{stroke-dashoffset:0}
   <a href="#sell">Sell</a>
   <a href="#enc">Encryption</a>
   <a href="#api">API</a>
-  <a href="#roadmap">Roadmap</a>
   <a class="go" href="/launch">Launch</a>
 </nav>
 
@@ -802,23 +837,23 @@ html.static .step svg .draw{stroke-dashoffset:0}
         </div>
         <p class="lede rv" style="--i:2">A marketplace normally holds the payment and the goods, and then has to be trusted with both. Here the goods are encrypted before they leave the creator's device and the payment goes wallet to wallet. What is left for the platform is bookkeeping: did the chain move what the order says it should?</p>
       </div>
-      <div class="steps">
-        <article class="g step rv" style="--i:0">
+      <div class="steps gridl rv">
+        <article class="step" style="--i:0">
           <span class="n">01</span>
           <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path class="draw" d="M10 34 24 8l14 26" stroke-width="1.6" stroke-linejoin="round"/><path class="draw" d="M16 34h16" stroke-width="1.6" stroke-linecap="round"/></svg>
           <h3>Launch</h3><p>A creator lists a file, a secret, or access to a repository, with a price in SOL. No approval queue: the listing is live the moment it is published.</p>
         </article>
-        <article class="g step rv" style="--i:1">
+        <article class="step" style="--i:1">
           <span class="n">02</span>
           <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect class="draw" x="11" y="20" width="26" height="18" rx="4" stroke-width="1.6"/><path class="draw" d="M17 20v-5a7 7 0 0 1 14 0v5" stroke-width="1.6" stroke-linecap="round"/></svg>
           <h3>Encrypt</h3><p>The browser generates a key and encrypts the content before upload. Storage only ever sees ciphertext; a leaked URL is useless.</p>
         </article>
-        <article class="g step rv" style="--i:2">
+        <article class="step" style="--i:2">
           <span class="n">03</span>
           <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path class="draw" d="M8 24h24m0 0-8-8m8 8-8 8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle class="draw" cx="38" cy="24" r="4" stroke-width="1.6"/></svg>
           <h3>Pay</h3><p>One transaction, two transfers: 95% to the creator, 5% to the treasury, plus a reference key unique to this order. Either both land or neither does.</p>
         </article>
-        <article class="g step rv" style="--i:3">
+        <article class="step" style="--i:3">
           <span class="n">04</span>
           <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path class="draw" d="M12 26l8 8 16-18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <h3>Unlock</h3><p>The server reads the confirmed transaction, checks every balance that changed, and releases the key. Decryption happens on the buyer's device.</p>
@@ -840,19 +875,38 @@ html.static .step svg .draw{stroke-dashoffset:0}
       <div class="sell">
         <div class="tabs rv" role="tablist" aria-label="Product kinds">
           <button class="tab" role="tab" aria-selected="true" aria-controls="pane-file" id="tab-file">
-            <span class="ic"><svg viewBox="0 0 20 20" fill="none"><path d="M5 2h7l4 4v12H5z" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 2v4h4" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+            <span class="ic ic-file"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 2.5h8l5 5V21.5H6z" stroke-width="1.5" stroke-linejoin="round"/><path d="M14 2.5v5h5" stroke-width="1.5" stroke-linejoin="round"/>
+              <path class="w w1" d="M9 12h6" stroke-width="1.6" stroke-linecap="round"/><path class="w w2" d="M9 15h6" stroke-width="1.6" stroke-linecap="round"/><path class="w w3" d="M9 18h4" stroke-width="1.6" stroke-linecap="round"/>
+              <g class="lock"><rect x="13.5" y="13.5" width="8" height="6.5" rx="1.6" stroke-width="1.4"/><path d="M15.5 13.5v-2a2 2 0 0 1 4 0v2" stroke-width="1.4" stroke-linecap="round"/></g>
+            </svg></span>
             <span><b>A file</b><small>Dataset, research, template, code — up to 200 MB</small></span><span class="arw">→</span>
           </button>
           <button class="tab" role="tab" aria-selected="false" aria-controls="pane-secret" id="tab-secret" tabindex="-1">
-            <span class="ic"><svg viewBox="0 0 20 20" fill="none"><circle cx="7" cy="10" r="4" stroke-width="1.5"/><path d="M11 10h7m-3 0v3" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            <span class="ic ic-key"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <g class="key"><circle cx="8" cy="12" r="4.2" stroke-width="1.5"/><circle cx="7" cy="11" r="1" fill="currentColor" stroke="none" style="fill:var(--s-acc2)"/><path d="M12.2 12H21m-3 0v3.2M15 12v2.4" stroke-width="1.5" stroke-linecap="round"/></g>
+              <g class="star"><path d="M18.5 4.5v3M17 6h3" stroke-width="1.4" stroke-linecap="round"/></g>
+            </svg></span>
             <span><b>Secret text</b><small>API key, invite link, credentials</small></span><span class="arw">→</span>
           </button>
           <button class="tab" role="tab" aria-selected="false" aria-controls="pane-github" id="tab-github" tabindex="-1">
-            <span class="ic"><svg viewBox="0 0 20 20" fill="none"><path d="M6 3v14M6 8a4 4 0 0 0 4 4h1a3 3 0 0 1 3 3" stroke-width="1.5" stroke-linecap="round"/><circle cx="6" cy="3" r="1.5" stroke-width="1.5"/><circle cx="14" cy="5" r="1.5" stroke-width="1.5"/><path d="M14 6.5V8a3 3 0 0 1-3 3" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            <span class="ic ic-git"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <defs><path id="gitPath" d="M7 4.5 V19.5"/><path id="gitBranch" d="M17 7 C17 12, 7 10, 7 15"/></defs>
+              <path d="M7 4.5V19.5" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M17 7C17 12 7 10 7 15" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="7" cy="4.5" r="1.9" stroke-width="1.5"/><circle cx="7" cy="19.5" r="1.9" stroke-width="1.5"/><circle cx="17" cy="5" r="1.9" stroke-width="1.5"/>
+              <circle class="commit" r="1.4" style="fill:var(--s-acc2);stroke:none"><animateMotion dur="2.6s" repeatCount="indefinite" begin="0s"><mpath href="#gitBranch"/></animateMotion></circle>
+              <circle class="commit" r="1.4" style="fill:#8FD6A8;stroke:none"><animateMotion dur="2.6s" repeatCount="indefinite" begin="1.3s"><mpath href="#gitPath"/></animateMotion></circle>
+            </svg></span>
             <span><b>GitHub repository</b><small>Buyer is invited as a read-only collaborator</small></span><span class="arw">→</span>
           </button>
           <button class="tab" role="tab" aria-selected="false" aria-controls="pane-app" id="tab-app" tabindex="-1">
-            <span class="ic"><svg viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke-width="1.5"/><path d="M2 8h16M7 12h6" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+            <span class="ic ic-app"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="2.5" y="4" width="19" height="15" rx="2.5" stroke-width="1.5"/><path d="M2.5 8.5h19" stroke-width="1.5"/>
+              <circle cx="5.5" cy="6.25" r=".8" style="fill:var(--s-acc2);stroke:none"/><circle cx="8" cy="6.25" r=".8" style="fill:var(--s-acc2);stroke:none"/>
+              <path class="scan" d="M6 12.5h7" stroke-width="1.6" stroke-linecap="round"/><path class="scan s2" d="M6 15.5h10" stroke-width="1.6" stroke-linecap="round"/>
+              <g class="check"><circle cx="17.5" cy="14.5" r="3.1" stroke-width="1.3"/><path d="m16 14.6 1.1 1.1 2-2.2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></g>
+            </svg></span>
             <span><b>Your own app or agent</b><small>Hosted by you, gated by one ownership check</small></span><span class="arw">→</span>
           </button>
         </div>
@@ -904,7 +958,7 @@ permission: pull
         <p class="lede rv" style="--i:2">Three parties, one key. The creator's browser makes it, the buyer's browser uses it, and the platform holds it wrapped so that a purchase at 3 a.m. can be delivered without the creator being awake. Follow the packets.</p>
       </div>
       <div class="enc">
-        <div class="g diagram rv">
+        <div class="diagram rv">
           <svg viewBox="0 0 760 340" aria-label="Key and ciphertext flow between creator, storage, EVERYNTH and buyer">
             <defs>
               <path id="pCT" d="M160 120 C 260 120, 300 80, 380 80"/>
@@ -949,7 +1003,7 @@ permission: pull
             <circle class="pkt" r="4" style="fill:#8FD6A8;filter:drop-shadow(0 0 6px rgba(143,214,168,.9))"><animateMotion dur="3s" repeatCount="indefinite" begin="2.6s"><mpath href="#pTX"/></animateMotion></circle>
           </svg>
         </div>
-        <div class="g enc-side rv" style="--i:1">
+        <div class="enc-side rv" style="--i:1">
           <div class="row2"><i>KEY</i><span>Generated per product by the creator's browser (WebCrypto, AES-256-GCM). Never derived from anything guessable.</span></div>
           <div class="row2"><i>CT</i><span>Ciphertext = 12-byte IV + AES-GCM output. Files go straight to blob storage; secrets sit inline in the database.</span></div>
           <div class="row2"><i>WRAP</i><span>EVERYNTH stores the key wrapped with a master key that lives only in the server environment. Losing it makes every product undecryptable — so it is backed up like money.</span></div>
@@ -994,7 +1048,7 @@ permission: pull
         <p class="lede rv" style="--i:2">Nothing is admin-only except takedowns. There is no upgrade switch on the payment path because there is no program to upgrade: the transaction is two transfers anyone can inspect on Solscan.</p>
       </div>
       <div class="api">
-        <div class="g rv" style="padding:calc(10*var(--v)) calc(28*var(--v)) calc(6*var(--v))">
+        <div class="rv">
           <table class="tbl">
             <thead><tr><th>Route</th><th>Effect</th><th>Caller</th></tr></thead>
             <tbody>
@@ -1039,7 +1093,7 @@ permission: pull
         <p class="lede rv" style="--i:2">The payment path has no program of ours and therefore no admin key, no pause, no upgrade. What can go wrong is bounded to the one order in front of you — and a paid order that failed to verify recovers itself from the chain on the next click.</p>
       </div>
       <div class="facts">
-        <div class="g fact-list rv">
+        <div class="fact-list rv">
           <dl>
             <div class="fact"><dt>Status</dt><dd class="ok">LIVE</dd></div>
             <div class="fact"><dt>Network</dt><dd>SOLANA MAINNET</dd></div>
@@ -1078,40 +1132,67 @@ permission: pull
         </div>
         <p class="lede rv" style="--i:2">Worth saying plainly: EVERYNTH cannot see whether a dataset is good or an API key still works. A listing is a claim its creator makes. Your protection is that the amount at risk is one price, the description is public, and a report reaches a human who can take the listing down.</p>
       </div>
-      <div class="three">
-        <article class="g point lift rv" style="--i:0"><span class="st"><b>NOW</b><span>shipped</span></span><h3 class="display xs">A private checkout rail</h3><p>Encrypted delivery, wallet-to-wallet SOL, chain-verified unlock, files, secrets, GitHub access, ownership check. Live on mainnet.</p></article>
-        <article class="g point lift rv" style="--i:1"><span class="st"><b>NEXT</b><span>planned</span></span><h3 class="display xs">Machines as buyers</h3><p>x402: creators put an API behind a pay-per-call gate, and an agent pays for exactly the calls it makes. Same rail, no human in the loop.</p></article>
-        <article class="g point lift rv" style="--i:2"><span class="st"><b>GOAL</b><span>research</span></span><h3 class="display xs">Keys the platform cannot open</h3><p>Per-wallet keys derived from signatures, so delivery is end-to-end and private chat between buyer and creator is possible without a readable server copy.</p></article>
+      <div class="rail-art rv" aria-hidden="true">
+        <svg viewBox="0 0 1200 300">
+          <defs>
+            <path id="payPath" d="M160 105 H 1040"/>
+            <path id="goodsPath" d="M1040 205 H 160"/>
+          </defs>
+          <!-- lanes -->
+          <line class="lane" x1="160" y1="105" x2="1040" y2="105"/>
+          <line class="lane" x1="160" y1="205" x2="1040" y2="205"/>
+          <text x="350" y="86" text-anchor="middle">PAYMENT · WALLET → WALLET · VERIFIED</text>
+          <text x="850" y="232" text-anchor="middle">GOODS · ENCRYPTED · NEVER INSPECTED</text>
+          <!-- parties -->
+          <g><rect class="node" x="30" y="80" width="130" height="150" rx="18"/><text class="who" x="95" y="150" text-anchor="middle">Buyer</text><text x="95" y="170" text-anchor="middle">pays · unlocks</text></g>
+          <g><rect class="node" x="1040" y="80" width="130" height="150" rx="18"/><text class="who" x="1105" y="150" text-anchor="middle">Creator</text><text x="1105" y="170" text-anchor="middle">lists · receives</text></g>
+          <!-- the rail: a gate that only reads balances -->
+          <g>
+            <rect class="node gate" x="540" y="60" width="120" height="190" rx="20"/>
+            <text class="who" x="600" y="160" text-anchor="middle">EVERYNTH</text>
+            <text x="600" y="178" text-anchor="middle">reads deltas</text>
+            <!-- verified stamp on the payment lane -->
+            <circle class="ring" cx="600" cy="105" r="14">
+              <animate attributeName="opacity" values="0;1;0" keyTimes="0;.5;1" dur="1.2s" begin="1.6s;7.6s" fill="freeze"/>
+              <animate attributeName="r" values="10;22" dur="1.2s" begin="1.6s;7.6s"/>
+            </circle>
+            <path class="stamp" d="M592 105 l6 6 11 -12"><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.7;1" dur="2.4s" begin="1.6s;7.6s"/></path>
+            <!-- crossed eye on the goods lane -->
+            <g class="noeye">
+              <path d="M586 205c4-6 9-9 14-9s10 3 14 9c-4 6-9 9-14 9s-10-3-14-9z"/><circle cx="600" cy="205" r="3"/><path d="M588 217 612 193"/>
+              <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.7;1" dur="2.4s" begin="4.4s;10.4s"/>
+            </g>
+          </g>
+          <!-- coins: buyer → creator, splitting at the gate into 95 / 5 -->
+          <circle class="coin" r="6"><animateMotion dur="3.4s" begin="0s;6s" fill="freeze" keyPoints="0;0.5;0.5;1" keyTimes="0;0.45;0.55;1" calcMode="linear"><mpath href="#payPath"/></animateMotion></circle>
+          <circle class="coin" r="3" style="fill:#2E3C58;filter:none;stroke:var(--s-acc2);stroke-width:1"><animateMotion dur="1.6s" begin="1.8s;7.8s" path="M600 105 C 600 40, 600 40, 600 30" fill="freeze"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.8;1" dur="1.6s" begin="1.8s;7.8s"/></circle>
+          <text class="cap" x="618" y="36">5% → treasury</text>
+          <text class="cap" x="850" y="92" text-anchor="middle">95% → creator</text>
+          <!-- goods: sealed box creator → buyer, lock never opens at the gate -->
+          <g class="box">
+            <rect x="-14" y="-10" width="28" height="20" rx="4"/>
+            <path class="lid" d="M-6 -10 v-4 a6 6 0 0 1 12 0 v4"/>
+            <animateMotion dur="3.4s" begin="2.8s;8.8s" fill="freeze" keyPoints="0;0.5;0.5;1" keyTimes="0;0.45;0.55;1" calcMode="linear"><mpath href="#goodsPath"/></animateMotion>
+          </g>
+          <text class="cap" x="350" y="232" text-anchor="middle">unlocked here, on the buyer's device</text>
+          <!-- loop timing: whole scene ≈ 6 s, restarts via begin lists -->
+          <animate id="loop" attributeName="opacity" values="1;1" dur="6s" repeatCount="indefinite"/>
+        </svg>
+      </div>
+      <div class="three gridl rv">
+        <article class="point"><span class="st"><b>NOW</b><span>shipped</span></span><h3 class="display xs">A private checkout rail</h3><p>Encrypted delivery, wallet-to-wallet SOL, chain-verified unlock, files, secrets, GitHub access, ownership check. Live on mainnet.</p></article>
+        <article class="point"><span class="st"><b>NEXT</b><span>planned</span></span><h3 class="display xs">Machines as buyers</h3><p>x402: creators put an API behind a pay-per-call gate, and an agent pays for exactly the calls it makes. Same rail, no human in the loop.</p></article>
+        <article class="point"><span class="st"><b>GOAL</b><span>research</span></span><h3 class="display xs">Keys the platform cannot open</h3><p>Per-wallet keys derived from signatures, so delivery is end-to-end and private chat between buyer and creator is possible without a readable server copy.</p></article>
       </div>
     </div>
   </section>
 
-  <!-- §08 roadmap -->
-  <section class="sec" id="roadmap">
-    <div class="sec-in">
-      <div class="sec-head">
-        <div>
-          <p class="kicker rv">§08 — Roadmap</p>
-          <h2 class="display rv" style="--i:1">What ships, in order.</h2>
-        </div>
-        <p class="lede rv" style="--i:2">R1 is live. Everything after it adds a capability to the rail without adding a party who can hold your money or read your goods.</p>
-      </div>
-      <div class="road">
-        <article class="g rd live rv" style="--i:0"><span class="tag2"><b>R1</b><span>live</span></span><h4>The market opens</h4><ul><li>Launch, encrypt, pay, unlock</li><li>Files, secrets, GitHub access</li><li>Ownership check for own apps</li><li>Reports, takedowns, blocks</li></ul></article>
-        <article class="g rd rv" style="--i:1"><span class="tag2"><b>R2</b><span>next</span></span><h4>Machine commerce</h4><ul><li>x402 pay-per-call gate for APIs</li><li>Agents buying datasets and access</li><li>USDC as a second rail for agents</li></ul></article>
-        <article class="g rd rv" style="--i:2"><span class="tag2"><b>R3</b><span>planned</span></span><h4>Private chat</h4><ul><li>Buyer ↔ creator, end-to-end</li><li>Keys derived from wallet signatures</li><li>Content delivery goes end-to-end too</li></ul></article>
-        <article class="g rd rv" style="--i:3"><span class="tag2"><b>R4</b><span>planned</span></span><h4>Escrow for services</h4><ul><li>On-chain program, audited</li><li>Milestones and disputes</li><li>For work that cannot be delivered instantly</li></ul></article>
-        <article class="g rd rv" style="--i:4"><span class="tag2"><b>R5</b><span>later</span></span><h4>Token economy</h4><ul><li>Fee discounts and creator access</li><li>Platform revenue → buyback</li><li>Holder rewards + burn</li></ul></article>
-      </div>
-    </div>
-  </section>
-
-  <!-- §09 design -->
+  <!-- §08 design -->
   <section class="sec" id="design">
     <div class="sec-in">
       <div class="sec-head">
         <div>
-          <p class="kicker rv">§09 — The design</p>
+          <p class="kicker rv">§08 — The design</p>
           <h2 class="display rv" style="--i:1">Short, because the idea is short.</h2>
         </div>
         <p class="lede rv" style="--i:2">No smart contract to audit, because two transfers do not need one. Encryption from the browser's own crypto. One Next.js app, one Postgres, one blob store. The stack is the whole security argument: less to trust.</p>
@@ -1208,7 +1289,7 @@ permission: pull
   $$('.rv').forEach(el=>io.observe(el));
 
   /* pointer-follow glow on glass cards */
-  $$('.g').forEach(g=>g.addEventListener('pointermove',(e)=>{
+  $$('.g, .gridl > *').forEach(g=>g.addEventListener('pointermove',(e)=>{
     const r=g.getBoundingClientRect();
     g.style.setProperty('--mx',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
     g.style.setProperty('--my',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
