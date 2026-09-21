@@ -4,91 +4,139 @@ Tanggal: 2026-09-21. Status: draf, menunggu persetujuan.
 
 ## 1. Apa ini
 
-Marketplace v1 menjual **file dan akses**. EVERYNTH Apps menjual **aplikasi yang langsung hidup**: web app dan AI agent yang dihosting EVERYNTH. Pengguna memilih template, membayar, memberi nama dan gaya, dan aplikasinya jalan dalam satu menit di alamat sendiri.
+Marketplace v1 menjual **file dan akses**. EVERYNTH Apps menjual **aplikasi yang langsung hidup**: web app dan AI agent buatan **creator**, dihosting EVERYNTH. Pembeli memilih template, membayar, memberi nama dan gaya, dan aplikasinya jalan dalam satu menit di alamat sendiri.
 
-Pengguna tidak deploy apa pun, tidak punya akun Vercel, tidak menyentuh kode.
+Tiga pihak:
+- **Creator** membuat template dan mengunggahnya ke EVERYNTH. Dapat 95% dari tiap penjualan dan perpanjangan.
+- **Pembeli** (penyewa) membeli template, mendapat salinan bermerek sendiri.
+- **EVERYNTH** menghosting, menagih, membagi hasil, menyediakan AI, pembayaran, dan login.
 
-## 2. Alur pengguna
+Pembeli tidak deploy apa pun, tidak punya akun Vercel, tidak menyentuh kode.
 
-1. Buka halaman **Apps**, pilih template (misalnya "AI Agent Chat").
-2. Bayar dengan SOL. Sama seperti v1: satu transaksi, diverifikasi server.
-3. Isi form singkat: nama aplikasi, dan satu kalimat gaya ("toko kopi, hangat, coklat tua").
-4. AI menghasilkan nama, tagline, palet warna, dan logo sederhana. Pengguna bisa menimpa: unggah logo sendiri, pilih warna sendiri.
-5. Aplikasi hidup di `nama.everynth.app`.
-6. Opsional: pasang domain sendiri. Pengguna mengetik domainnya, EVERYNTH menampilkan satu record DNS (CNAME) yang harus dibuat. Setelah DNS mengarah, SSL otomatis.
+## 2. Keputusan inti: kode creator berjalan di mana
 
-## 3. Cara kerja: satu aplikasi, banyak penyewa
+Ini keputusan terpenting dan yang paling menentukan keamanan.
 
-Satu kode template dihosting **satu kali**. Tiap pembeli adalah satu **penyewa** (tenant): satu baris di database berisi nama, logo, warna, subdomain, domain sendiri, pengaturan, dan masa aktif.
+**Kode creator hanya berjalan di browser pengunjung, tidak pernah di server EVERYNTH.**
 
-Saat ada kunjungan ke `nama.everynth.app` atau domain sendiri, server melihat nama host, mencari penyewanya di database, lalu merender template dengan konfigurasi penyewa itu. Ganti nama, logo, atau warna hanya mengubah data, bukan kode, jadi tidak ada deploy per pengguna.
+Creator mengunggah aplikasinya sebagai **bundel statis** (HTML, CSS, JavaScript, gambar). EVERYNTH menyajikannya di subdomain penyewa. Semua yang butuh server (AI, pembayaran, login, penyimpanan data) disediakan EVERYNTH lewat API, dan aplikasi creator memanggil API itu.
 
-Kenapa bukan satu deploy per pengguna: lambat, rapuh, biaya naik per pengguna, dan Vercel membatasi jumlah proyek.
+Kenapa begitu:
+- Kode server dari orang tak dikenal bisa membaca kunci rahasia, menghabiskan kuota, atau menyerang penyewa lain. Kode di browser tidak bisa menyentuh server EVERYNTH selain lewat API yang dijaga.
+- Tidak perlu deploy per template. Bundel disimpan sebagai file, disajikan langsung.
+- Semua framework front-end bisa dipakai (React, Vue, Svelte, HTML biasa), asal hasil build-nya statis.
+
+Yang tidak bisa dengan cara ini: template yang butuh kode server sendiri (database custom, integrasi rahasia pihak ketiga). Untuk itu ada jalur lanjutan di bagian 9.
+
+## 3. Alur creator
+
+1. Buat aplikasi secara lokal seperti biasa. Baca konfigurasi merek dari EVERYNTH (lihat bagian 5), panggil API EVERYNTH untuk AI atau pembayaran.
+2. Build jadi folder statis, zip, unggah di halaman **Launch template** (batas awal 20 MB).
+3. Isi nama template, deskripsi, tangkapan layar, harga langganan bulanan.
+4. EVERYNTH memasang template itu di alamat pratinjau, misalnya `preview-123.everynth.app`, agar creator bisa mengecek.
+5. Publish. Template tampil di halaman Apps.
+
+Versi baru: unggah zip baru, semua penyewa otomatis memakai versi terbaru. Creator bisa memilih "tahan versi lama" kalau perubahan besar.
+
+## 4. Alur pembeli
+
+1. Buka **Apps**, pilih template, lihat demo hidup.
+2. Bayar SOL untuk bulan pertama. Mekanisme sama dengan v1: satu transaksi, 95% creator, 5% EVERYNTH, diverifikasi server.
+3. Isi nama aplikasi dan satu kalimat gaya. AI menghasilkan nama, tagline, palet warna, dan logo sederhana. Bisa ditimpa manual.
+4. Aplikasi hidup di `nama.everynth.app`.
+5. Opsional: domain sendiri. Pembeli mengetik domainnya, EVERYNTH menampilkan satu record DNS (CNAME) yang harus dibuat. SSL otomatis.
+6. Perpanjang tiap bulan dengan bayar SOL lagi.
+
+## 5. Cara kerja teknis
+
+### Satu template, banyak penyewa
+Satu bundel template disajikan untuk semua penyewanya. Tiap penyewa adalah satu baris data: template, pemilik, subdomain, domain sendiri, nama, logo, warna, pengaturan, masa aktif.
+
+Saat ada kunjungan, server melihat nama host, mencari penyewa, lalu menyajikan bundel template itu **plus** konfigurasi penyewa yang disuntikkan ke halaman. Ganti nama, logo, atau warna hanya mengubah data.
+
+### Kontrak untuk creator (SDK kecil)
+Di halaman penyewa, EVERYNTH menyuntikkan objek global:
+
+- `EVERYNTH.brand`: nama, tagline, logo (URL), warna (latar, teks, aksen).
+- `EVERYNTH.tenant`: id penyewa, subdomain.
+- `EVERYNTH.settings`: pengaturan bebas yang diisi penyewa lewat dashboard, bentuknya ditentukan creator (misalnya "persona agent", "pesan sambutan").
+
+Dan API yang bisa dipanggil aplikasi (dijaga per penyewa):
+
+- `POST /api/apps/ai/chat`: kirim pesan, dapat jawaban model. Kuota per penyewa.
+- `POST /api/apps/pay`: buat tagihan SOL ke wallet penyewa (untuk template yang menjual sesuatu ke pengunjungnya).
+- `GET /api/apps/me`: identitas pengunjung yang connect wallet (untuk template yang membedakan pengunjung).
+- `GET/PUT /api/apps/store/:key`: penyimpanan kecil per penyewa (JSON, batas ukuran), untuk data sederhana.
+
+Kunci API model, kunci Vercel, dan rahasia lain hanya ada di server EVERYNTH.
+
+### Pengaturan yang ditentukan creator
+Creator menyertakan file `everynth.json` di bundel: daftar field pengaturan (nama, jenis, label, nilai awal). Dashboard penyewa menampilkan form dari daftar itu. Jadi tiap template bisa punya pengaturan sendiri tanpa EVERYNTH mengubah apa pun.
 
 ### Subdomain
-Domain `everynth.app` (atau yang dipilih) dipasang ke proyek Vercel sebagai wildcard `*.everynth.app`. Semua subdomain otomatis masuk ke aplikasi yang sama. Tidak ada langkah per pengguna.
+Domain EVERYNTH dipasang ke Vercel sebagai wildcard `*.everynth.app`. Semua subdomain masuk ke aplikasi yang sama. Tidak ada langkah per penyewa.
 
 ### Domain sendiri
-1. Pengguna mengetik `agent.tokokopi.com` di dashboard.
-2. EVERYNTH mendaftarkan domain itu ke proyek Vercel lewat API Vercel.
-3. Dashboard menampilkan instruksi: buat CNAME `agent` → `cname.vercel-dns.com`.
-4. Vercel memeriksa DNS dan menerbitkan SSL sendiri. Dashboard menampilkan status "aktif" saat selesai.
+Penyewa mengetik domain → EVERYNTH mendaftarkannya ke proyek Vercel lewat API Vercel → dashboard menampilkan CNAME yang harus dibuat → Vercel memeriksa DNS dan menerbitkan SSL → status "aktif".
 
 ### Branding oleh AI
-Input: nama dan kalimat gaya. Output: nama final, tagline, palet warna (latar, teks, aksen), dan logo SVG sederhana (monogram atau bentuk geometris). Semua disimpan sebagai data penyewa. Logo bitmap yang diunggah manual disimpan sebagai gambar kecil, sama seperti cover produk di v1.
+Input: nama dan kalimat gaya. Output: nama final, tagline, palet warna, logo SVG sederhana (monogram). Disimpan sebagai data penyewa. Logo unggahan manual disimpan seperti cover produk v1.
 
-Batas jujur: logo buatan AI di sini adalah monogram sederhana, bukan ilustrasi. Untuk logo bagus, pengguna unggah sendiri.
+Batas jujur: logo dari AI adalah monogram sederhana, bukan ilustrasi.
 
-## 4. Template pertama: AI Agent Chat
+## 6. Keamanan bundel creator
 
-Usulan template pertama, karena paling cocok dengan narasi EVERYNTH dan paling terasa "hidup":
+Walau hanya berjalan di browser, kode creator tetap bisa menipu pengunjung (phishing, minta tanda tangan wallet yang merugikan). Penangkal:
 
-- Halaman chat dengan nama, logo, dan warna penyewa.
-- Penyewa mengatur: persona agent (teks instruksi), pengetahuan (teks atau file kecil yang dimasukkan ke konteks), pesan sambutan.
-- Pengunjung bisa langsung chat. Opsional: hanya pemegang produk tertentu yang boleh chat (memakai cek kepemilikan dari marketplace v1).
-- Jawaban dari model Claude lewat server EVERYNTH. Kunci API milik EVERYNTH, tidak pernah ke browser.
+- Bundel dipindai saat unggah: tolak file yang bukan web statis, batasi ukuran, tolak `iframe` ke luar dan skrip dari domain luar yang tidak dikenal.
+- Tiap penyewa di subdomain sendiri, jadi cookie dan penyimpanan browser terpisah dari EVERYNTH utama.
+- Tombol lapor di tiap aplikasi penyewa. Admin bisa menonaktifkan template beserta semua penyewanya.
+- Creator template harus punya reputasi: minimal sudah menjual di marketplace v1, atau disetujui admin dulu untuk template pertamanya.
 
-**Kuota.** Tiap panggilan model ada biayanya. Setiap penyewa punya kuota pesan per bulan sesuai paket. Habis kuota, chat berhenti sampai bulan berikut atau beli tambahan. Tanpa kuota, satu penyewa ramai bisa menghabiskan biaya untuk semua.
+## 7. Pembayaran dan bagi hasil
 
-Template kedua yang mudah menyusul: "Mini store", yaitu toko produk digital satu creator dengan pembayaran SOL, memakai ulang kode v1.
+- Langganan bulanan dalam SOL, harga ditentukan creator dengan batas bawah yang ditetapkan EVERYNTH (agar menutup biaya hosting dan AI).
+- Tiap pembayaran: 95% ke creator, 5% ke EVERYNTH, satu transaksi. Sama seperti v1.
+- Kuota AI per penyewa per bulan ditentukan dari harga. Template yang memakai AI wajib berharga di atas batas bawah yang lebih tinggi.
+- Habis masa aktif: aplikasi menampilkan halaman "tidak aktif", data disimpan 30 hari.
 
-## 5. Pembayaran dan harga
+Tidak ada tagihan otomatis di v1 (tanpa kartu kredit). Pembayaran otomatis lewat agent atau x402 menyusul.
 
-Hosting dan model punya biaya berjalan, jadi bukan sekali bayar.
+## 8. Biaya untuk EVERYNTH
 
-- **Langganan bulanan dalam SOL.** Bayar → masa aktif ditambah 30 hari. Sama mekanismenya dengan pembelian v1, hanya menambah `paid_until`.
-- Tujuh hari sebelum habis, dashboard menampilkan peringatan. Habis masa aktif, aplikasi menampilkan halaman "tidak aktif", data tidak dihapus selama 30 hari.
-- Harga per template ditentukan Anda. Harga harus menutup Vercel, database, dan pemakaian model dengan margin.
-
-Tidak ada tagihan otomatis (tidak ada kartu kredit), jadi pengguna membayar manual tiap bulan. Ini kelemahan yang diterima di v1. Pembayaran otomatis lewat agent atau x402 bisa menyusul.
-
-## 6. Biaya untuk EVERYNTH
-
-- **Vercel Pro, 20 dolar per bulan.** Wajib: paket Hobby melarang pemakaian komersial, dan wildcard domain butuh Pro. EVERYNTH v1 yang sudah mengambil fee pun seharusnya sudah di Pro.
+- **Vercel Pro, 20 dolar per bulan.** Wajib: paket Hobby melarang pemakaian komersial, dan wildcard domain butuh Pro. EVERYNTH v1 pun seharusnya sudah di Pro.
 - **Domain**, sekitar 10–15 dolar per tahun. Usul: `everynth.app`.
-- **Database**: Neon gratis cukup untuk ratusan penyewa. Naik ke paket berbayar (sekitar 19 dolar per bulan) saat data chat mulai banyak.
-- **Model AI**: bayar sesuai pemakaian. Dikendalikan lewat kuota per penyewa.
-- **Agent yang harus hidup terus** (memantau pasar, bot Telegram) tidak cocok di Vercel yang serverless. Kalau nanti ada template seperti itu, butuh worker terpisah (Railway atau Fly, sekitar 5–10 dolar per bulan). Template pertama tidak membutuhkannya.
+- **Penyimpanan bundel**: Vercel Blob atau R2, murah, bayar per GB.
+- **Database**: Neon gratis untuk awal, naik saat data penyewa banyak.
+- **Model AI**: sesuai pemakaian, dikendalikan kuota.
 
-## 7. Yang perlu Anda siapkan
+## 9. Jalur lanjutan: template dengan kode server
+
+Kalau nanti creator butuh kode server sendiri, jangan dijalankan di Vercel EVERYNTH. Pakai layanan yang memang dibuat untuk menjalankan kode pelanggan secara terisolasi, misalnya Cloudflare Workers for Platforms. Tiap template jadi satu worker terisolasi dengan batas CPU dan memori, tidak bisa membaca rahasia EVERYNTH. Ini tahap 2, setelah jalur statis terbukti dipakai.
+
+## 10. Yang perlu Anda siapkan
 
 1. Naik ke Vercel Pro.
 2. Beli domain dan arahkan ke Vercel.
-3. Kunci API Claude untuk template agent.
-4. Tentukan harga langganan template pertama.
+3. Kunci API Claude untuk API AI.
+4. Tentukan batas bawah harga template, dan batas bawah untuk template ber-AI.
 
-## 8. Rencana kerja
+## 11. Rencana kerja
 
-1. Tabel penyewa + pembacaan nama host di server + halaman "tidak aktif".
-2. Wildcard subdomain di Vercel dan domain sendiri lewat API Vercel, dengan instruksi DNS di dashboard.
-3. Halaman Apps: daftar template, beli (mekanisme pembayaran v1), buat penyewa.
-4. Dashboard penyewa: nama, logo, warna, subdomain, domain sendiri, masa aktif, bayar perpanjangan.
-5. Branding oleh AI: nama, tagline, palet, logo SVG.
-6. Template AI Agent Chat: persona, pengetahuan, chat, kuota pesan.
-7. Uji penuh: beli → hidup di subdomain → chat → domain sendiri → perpanjangan.
+1. Tabel template dan penyewa, penyimpanan bundel, pembacaan nama host, halaman "tidak aktif".
+2. Unggah bundel oleh creator, pemindaian, alamat pratinjau, publish.
+3. Penyuntikan `EVERYNTH.brand/tenant/settings` dan form pengaturan dari `everynth.json`.
+4. Halaman Apps: daftar template, demo, beli (mekanisme v1), buat penyewa.
+5. Dashboard penyewa: merek, pengaturan, subdomain, domain sendiri, masa aktif, perpanjangan.
+6. Branding oleh AI.
+7. API untuk aplikasi: AI chat dengan kuota, pay, me, store.
+8. Wildcard subdomain dan domain sendiri lewat API Vercel.
+9. Satu template contoh buatan EVERYNTH ("AI Agent Chat") sebagai acuan creator dan pengisi awal katalog.
+10. Uji penuh: creator unggah → pembeli beli → hidup di subdomain → chat → domain sendiri → perpanjangan.
 
-## 9. Risiko
+## 12. Risiko
 
-- **Penyalahgunaan**: penyewa memakai agent untuk hal terlarang. Penangkal: syarat layanan, tombol lapor di tiap app, admin bisa menonaktifkan penyewa.
-- **Biaya model membengkak**: kuota per penyewa wajib sejak hari pertama.
-- **Phishing lewat domain sendiri**: seseorang memasang domain mirip bank. Penangkal: domain sendiri hanya untuk penyewa aktif, dan admin bisa mencabutnya.
+- **Template jahat**: phishing atau minta tanda tangan merugikan. Penangkal di bagian 6.
+- **Biaya AI membengkak**: kuota per penyewa wajib sejak hari pertama.
+- **Katalog kosong di awal**: perlu 3–5 template sungguhan sebelum dibuka. Template contoh dari EVERYNTH menutup awalnya.
+- **Creator berharap kode server**: batas jalur statis harus jelas di panduan creator, dengan jalur lanjutan (bagian 9) sebagai jawabannya.
