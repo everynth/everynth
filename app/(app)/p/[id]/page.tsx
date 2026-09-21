@@ -25,11 +25,11 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
     <article className="mx-auto flex max-w-2xl flex-col gap-6">
       {product.has_cover && (
         // eslint-disable-next-line @next/next/no-img-element -- served from our own API route, not optimizable
-        <img src={`/api/products/${product.id}/cover`} alt="" className="aspect-[2/1] w-full rounded-2xl object-cover" />
+        <img src={`/api/products/${product.id}/cover`} alt="" className="rise aspect-[2/1] w-full rounded-2xl object-cover" style={{ border: "1px solid var(--line)" }} />
       )}
-      <span className="font-mono text-xs uppercase tracking-wider opacity-60">{product.category}</span>
-      <h1 className="text-3xl font-semibold tracking-tight">{product.title}</h1>
-      <p className="font-mono text-xs opacity-60">
+      <span className="kicker rise">{product.category}</span>
+      <h1 className="chrome shimmer rise rise-2 text-3xl font-medium tracking-tight sm:text-5xl">{product.title}</h1>
+      <p className="rise rise-3 font-mono text-xs" style={{ color: "var(--mute)" }}>
         by{" "}
         <Link href={`/u/${product.creator}`} className="underline">
           {product.creator.slice(0, 4)}…{product.creator.slice(-4)}
@@ -41,11 +41,13 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
             ? `read access to github.com/${product.github_repo}`
             : "secret text · delivered encrypted"}
       </p>
-      <p className="whitespace-pre-wrap opacity-80">{product.description}</p>
+      <p className="rise rise-3 whitespace-pre-wrap leading-relaxed" style={{ color: "var(--ink2)" }}>{product.description}</p>
 
-      <div className="card flex flex-wrap items-center justify-between gap-4">
-        <span className="font-mono text-xl">{formatSol(product.price)} SOL</span>
-        {product.status === "removed" && <span className="text-sm text-red-600">Removed from the market</span>}
+      <div className="card rise rise-4 flex flex-wrap items-center justify-between gap-4">
+        <span className="font-mono text-2xl">
+          <span className="chrome font-semibold">{formatSol(product.price)}</span> <span className="text-base" style={{ color: "var(--mute)" }}>SOL</span>
+        </span>
+        {product.status === "removed" && <span className="text-sm text-red-400">Removed from the market</span>}
         {purchase ? (
           <OpenContent purchaseId={purchase.id} />
         ) : isCreator ? (

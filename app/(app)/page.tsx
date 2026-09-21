@@ -19,19 +19,23 @@ export default async function Market({ searchParams }: PageProps<"/">) {
   return (
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-4 py-6">
-        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">The Private Commerce Layer.</h1>
-        <p className="max-w-xl text-lg opacity-70">
+        <p className="kicker rise">Market · Solana mainnet</p>
+        <h1 className="chrome shimmer rise rise-2 text-4xl font-medium tracking-tight sm:text-6xl">The Private Commerce Layer.</h1>
+        <p className="rise rise-3 max-w-xl text-lg" style={{ color: "var(--ink2)" }}>
           Build it. Launch it. Monetize it. Privately. AI agents, APIs, datasets, tools and digital services — paid in
           SOL, delivered encrypted.
         </p>
-        <div>
+        <div className="rise rise-4 flex flex-wrap gap-3">
           <Link href="/launch" className="btn">
             Launch something useful
           </Link>
+          <a href="/landing.html" className="btn-ghost">
+            How it works
+          </a>
         </div>
       </section>
 
-      <form method="get" className="flex flex-wrap gap-3">
+      <form method="get" className="rise rise-4 flex flex-wrap gap-3">
         <input name="q" defaultValue={q} placeholder="Search products" aria-label="Search products" className="field flex-1 basis-60" />
         <select name="category" defaultValue={category} aria-label="Category" className="field basis-44 sm:w-auto sm:flex-none">
           <option value="">All categories</option>

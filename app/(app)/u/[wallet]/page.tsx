@@ -18,11 +18,11 @@ export default async function CreatorPage({ params }: PageProps<"/u/[wallet]">) 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <p className="font-mono text-xs uppercase tracking-wider opacity-60">Creator</p>
-        <h1 className="break-all font-mono text-xl">{wallet}</h1>
+        <p className="kicker rise">Creator</p>
+        <h1 className="chrome rise rise-2 break-all font-mono text-xl sm:text-2xl">{wallet}</h1>
       </div>
       {products.length === 0 ? (
-        <p className="opacity-60">No live products.</p>
+        <p className="rise rise-3" style={{ color: "var(--mute)" }}>No live products.</p>
       ) : (
         <ProductGrid products={products} />
       )}

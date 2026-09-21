@@ -22,25 +22,32 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-3xl font-semibold tracking-tight">Creator dashboard</h1>
-        {wallet && <p className="font-mono text-sm">Earned: {formatSol(total)} SOL</p>}
+        <div>
+          <p className="kicker rise">Creator · Dashboard</p>
+          <h1 className="chrome shimmer rise rise-2 text-3xl font-medium tracking-tight sm:text-5xl">Creator dashboard</h1>
+        </div>
+        {wallet && (
+          <p className="card rise rise-3 font-mono text-sm">
+            Earned <span className="chrome text-2xl font-semibold">{formatSol(total)}</span> SOL
+          </p>
+        )}
       </div>
       {!wallet ? (
         <p className="card">Sign in to see your products.</p>
       ) : rows.length === 0 ? (
-        <p className="opacity-60">
+        <p className="rise rise-3" style={{ color: "var(--mute)" }}>
           No products yet. <Link href="/launch" className="underline">Launch your first</Link>.
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
           {rows.map((r) => (
-            <li key={r.id} className="card flex flex-wrap items-center justify-between gap-4">
+            <li key={r.id} className="card rise rise-3 flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h2 className="font-medium">
                   <Link href={`/p/${r.id}`}>{r.title}</Link>
-                  {r.status === "removed" && <span className="ml-2 text-sm text-red-600">removed</span>}
+                  {r.status === "removed" && <span className="ml-2 text-sm text-red-400">removed</span>}
                 </h2>
-                <p className="font-mono text-xs opacity-60">
+                <p className="font-mono text-xs" style={{ color: "var(--mute)" }}>
                   {formatSol(r.price)} SOL · {r.sales} sold · {formatSol(r.revenue)} SOL earned
                 </p>
               </div>
