@@ -18,7 +18,11 @@ export function OpenContent({ purchaseId }: { purchaseId: string }) {
       const res = await fetch(`/api/purchases/${purchaseId}/content`);
       const body = await res.json();
       if (!res.ok) throw new Error(body.error);
-      const plain = await decryptContent(fromBase64(body.key), fromBase64(body.payload));
+      // Files live in blob storage as ciphertext; secrets come inline.
+      const payload = body.payloadUrl
+        ? new Uint8Array(await (await fetch(body.payloadUrl)).arrayBuffer())
+        : fromBase64(body.payload);
+      const plain = await decryptContent(fromBase64(body.key), payload);
       if (body.kind === "secret") return setSecret(new TextDecoder().decode(plain));
 
       const url = URL.createObjectURL(new Blob([plain as BlobPart], { type: body.fileType }));

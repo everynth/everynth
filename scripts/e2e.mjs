@@ -5,7 +5,7 @@
 //   npm run build
 //   $env:RPC_URL="http://127.0.0.1:3199"; $env:PGLITE_DIR="$env:TEMP\everynth-e2e"
 //   $env:ADMIN_WALLETS=(node scripts/e2e.mjs --admin-wallet); npx next start -p 3100
-//   node scripts/e2e.mjs        (in a second terminal)
+//   node --env-file=.env.local scripts/e2e.mjs        (in a second terminal; env gives the blob token for cleanup)
 import assert from "node:assert/strict";
 import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, randomBytes, sign } from "node:crypto";
 import { createServer } from "node:http";
@@ -16,6 +16,8 @@ const project = fileURLToPath(new URL("../", import.meta.url));
 const require = createRequire(project);
 const { PublicKey, Keypair } = require("@solana/web3.js");
 const bs58 = require("bs58").default ?? require("bs58");
+const { upload } = require("@vercel/blob/client");
+const { del } = require("@vercel/blob");
 const { loginMessage } = await import(pathToFileURL(project + "lib/login-message.ts").href);
 const { encryptContent, decryptContent } = await import(pathToFileURL(project + "lib/content-crypto.ts").href);
 
@@ -231,6 +233,33 @@ res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: c
 assert.equal(res.status, 400);
 assert.match((await res.json()).error, /executables/i);
 step("executables and installers refused");
+
+// file product: ciphertext goes browser -> Vercel Blob directly, buyer fetches it from there
+const fileBytes = randomBytes(300 * 1024); // 300 KB, beyond what a secret may be
+const enc = await encryptContent(fileBytes);
+const blob = await upload("dataset.zip.enc", new Blob([enc.payload]), {
+  access: "public", handleUploadUrl: BASE + "/api/upload", contentType: "application/octet-stream", headers: { cookie: creator.cookie },
+});
+const fileForm = new FormData();
+for (const [k, val] of Object.entries({ title: "Onchain dataset", description: "300 KB of very real market data.", category: "Dataset", price: "1", kind: "file", fileName: "dataset.zip", fileType: "application/zip", key: Buffer.from(enc.key).toString("base64"), payloadUrl: blob.url })) fileForm.set(k, val);
+res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: fileForm });
+assert.equal(res.status, 200, await res.clone().text());
+const { id: fileProduct } = await res.json();
+fileForm.set("payloadUrl", "https://evil.example.com/x.enc");
+assert.equal((await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: fileForm })).status, 400);
+assert.equal((await fetch(BASE + "/api/upload", { method: "POST", body: "{}" })).status, 401);
+const fo = await (await buyer.json("/api/orders", { productId: fileProduct })).json();
+putTx(newSig(), fo.reference, { [fo.creator]: fo.creatorAmount, [fo.treasury]: fo.fee });
+assert.equal((await buyer.json(`/api/orders/${fo.purchaseId}/confirm`)).status, 200);
+const fc = await (await buyer.get(`/api/purchases/${fo.purchaseId}/content`)).json();
+assert.equal(fc.payloadUrl, blob.url);
+assert.equal(fc.payload, null);
+const blobRes = await fetch(fc.payloadUrl);
+assert.equal(blobRes.headers.get("access-control-allow-origin"), "*", "blob must be fetchable cross-origin from the buyer's browser");
+const filePlain = await decryptContent(Buffer.from(fc.key, "base64"), new Uint8Array(await blobRes.arrayBuffer()));
+assert.deepEqual(Buffer.from(filePlain), fileBytes);
+if (process.env.BLOB_READ_WRITE_TOKEN) await del(blob.url, { token: process.env.BLOB_READ_WRITE_TOKEN });
+step("file product via blob storage: upload, buy, fetch, decrypt byte-for-byte");
 
 // admin: block a creator, everything they sell disappears, they cannot launch again, unblock restores launching
 if (process.env.SKIP_ADMIN !== "1") {
