@@ -191,7 +191,6 @@ npm run dev                          # http://localhost:3000`}</Code>
           <tr><td><code>DATABASE_URL</code></td><td>Neon Postgres. Blank = local PGlite.</td></tr>
           <tr><td><code>BLOB_READ_WRITE_TOKEN</code></td><td>Vercel Blob store for file ciphertext.</td></tr>
           <tr><td><code>GITHUB_API</code></td><td>Optional override of <code>https://api.github.com</code> (used by tests).</td></tr>
-          <tr><td><code>NEXT_PUBLIC_PRIVY_APP_ID</code></td><td>Privy app id for login and embedded Solana wallets. Add your domains under Allowed origins in the Privy dashboard.</td></tr>
         </tbody>
       </table>
       <Code lang="sh">{`node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"   # SESSION_SECRET / MASTER_KEY`}</Code>
