@@ -79,7 +79,7 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
           </section>
 
           <section className="panel rise rise-3">
-            <header className="panel-head"><h2>What you get</h2><span>{product.kind === "file" ? product.file_name : product.kind === "github" ? product.github_repo : "secret text"}</span></header>
+            <header className="panel-head"><h2>What you get</h2><span>{product.kind === "file" ? product.file_name : product.kind === "github" ? `github.com/${product.github_repo}` : "secret text"}</span></header>
             <ul className="checks">
               {kind.gets.map((g) => <li key={g}>{g}</li>)}
             </ul>
