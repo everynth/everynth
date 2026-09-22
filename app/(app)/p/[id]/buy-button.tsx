@@ -1,17 +1,19 @@
 "use client";
 
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { Transaction } from "@solana/web3.js";
+import { useSignTransaction, useWallets } from "@privy-io/react-auth/solana";
+import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { RPC_URL } from "@/lib/config";
 import { buildPaymentInstructions, type Order } from "@/lib/payment";
 
 const post = (url: string, body: unknown) =>
   fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+const CHAIN = RPC_URL.includes("devnet") ? "solana:devnet" : "solana:mainnet";
 
 export function BuyButton({ productId, sessionWallet }: { productId: string; sessionWallet: string }) {
-  const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
+  const { wallets } = useWallets();
+  const { signTransaction } = useSignTransaction();
   const router = useRouter();
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -19,7 +21,8 @@ export function BuyButton({ productId, sessionWallet }: { productId: string; ses
   async function buy() {
     setError("");
     try {
-      if (publicKey?.toBase58() !== sessionWallet) throw new Error("Connect the same wallet you signed in with");
+      const wallet = wallets.find((w) => w.address === sessionWallet);
+      if (!wallet) throw new Error("Sign in again with the wallet you are paying from");
 
       setStatus("Preparing order…");
       const orderRes = await post("/api/orders", { productId });
@@ -27,11 +30,19 @@ export function BuyButton({ productId, sessionWallet }: { productId: string; ses
       const order: Order & { purchaseId: string; error?: string } = await orderRes.json();
       if (!orderRes.ok) throw new Error(order.error);
 
-      setStatus("Approve in your wallet…");
-      const tx = new Transaction().add(...buildPaymentInstructions(publicKey, order));
+      // Same transaction as before: two transfers + reference. Privy signs it, we broadcast it.
+      const connection = new Connection(RPC_URL, "confirmed");
+      const payer = new PublicKey(wallet.address);
       const latest = await connection.getLatestBlockhash();
-      const signature = await sendTransaction(tx, connection);
+      const tx = new Transaction({ feePayer: payer, ...latest }).add(...buildPaymentInstructions(payer, order));
+      setStatus("Approve in your wallet…");
+      const { signedTransaction } = await signTransaction({
+        transaction: tx.serialize({ requireAllSignatures: false, verifySignatures: false }),
+        wallet,
+        chain: CHAIN,
+      });
       setStatus("Confirming payment…");
+      const signature = await connection.sendRawTransaction(signedTransaction);
       await connection.confirmTransaction({ signature, ...latest }, "confirmed");
 
       // The server re-checks the chain itself; retry briefly while its RPC catches up.
