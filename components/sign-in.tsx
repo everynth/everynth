@@ -1,29 +1,38 @@
 "use client";
 
-import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { usePrivy } from "@privy-io/react-auth";
+import { useSignMessage, useWallets } from "@privy-io/react-auth/solana";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loginMessage } from "@/lib/login-message";
 
+// Two steps: Privy login (email / Google / Phantom …) gives the user a Solana wallet; then that
+// wallet signs our login message and the server issues the session cookie (unchanged server side).
 export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
-  const { publicKey, signMessage, disconnect } = useWallet();
+  const { ready, authenticated, login, logout } = usePrivy();
+  const { wallets, ready: walletsReady } = useWallets();
+  const { signMessage } = useSignMessage();
   const router = useRouter();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const attempted = useRef(false);
+  const wallet = wallets[0];
 
   async function signIn() {
-    if (!publicKey || !signMessage) return;
+    if (!wallet) return;
     setBusy(true);
     setError("");
     try {
-      const wallet = publicKey.toBase58();
       const issuedAt = Date.now();
-      const signed = await signMessage(new TextEncoder().encode(loginMessage(location.host, wallet, issuedAt)));
+      const { signature } = await signMessage({
+        message: new TextEncoder().encode(loginMessage(location.host, wallet.address, issuedAt)),
+        wallet,
+        options: { uiOptions: { title: "Sign in to EVERYNTH", description: "Free. This does not move any funds." } },
+      });
       const res = await fetch("/api/session", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ wallet, issuedAt, signature: btoa(String.fromCharCode(...signed)) }),
+        body: JSON.stringify({ wallet: wallet.address, issuedAt, signature: btoa(String.fromCharCode(...signature)) }),
       });
       if (!res.ok) throw new Error((await res.json()).error);
       router.refresh();
@@ -34,9 +43,18 @@ export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
     }
   }
 
+  // Right after Privy login, ask for the signature once without another click.
+  useEffect(() => {
+    if (authenticated && wallet && !sessionWallet && !attempted.current) {
+      attempted.current = true;
+      void signIn();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authenticated, wallet?.address, sessionWallet]);
+
   async function signOut() {
     await fetch("/api/session", { method: "DELETE" });
-    await disconnect();
+    await logout();
     router.refresh();
   }
 
@@ -54,21 +72,20 @@ export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
   }
 
   return (
-    <div className="flex flex-col items-start gap-2">
-      <div className="flex items-center gap-3">
-        <WalletMultiButton />
-        {publicKey && (
-          <button
-            onClick={signIn}
-            disabled={busy || !signMessage}
-            className="btn"
-          >
-            {busy ? "Check your wallet…" : "Sign in (free)"}
-          </button>
-        )}
-      </div>
+    <div className="flex flex-col items-end gap-2">
+      {!authenticated ? (
+        <button onClick={() => login()} disabled={!ready} className="btn">
+          Sign in
+        </button>
+      ) : !walletsReady || !wallet ? (
+        <span className="btn-ghost" aria-busy="true">Preparing your wallet…</span>
+      ) : (
+        <button onClick={signIn} disabled={busy} className="btn">
+          {busy ? "Check your wallet…" : `Continue as ${wallet.address.slice(0, 4)}…${wallet.address.slice(-4)}`}
+        </button>
+      )}
       {error && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="max-w-xs text-right text-sm text-red-400">
           {error}
         </p>
       )}
