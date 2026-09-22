@@ -182,7 +182,7 @@ function Avatar({ seed }: { seed: string }) {
   for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   const hue = h % 360;
   return (
-    <span className="avatar" style={{ background: `linear-gradient(160deg, hsl(${hue} 60% 55%), hsl(${(hue + 40) % 360} 70% 30%))` }} aria-hidden="true">
+    <span className="avatar" style={{ background: `hsl(${hue} 45% 42%)` }} aria-hidden="true">
       {seed.replace(/[^a-z0-9]/gi, "").slice(0, 2).toUpperCase() || "EV"}
     </span>
   );
@@ -194,12 +194,8 @@ function Spark({ days }: { days: number[] }) {
   const d = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
   return (
     <svg className="spark" viewBox="0 0 300 100" preserveAspectRatio="none" aria-label={`${days.reduce((a, b) => a + b, 0)} purchases in the last 14 days`}>
-      <defs>
-        <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#A9C4EA" stopOpacity=".35" /><stop offset="1" stopColor="#A9C4EA" stopOpacity="0" /></linearGradient>
-        <linearGradient id="sparkLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#6E9AD6" /><stop offset="1" stopColor="#ffffff" /></linearGradient>
-      </defs>
-      <path d={`${d} L300 100 L0 100 Z`} fill="url(#sparkFill)" />
-      <path d={d} fill="none" stroke="url(#sparkLine)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" className="spark-line" />
+      <path d={`${d} L300 100 L0 100 Z`} fill="rgba(255,255,255,.06)" />
+      <path d={d} fill="none" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" className="spark-line" />
       {pts.map(([x, y], i) => days[i] > 0 && <circle key={i} cx={x} cy={y} r="3" fill="#fff" />)}
     </svg>
   );
