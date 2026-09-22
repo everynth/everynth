@@ -9,19 +9,24 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <Providers>
       <header className="top">
-        <div className="wrap flex flex-wrap items-center gap-x-5 gap-y-3">
+        <div className="wrap-wide flex flex-wrap items-center gap-x-4 gap-y-3">
           <Link href="/" className="brand">
             <span className="chrome">EVERYNTH</span>
           </Link>
-          <NavLinks signedIn={!!wallet} admin={isAdmin(wallet)} />
-          <div className="ml-auto">
+          <div className="tabs">
+            <NavLinks signedIn={!!wallet} admin={isAdmin(wallet)} />
+          </div>
+          <form method="get" action="/" className="ml-auto hidden md:block">
+            <input name="q" placeholder="Search" aria-label="Search products" className="field" style={{ width: 240, borderRadius: 999 }} />
+          </form>
+          <div className="ml-auto md:ml-0">
             <SignIn sessionWallet={wallet} />
           </div>
         </div>
       </header>
-      <main className="wrap flex-1 py-10">{children}</main>
+      <main className="wrap-wide flex-1 py-6">{children}</main>
       <footer className="foot">
-        <div className="wrap flex flex-wrap items-center gap-x-6 gap-y-2">
+        <div className="wrap-wide flex flex-wrap items-center gap-x-6 gap-y-2">
           <span className="chrome font-mono text-xs tracking-widest">EVERYNTH</span>
           <Link href="/terms" className="navlink">Terms</Link>
           <Link href="/developers" className="navlink">For developers</Link>
