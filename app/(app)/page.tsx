@@ -1,10 +1,9 @@
 import Link from "next/link";
+import { age, Avatar, short } from "@/components/avatar";
 import { CATEGORIES } from "@/lib/config";
 import { listProducts, PAGE_SIZE, pulse, SORTS, topCreators, trending, type Listed, type Sort } from "@/lib/market";
 import { formatSol } from "@/lib/money";
 
-const short = (w: string) => `${w.slice(0, 4)}…${w.slice(-4)}`;
-const age = (d: number) => (d < 1 ? "today" : d < 2 ? "1 day" : `${Math.floor(d)} days`);
 const kindLabel = { file: "File", secret: "Secret", github: "Repo" } as const;
 
 export default async function Market({ searchParams }: PageProps<"/">) {
@@ -155,18 +154,6 @@ export default async function Market({ searchParams }: PageProps<"/">) {
         </footer>
       </div>
     </div>
-  );
-}
-
-// Deterministic two-letter monogram on a hue derived from the seed. No images to host.
-function Avatar({ seed }: { seed: string }) {
-  let h = 0;
-  for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  const hue = h % 360;
-  return (
-    <span className="avatar" style={{ background: `hsl(${hue} 45% 42%)` }} aria-hidden="true">
-      {seed.replace(/[^a-z0-9]/gi, "").slice(0, 2).toUpperCase() || "EV"}
-    </span>
   );
 }
 
