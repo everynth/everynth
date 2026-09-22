@@ -43,19 +43,29 @@ export const topCreators = (limit = 6) =>
     [limit],
   );
 
-export type Pulse = { live: number; sales: number; volume: number; creators: number; days: number[] };
-// 14-day purchase counts, oldest first, for the sparkline.
-export async function pulse(): Promise<Pulse> {
+export type Pulse = { live: number; sales: number; volume: number; creators: number; days: number[]; volumeDays: number[] };
+// Purchase counts and SOL volume per day for the last `span` days, oldest first.
+export async function pulse(span = 14): Promise<Pulse> {
   const [t] = await query<{ live: number; sales: number; volume: number; creators: number }>(
     `select (select count(*) from products where status = 'live')::int as live,
             (select count(*) from purchases where status = 'paid')::int as sales,
             (select coalesce(sum(creator_amount + fee), 0) from purchases where status = 'paid')::float8 as volume,
             (select count(distinct creator) from products where status = 'live')::int as creators`,
   );
-  const daily = await query<{ d: number; n: number }>(
-    `select floor(extract(epoch from now() - created_at) / 86400)::int as d, count(*)::int as n
-     from purchases where status = 'paid' and created_at > now() - interval '14 days' group by 1`,
+  const daily = await query<{ d: number; n: number; v: number }>(
+    `select floor(extract(epoch from now() - created_at) / 86400)::int as d, count(*)::int as n, sum(creator_amount + fee)::float8 as v
+     from purchases where status = 'paid' and created_at > now() - ($1 || ' days')::interval group by 1`,
+    [String(span)],
   );
-  const days = Array.from({ length: 14 }, (_, i) => daily.find((r) => r.d === 13 - i)?.n ?? 0);
-  return { ...t, days };
+  const days = Array.from({ length: span }, (_, i) => daily.find((r) => r.d === span - 1 - i)?.n ?? 0);
+  const volumeDays = Array.from({ length: span }, (_, i) => daily.find((r) => r.d === span - 1 - i)?.v ?? 0);
+  return { ...t, days, volumeDays };
 }
+
+export type CategoryStat = { category: string; products: number; sales: number };
+export const byCategory = () =>
+  query<CategoryStat>(
+    `select p.category, count(distinct p.id)::int as products, count(x.id)::int as sales
+     from products p left join purchases x on x.product_id = p.id and x.status = 'paid'
+     where p.status = 'live' group by p.category order by sales desc, products desc`,
+  );
