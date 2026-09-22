@@ -137,7 +137,10 @@ export default async function Market({ searchParams }: PageProps<"/">) {
               <span className="mono"><b className="chrome">{formatSol(x.price)}</b> SOL</span>
               <span className="mono">{x.sales} sold</span>
             </span>
-            <span className={`pill${x.age_days < 3 ? " pill-live" : ""}`}>{x.age_days < 3 ? "● New" : kindLabel[x.kind]}</span>
+            <span className="pcardx-foot">
+              <span className={`pill${x.age_days < 3 ? " pill-live" : ""}`}>{x.age_days < 3 ? "● New" : kindLabel[x.kind]}</span>
+              {x.preview_url && <span className="pill">Preview ↗</span>}
+            </span>
           </Link>
         ))}
       </div>

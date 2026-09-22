@@ -20,7 +20,7 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
   const { id } = await params;
   const wallet = await sessionWallet();
   const [product] = await query<Product & { sales: number; age_days: number }>(
-    `select p.id, p.creator, p.title, p.description, p.category, p.price::float8 as price, p.kind, p.file_name, p.github_repo, p.status,
+    `select p.id, p.creator, p.title, p.description, p.category, p.price::float8 as price, p.kind, p.file_name, p.github_repo, p.preview_url, p.status,
        (p.cover is not null) as has_cover, p.created_at,
        (select count(*) from purchases x where x.product_id = p.id and x.status = 'paid')::int as sales,
        extract(epoch from now() - p.created_at)::float8 / 86400 as age_days
@@ -60,6 +60,9 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
               <span className="cover-blank"><span className="chrome">{kind.label.toLowerCase()}</span></span>
             )}
             <span className={`pill detail-badge${product.age_days < 3 ? " pill-live" : ""}`}>{product.age_days < 3 ? "● New" : kind.label}</span>
+            {product.preview_url && (
+              <a href={product.preview_url} target="_blank" rel="noreferrer noopener" className="btn detail-preview">▶ Preview</a>
+            )}
           </div>
 
           <div className="rise rise-2">
@@ -108,6 +111,11 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
             <p className="kicker">Price</p>
             <p className="buy-price"><span className="chrome">{formatSol(product.price)}</span> <small>SOL</small></p>
             <p className="buy-split">{formatSol(creatorAmount)} SOL to the creator · {formatSol(product.price - creatorAmount)} SOL fee</p>
+            {product.preview_url && (
+              <a href={product.preview_url} target="_blank" rel="noreferrer noopener" className="btn-ghost preview-btn">
+                Preview live product ↗
+              </a>
+            )}
             <div className="buy-action">
               {product.status === "removed" && <span className="pill">Removed from the market</span>}
               {purchase ? (

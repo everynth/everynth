@@ -5,7 +5,7 @@ import { query, type Product } from "./db.ts";
 export type Listed = Product & { sales: number; earned: number; age_days: number };
 
 // Same columns as PRODUCT_COLS, qualified with the products alias, plus the aggregates.
-const LISTED_COLS = `p.id, p.creator, p.title, p.description, p.category, p.price::float8 as price, p.kind, p.file_name, p.github_repo, p.status,
+const LISTED_COLS = `p.id, p.creator, p.title, p.description, p.category, p.price::float8 as price, p.kind, p.file_name, p.github_repo, p.preview_url, p.status,
   (p.cover is not null) as has_cover, p.created_at,
   count(x.id)::int as sales, coalesce(sum(x.creator_amount), 0)::float8 as earned,
   extract(epoch from now() - p.created_at)::float8 / 86400 as age_days`;

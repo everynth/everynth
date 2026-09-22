@@ -70,11 +70,12 @@ export async function POST(request: Request) {
 
   const id = crypto.randomUUID();
   await query(
-    `insert into products (id, creator, title, description, category, price, kind, file_name, file_type, payload, payload_url, github_repo, wrapped_key, cover, cover_type)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+    `insert into products (id, creator, title, description, category, price, kind, file_name, file_type, payload, payload_url, github_repo, wrapped_key, cover, cover_type, preview_url)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
     [
       id, creator, fields.title, fields.description, fields.category, fields.price, kind,
       fileName, fileType, payload, payloadUrl, githubRepo, wrapKey(secret, masterKey()), cover?.bytes ?? null, cover?.type ?? null,
+      fields.previewUrl ?? (githubRepo ? `https://github.com/${githubRepo}` : null), // repos preview to their GitHub page by default
     ],
   );
   return Response.json({ id });

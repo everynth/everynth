@@ -19,8 +19,9 @@ export function ProductGrid({ products }: { products: Product[] }) {
             <span className="kicker text-[10.5px]">{p.category}</span>
             <h2 className="text-lg font-medium tracking-tight">{p.title}</h2>
             <p className="line-clamp-3 flex-1 text-sm" style={{ color: "var(--mute)" }}>{p.description}</p>
-            <span className="font-mono text-sm">
-              <span className="chrome font-semibold">{formatSol(p.price)}</span> <span style={{ color: "var(--mute)" }}>SOL</span>
+            <span className="flex items-center justify-between font-mono text-sm">
+              <span><span className="chrome font-semibold">{formatSol(p.price)}</span> <span style={{ color: "var(--mute)" }}>SOL</span></span>
+              {p.preview_url && <span className="pill pill-sm">Preview ↗</span>}
             </span>
           </Link>
         </li>
