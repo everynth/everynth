@@ -116,6 +116,19 @@ body {
 .tab-pill:hover { color: var(--foreground); }
 .tab-pill.is-active { color: #05070C; background: #fff; }
 .dash-search { flex: 1 1 220px; max-width: 420px; }
+/* segmented toggle (radio group styled as pills) */
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16); background: var(--background); align-self: flex-start; }
+.seg-item { padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--mute); cursor: pointer; user-select: none; transition: color .2s, background .2s; }
+.seg-item:hover { color: var(--foreground); }
+.seg-item.is-active { color: #05070C; background: #fff; }
+.seg-item:has(input:focus-visible) { outline: 2px solid #fff; outline-offset: 2px; }
+/* native checkboxes/radios elsewhere: white on dark */
+input[type="checkbox"], input[type="radio"]:not(.sr-only) { accent-color: #fff; }
+input[type="file"].field { padding: 8px 12px; }
+input[type="file"].field::file-selector-button { margin-right: 12px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.22); background: transparent; color: var(--foreground); font: inherit; font-size: 13px; cursor: pointer; }
+input[type="file"].field::file-selector-button:hover { border-color: #fff; }
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
 .dash-cat { width: auto; flex: none; }
 .panel-table { padding: 6px 6px 10px; }
 .dtable { width: 100%; border-collapse: separate; border-spacing: 0 6px; font-size: .9rem; }
