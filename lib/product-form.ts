@@ -1,7 +1,17 @@
 import { CATEGORIES, MAX_COVER_BYTES } from "./config.ts";
 import { parseSol } from "./money.ts";
 
-export type Fields = { title: string; description: string; category: string; price: number };
+export type Fields = { title: string; description: string; category: string; price: number; previewUrl: string | null };
+
+// Public preview link: https only, no javascript: or data: tricks, at most 500 chars.
+export function isHttpsUrl(s: string): boolean {
+  try {
+    const u = new URL(s);
+    return u.protocol === "https:" && s.length <= 500;
+  } catch {
+    return false;
+  }
+}
 
 export const formText = (form: FormData, name: string) =>
   typeof form.get(name) === "string" ? (form.get(name) as string).trim() : "";
@@ -16,7 +26,9 @@ export function parseFields(form: FormData): Fields | string {
   if (description.length < 10 || description.length > 4000) return "description must be 10-4000 characters";
   if (!(CATEGORIES as readonly string[]).includes(category)) return "unknown category";
   if (price === null) return "price must be between 0.02 and 1,000,000 SOL, max 9 decimals";
-  return { title, description, category, price };
+  const previewUrl = formText(form, "previewUrl") || null;
+  if (previewUrl && !isHttpsUrl(previewUrl)) return "preview must be an https:// link";
+  return { title, description, category, price, previewUrl };
 }
 
 // Optional cover image: undefined when none was sent, error string when invalid.
