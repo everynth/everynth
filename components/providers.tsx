@@ -1,18 +1,24 @@
 "use client";
 
-import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
-import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import "@solana/wallet-adapter-react-ui/styles.css";
+import { PrivyProvider } from "@privy-io/react-auth";
+import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
 
-const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL ?? "https://api.devnet.solana.com";
+// Privy handles login (email, Google, or an external Solana wallet such as Phantom) and gives
+// every user a Solana wallet. Our own auth stays wallet-signature based: see components/sign-in.tsx.
+const solanaConnectors = toSolanaWalletConnectors();
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  // Empty list: Phantom, Solflare, Backpack etc. register themselves via Wallet Standard.
   return (
-    <ConnectionProvider endpoint={RPC_URL}>
-      <WalletProvider wallets={[]} autoConnect>
-        <WalletModalProvider>{children}</WalletModalProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+    <PrivyProvider
+      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? ""}
+      config={{
+        loginMethods: ["email", "google", "wallet"],
+        appearance: { theme: "#05070C", accentColor: "#ffffff", walletChainType: "solana-only" },
+        embeddedWallets: { solana: { createOnLogin: "users-without-wallets" }, ethereum: { createOnLogin: "off" } },
+        externalWallets: { solana: { connectors: solanaConnectors } },
+      }}
+    >
+      {children}
+    </PrivyProvider>
   );
 }

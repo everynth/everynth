@@ -27,7 +27,7 @@ export function Overview() {
       <H2 id="one-purchase">One purchase, end to end</H2>
       <ol>
         <li>A creator launches a product. The content is encrypted locally and uploaded; the key is stored wrapped.</li>
-        <li>A buyer signs in with their wallet (a free signature, no funds move) and presses Buy.</li>
+        <li>A buyer signs in — email, Google or an existing wallet — and presses Buy. The wallet signs a free message; no funds move.</li>
         <li>The server freezes the payout terms for this order and mints a unique reference key.</li>
         <li>The buyer&apos;s wallet sends one transaction: two transfers plus the reference.</li>
         <li>The server fetches the confirmed transaction and checks the balances that changed.</li>
@@ -88,17 +88,22 @@ Refunds        none — delivery is instant`}</Code>
 export function GettingStarted() {
   return (
     <>
-      <H2 id="wallet">1. A Solana wallet</H2>
+      <H2 id="wallet">1. Sign in — with or without a wallet</H2>
       <p>
-        Phantom, Solflare, Backpack or any wallet that supports the Wallet Standard. Set it to <strong>mainnet</strong>.
-        To buy you need SOL for the price plus a little for network fees (a fraction of a cent). To sell you need
-        nothing: listing is free.
+        Press <em>Sign in</em>. You can use an <strong>email</strong> or <strong>Google</strong> account, or connect an
+        existing Solana wallet such as Phantom, Solflare or Backpack. If you sign in with email or Google, a Solana
+        wallet is created for you on the spot (powered by Privy); you can export its key to another wallet app later.
+      </p>
+      <p>
+        To buy you need SOL in that wallet for the price plus a little for network fees (a fraction of a cent). To
+        sell you need nothing: listing is free.
       </p>
 
-      <H2 id="sign-in">2. Sign in</H2>
+      <H2 id="sign-in">2. The signature</H2>
       <p>
-        Press <em>Select Wallet</em>, connect, then <em>Sign in (free)</em>. Your wallet asks you to sign a short
-        message. This proves you control the address; it costs nothing and moves no funds. The message looks like:
+        Right after login your wallet signs a short message. This proves you control the address; it costs nothing
+        and moves no funds. Embedded wallets sign it in a small Privy prompt; external wallets in their own popup. The
+        message looks like:
       </p>
       <Code>{`everynth.vercel.app wants you to sign in to EVERYNTH.
 This is free and does not move any funds.
@@ -110,7 +115,10 @@ Issued at: 1758445200000`}</Code>
         signed in for seven days.
       </p>
       <Note>
-        <p>There is no email, no password and no account to create. Your wallet address is your identity.</p>
+        <p>
+          There is no password and no EVERYNTH account. Your wallet address is your identity: email or Google are
+          only ways to reach that wallet.
+        </p>
       </Note>
 
       <H2 id="first-product">3. Launch your first product</H2>
@@ -189,7 +197,8 @@ export function Faq() {
 
       <H3 id="lost-wallet">I lost access to my wallet.</H3>
       <p>
-        Purchases are tied to the wallet address that paid. If you lose the wallet, you lose the ability to unlock what
+        Purchases are tied to the wallet address that paid. If you signed in with email or Google, the wallet is
+        recoverable through that login. If you used an external wallet and lose it, you lose the ability to unlock what
         it bought. EVERYNTH cannot move a purchase to another address, because there is no way to prove the two belong
         to the same person.
       </p>
