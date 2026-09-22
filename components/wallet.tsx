@@ -73,7 +73,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         const { publicKey } = await legacy.connect();
         const address = publicKey.toBase58();
         acc = w.accounts.find((a) => a.address === address) ?? {
-          address, publicKey: publicKey.toBytes(), chains: w.chains, features: Object.keys(w.features),
+          address, publicKey: publicKey.toBytes(), chains: w.chains, features: Object.keys(w.features) as WalletAccount["features"],
         };
       }
       if (!acc) throw new Error("No Solana account in this wallet");
