@@ -1,56 +1,206 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/config";
-import { ProductGrid } from "@/components/product-card";
-import { PRODUCT_COLS, query, type Product } from "@/lib/db";
+import { listProducts, newest, PAGE_SIZE, pulse, SORTS, topCreators, trending, type Listed, type Sort } from "@/lib/market";
+import { formatSol } from "@/lib/money";
+
+const short = (w: string) => `${w.slice(0, 4)}…${w.slice(-4)}`;
+const age = (d: number) => (d < 1 ? "today" : d < 2 ? "1 day" : `${Math.floor(d)} days`);
+const kindLabel = { file: "File", secret: "Secret", github: "Repo" } as const;
 
 export default async function Market({ searchParams }: PageProps<"/">) {
-  const params = await searchParams;
-  const q = typeof params.q === "string" ? params.q.trim().slice(0, 100) : "";
-  const category = typeof params.category === "string" ? params.category : "";
-  const products = await query<Product>(
-    `select ${PRODUCT_COLS} from products
-     where status = 'live'
-       and ($1 = '' or title ilike '%' || $1 || '%' or description ilike '%' || $1 || '%')
-       and ($2 = '' or category = $2)
-     order by created_at desc limit 60`,
-    [q, category],
-  );
+  const sp = await searchParams;
+  const q = typeof sp.q === "string" ? sp.q.trim().slice(0, 100) : "";
+  const category = typeof sp.category === "string" && (CATEGORIES as readonly string[]).includes(sp.category) ? sp.category : "";
+  const sort: Sort = SORTS.includes(sp.sort as Sort) ? (sp.sort as Sort) : "trending";
+  const page = Math.max(1, parseInt(typeof sp.page === "string" ? sp.page : "1", 10) || 1);
+
+  const filtering = !!(q || category); // search mode: just the results, no panels
+  const [hot, fresh, creators, p, list] = await Promise.all([
+    filtering ? [] : trending(6), filtering ? [] : newest(5), filtering ? [] : topCreators(6),
+    filtering ? null : pulse(), listProducts({ q, category, sort, page }),
+  ]);
+  const pages = Math.max(1, Math.ceil(list.total / PAGE_SIZE));
+  const href = (patch: Record<string, string | number>) => {
+    const u = new URLSearchParams();
+    for (const [k, v] of Object.entries({ q, category, sort, page, ...patch })) if (v && v !== "trending" && v !== 1) u.set(k, String(v));
+    const s = u.toString();
+    return s ? `/?${s}` : "/";
+  };
 
   return (
-    <div className="flex flex-col gap-10">
-      <section className="flex flex-col gap-4 py-6">
-        <p className="kicker rise">Market · Solana mainnet</p>
-        <h1 className="chrome shimmer rise rise-2 text-4xl font-medium tracking-tight sm:text-6xl">The Private Commerce Layer.</h1>
-        <p className="rise rise-3 max-w-xl text-lg" style={{ color: "var(--ink2)" }}>
-          Build it. Launch it. Monetize it. Privately. AI agents, APIs, datasets, tools and digital services — paid in
-          SOL, delivered encrypted.
-        </p>
-        <div className="rise rise-4 flex flex-wrap gap-3">
-          <Link href="/launch" className="btn">
-            Launch something useful
-          </Link>
-          <a href="/landing.html" className="btn-ghost">
-            How it works
-          </a>
-        </div>
-      </section>
+    <div className="dash">
+      {/* row 1: three glass panels */}
+      {p && <div className="dash-row3">
+        <section className="panel rise" aria-labelledby="trending-h">
+          <header className="panel-head"><h2 id="trending-h">🔥 Trending</h2><span>sold · price</span></header>
+          <ol className="plist">
+            {hot.length === 0 && <li className="pempty">No products yet</li>}
+            {hot.map((x) => (
+              <li key={x.id}>
+                <Link href={`/p/${x.id}`} className="prow">
+                  <Avatar seed={x.title} />
+                  <span className="prow-name">{x.title}<small>{x.category}</small></span>
+                  <span className="prow-val"><b className="chrome">{x.sales}</b><small>{formatSol(x.price)} SOL</small></span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </section>
 
-      <form method="get" className="rise rise-4 flex flex-wrap gap-3">
-        <input name="q" defaultValue={q} placeholder="Search products" aria-label="Search products" className="field flex-1 basis-60" />
-        <select name="category" defaultValue={category} aria-label="Category" className="field basis-44 sm:w-auto sm:flex-none">
-          <option value="">All categories</option>
-          {CATEGORIES.map((c) => (
-            <option key={c}>{c}</option>
+        <section className="panel panel-feature rise rise-2" aria-labelledby="pulse-h">
+          <div className="feature-left">
+            <header className="panel-head"><h2 id="pulse-h">Market pulse</h2><span>mainnet</span></header>
+            <dl className="pulse">
+              <div><dt>Live products</dt><dd className="chrome">{p.live}</dd></div>
+              <div><dt>Purchases settled</dt><dd className="chrome">{p.sales}</dd></div>
+              <div><dt>Volume</dt><dd className="chrome">{formatSol(p.volume)}<small> SOL</small></dd></div>
+              <div><dt>Creators</dt><dd className="chrome">{p.creators}</dd></div>
+            </dl>
+          </div>
+          <div className="feature-art">
+            <p className="kicker">Purchases · last 14 days</p>
+            <Spark days={p.days} />
+            <p className="feature-note">95% of every sale goes wallet-to-wallet. Nothing is held here.</p>
+          </div>
+        </section>
+
+        <section className="panel rise rise-3" aria-labelledby="creators-h">
+          <header className="panel-head"><h2 id="creators-h">Top creators</h2><span>earned · products</span></header>
+          <ol className="plist">
+            {creators.length === 0 && <li className="pempty">No creators yet</li>}
+            {creators.map((c) => (
+              <li key={c.creator}>
+                <Link href={`/u/${c.creator}`} className="prow">
+                  <Avatar seed={c.creator} />
+                  <span className="prow-name mono">{short(c.creator)}<small>{c.sales} sold</small></span>
+                  <span className="prow-val"><b className="chrome">{formatSol(c.earned)}</b><small>{c.products} live</small></span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </section>
+      </div>}
+
+      {/* row 2: newest products as covers */}
+      {!filtering && <div className="dash-cards">
+        {fresh.map((x, i) => (
+          <Link key={x.id} href={`/p/${x.id}`} className="pcardx rise" style={{ animationDelay: `${120 + i * 60}ms` }}>
+            <span className="pcardx-cover">
+              {x.has_cover ? (
+                // eslint-disable-next-line @next/next/no-img-element -- our own API route
+                <img src={`/api/products/${x.id}/cover`} alt="" />
+              ) : (
+                <span className="cover-blank"><span className="chrome">{kindLabel[x.kind].toLowerCase()}</span></span>
+              )}
+            </span>
+            <span className="pcardx-avatar"><Avatar seed={x.creator} /></span>
+            <span className="pcardx-title">{x.title}</span>
+            <span className="pcardx-by">{short(x.creator)}</span>
+            <span className="pcardx-desc">{x.description}</span>
+            <span className={`pill${x.age_days < 3 ? " pill-live" : ""}`}>{x.age_days < 3 ? "● New" : `${formatSol(x.price)} SOL · ${x.sales} sold`}</span>
+          </Link>
+        ))}
+        {fresh.length === 0 && (
+          <div className="pcardx pcardx-empty rise">
+            <span className="pcardx-title">Nothing launched yet</span>
+            <span className="pcardx-desc">Be the first: encrypted delivery, paid in SOL.</span>
+            <Link href="/launch" className="btn">Launch a product</Link>
+          </div>
+        )}
+      </div>}
+
+      {/* section head + filters */}
+      <div className="dash-sec rise rise-3">
+        <div>
+          <h2 className="dash-sec-title">{filtering ? `Results${q ? ` for “${q}”` : ""}${category ? ` in ${category}` : ""}` : "Live products"}</h2>
+          <p className="dash-sec-sub">
+            {filtering ? <Link href="/" className="navlink" style={{ padding: 0 }}>← Back to the market</Link> : "Everything on the market right now. Files, secrets and repository access — paid in SOL, delivered encrypted."}
+          </p>
+        </div>
+        <div className="dash-sec-actions">
+          <Link href="/launch" className="btn">Launch a product</Link>
+          <a href="/landing.html" className="btn-ghost">How it works →</a>
+        </div>
+      </div>
+      <form method="get" className="dash-filters rise rise-4">
+        <div className="tabs" role="tablist" aria-label="Sort">
+          {SORTS.map((s) => (
+            <Link key={s} href={href({ sort: s, page: 1 })} className={`tab-pill${sort === s ? " is-active" : ""}`} role="tab" aria-selected={sort === s}>
+              {s === "trending" ? "🔥 Trending" : s === "new" ? "New" : "Price"}
+            </Link>
           ))}
+        </div>
+        <input type="hidden" name="sort" value={sort} />
+        <input name="q" defaultValue={q} placeholder="Search products" aria-label="Search products" className="field dash-search" />
+        <select name="category" defaultValue={category} aria-label="Category" className="field dash-cat">
+          <option value="">All</option>
+          {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
         </select>
-        <button className="btn-ghost">Search</button>
+        <button className="btn-ghost">Filter</button>
       </form>
 
-      {products.length === 0 ? (
-        <p className="opacity-60">Nothing here yet. Be the first to launch.</p>
-      ) : (
-        <ProductGrid products={products} />
-      )}
+      {/* table */}
+      <div className="panel panel-table rise rise-4">
+        <table className="dtable">
+          <thead>
+            <tr><th>Product</th><th>Category</th><th>Kind</th><th>Price</th><th>Sold</th><th>Earned</th><th>Age</th><th>Creator</th></tr>
+          </thead>
+          <tbody>
+            {list.rows.length === 0 && <tr><td colSpan={8} className="pempty">No products match.</td></tr>}
+            {list.rows.map((x: Listed) => (
+              <tr key={x.id}>
+                <td><Link href={`/p/${x.id}`} className="prow prow-inline"><Avatar seed={x.title} /><span className="prow-name">{x.title}<small>{short(x.id)}</small></span></Link></td>
+                <td>{x.category}</td>
+                <td><span className="pill pill-sm">{kindLabel[x.kind]}</span></td>
+                <td className="mono"><b className="chrome">{formatSol(x.price)}</b> SOL</td>
+                <td className="mono">{x.sales}</td>
+                <td className="mono">{formatSol(x.earned)} SOL</td>
+                <td>{age(x.age_days)}</td>
+                <td><Link href={`/u/${x.creator}`} className="mono navlink">{short(x.creator)}</Link></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <footer className="dtable-foot">
+          <span>{list.total} products · {PAGE_SIZE} per page</span>
+          <nav className="pager" aria-label="Pages">
+            <Link href={href({ page: Math.max(1, page - 1) })} className="pg" aria-disabled={page === 1}>‹</Link>
+            {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + Math.max(1, Math.min(page - 2, pages - 4))).map((n) => (
+              <Link key={n} href={href({ page: n })} className={`pg${n === page ? " is-active" : ""}`} aria-current={n === page ? "page" : undefined}>{String(n).padStart(2, "0")}</Link>
+            ))}
+            <Link href={href({ page: Math.min(pages, page + 1) })} className="pg" aria-disabled={page === pages}>›</Link>
+          </nav>
+        </footer>
+      </div>
     </div>
+  );
+}
+
+// Deterministic two-letter monogram on a hue derived from the seed. No images to host.
+function Avatar({ seed }: { seed: string }) {
+  let h = 0;
+  for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const hue = h % 360;
+  return (
+    <span className="avatar" style={{ background: `linear-gradient(160deg, hsl(${hue} 60% 55%), hsl(${(hue + 40) % 360} 70% 30%))` }} aria-hidden="true">
+      {seed.replace(/[^a-z0-9]/gi, "").slice(0, 2).toUpperCase() || "EV"}
+    </span>
+  );
+}
+
+function Spark({ days }: { days: number[] }) {
+  const max = Math.max(1, ...days);
+  const pts = days.map((n, i) => [i * (300 / 13), 90 - (n / max) * 80] as const);
+  const d = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  return (
+    <svg className="spark" viewBox="0 0 300 100" preserveAspectRatio="none" aria-label={`${days.reduce((a, b) => a + b, 0)} purchases in the last 14 days`}>
+      <defs>
+        <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#A9C4EA" stopOpacity=".35" /><stop offset="1" stopColor="#A9C4EA" stopOpacity="0" /></linearGradient>
+        <linearGradient id="sparkLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#6E9AD6" /><stop offset="1" stopColor="#ffffff" /></linearGradient>
+      </defs>
+      <path d={`${d} L300 100 L0 100 Z`} fill="url(#sparkFill)" />
+      <path d={d} fill="none" stroke="url(#sparkLine)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" className="spark-line" />
+      {pts.map(([x, y], i) => days[i] > 0 && <circle key={i} cx={x} cy={y} r="3" fill="#fff" />)}
+    </svg>
   );
 }
