@@ -45,7 +45,7 @@ export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
     } catch (e) {
       const err = e as { message?: string; code?: number };
       const hint = err?.code === -32603 ? " — if this account is on a Ledger, Phantom cannot sign messages with it; use a regular account." : "";
-      setError(`${err?.message ?? "Sign-in failed"}${err?.code ? ` (${err.code})` : ""}${hint}`);
+      setError(`Sign failed: ${err?.message ?? "unknown"}${err?.code ? ` (${err.code})` : ""}${hint}`);
     } finally {
       signing.current = false;
       setBusy(false);
@@ -59,7 +59,7 @@ export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
       await connect(w); // the effect below asks for the signature once the address lands in state
     } catch (e) {
       const err = e as { message?: string; code?: number };
-      setError(`${err?.message ?? "Could not connect"}${err?.code ? ` (${err.code})` : ""}`);
+      setError(`Connect failed: ${err?.message ?? "unknown"}${err?.code ? ` (${err.code})` : ""}`);
     }
   }
 
