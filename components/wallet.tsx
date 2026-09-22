@@ -2,7 +2,7 @@
 
 import { getWallets } from "@wallet-standard/app";
 import type { Wallet, WalletAccount } from "@wallet-standard/base";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 // Direct Wallet Standard connection: no adapter UI, no iframe, no third-party login.
 // Phantom, Solflare, Backpack etc. register themselves on window; we list, connect, sign.
@@ -27,6 +27,7 @@ export type Ctx = {
 
 // Phantom's injected provider, used only as a fallback when its Wallet Standard surface misbehaves.
 type LegacyProvider = {
+  connect(opts?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: { toBase58(): string; toBytes(): Uint8Array } }>;
   signMessage(message: Uint8Array, display?: "utf8" | "hex"): Promise<{ signature: Uint8Array }>;
   signTransaction?<T>(tx: T): Promise<T>;
 };
@@ -57,25 +58,43 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     return api.on("register", refresh); // wallets that inject late still show up
   }, []);
 
+  const connecting = useRef(false); // one connect request at a time: Phantom answers -32603 to overlapping ones
+
   const connect = useCallback(async (w: Wallet) => {
-    const { accounts } = await (w.features["standard:connect"] as ConnectFeature).connect();
-    const acc = accounts.find((a) => a.chains.some((c) => c.startsWith("solana:"))) ?? accounts[0];
-    if (!acc) throw new Error("No Solana account in this wallet");
-    setWallet(w);
-    setAccount(acc);
-    try { localStorage.setItem(LAST, w.name); } catch {}
-    return acc.address;
+    connecting.current = true;
+    try {
+      let acc: WalletAccount | undefined;
+      try {
+        const { accounts } = await (w.features["standard:connect"] as ConnectFeature).connect();
+        acc = accounts.find((a) => a.chains.some((c) => c.startsWith("solana:"))) ?? accounts[0];
+      } catch (e) {
+        const legacy = legacyProvider(w.name);
+        if (!legacy || !isUnexpected(e)) throw e;
+        const { publicKey } = await legacy.connect();
+        const address = publicKey.toBase58();
+        acc = w.accounts.find((a) => a.address === address) ?? {
+          address, publicKey: publicKey.toBytes(), chains: w.chains, features: Object.keys(w.features),
+        };
+      }
+      if (!acc) throw new Error("No Solana account in this wallet");
+      setWallet(w);
+      setAccount(acc);
+      try { localStorage.setItem(LAST, w.name); } catch {}
+      return acc.address;
+    } finally {
+      connecting.current = false;
+    }
   }, []);
 
   // Silent reconnect to the wallet used last time, once it has registered.
   useEffect(() => {
-    if (wallet) return;
+    if (wallet || connecting.current) return;
     let last: string | null = null;
     try { last = localStorage.getItem(LAST); } catch {}
     const w = wallets.find((x) => x.name === last);
     if (!w) return;
     (w.features["standard:connect"] as ConnectFeature).connect({ silent: true })
-      .then(({ accounts }) => { const acc = accounts[0]; if (acc) { setWallet(w); setAccount(acc); } })
+      .then(({ accounts }) => { const acc = accounts[0]; if (acc && !connecting.current) { setWallet(w); setAccount(acc); } })
       .catch(() => {});
   }, [wallets, wallet]);
 
