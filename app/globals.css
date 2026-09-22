@@ -115,7 +115,7 @@ body {
 .tab-pill { padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--mute); text-decoration: none; transition: color .2s, background .2s; }
 .tab-pill:hover { color: var(--foreground); }
 .tab-pill.is-active { color: #05070C; background: #fff; }
-.dash-search { flex: 1 1 220px; max-width: 420px; }
+.dash-search { flex: 1 1 220px; max-width: 420px; border-radius: 999px; padding-left: 1rem; }
 /* segmented toggle (radio group styled as pills) */
 .seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16); background: var(--background); align-self: flex-start; }
 .seg-item { padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--mute); cursor: pointer; user-select: none; transition: color .2s, background .2s; }
@@ -311,7 +311,15 @@ details > summary::-webkit-details-marker { display: none; }
   }
   .field:focus { border-color: #fff; }
   .field::placeholder { color: var(--dim); }
-  select.field option { background: #05070C; }
+  /* custom select: native arrow removed, our own chevron drawn in */
+  select.field {
+    appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 2.4rem;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'><path d='M2.5 4.5 6 8l3.5-3.5' stroke='%23F2F5FA' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat; background-position: right .95rem center; background-size: 12px 12px;
+  }
+  select.field:hover { border-color: rgba(255,255,255,.4); }
+  select.field option { background: #05070C; color: var(--foreground); }
+  .dash-filters select.field, .top select.field { border-radius: 999px; padding-left: 1rem; }
   .card {
     @apply rounded-2xl p-5;
     position: relative; border: 1px solid var(--line); background: var(--background);
