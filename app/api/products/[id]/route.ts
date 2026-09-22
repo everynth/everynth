@@ -18,9 +18,9 @@ export async function PATCH(request: Request, { params }: RouteContext<"/api/pro
 
   const rows = await query(
     `update products set title = $1, description = $2, category = $3, price = $4,
-       cover = coalesce($5, cover), cover_type = coalesce($6, cover_type)
+       cover = coalesce($5, cover), cover_type = coalesce($6, cover_type), preview_url = $9
      where id = $7 and creator = $8 returning id`,
-    [fields.title, fields.description, fields.category, fields.price, cover?.bytes ?? null, cover?.type ?? null, id, wallet],
+    [fields.title, fields.description, fields.category, fields.price, cover?.bytes ?? null, cover?.type ?? null, id, wallet, fields.previewUrl],
   );
   return rows.length ? Response.json({ ok: true }) : bad("not found or not yours", 404);
 }

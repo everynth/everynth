@@ -37,6 +37,10 @@ export function ProductFields({ defaults }: { defaults?: Product }) {
         </label>
       </div>
       <label className="flex flex-col gap-1.5 text-sm">
+        Preview link (optional)
+        <input name="previewUrl" type="url" inputMode="url" pattern="https://.*" placeholder="https://… a demo, sample page, README or video buyers can look at first" defaultValue={defaults?.preview_url ?? ""} className="field" />
+      </label>
+      <label className="flex flex-col gap-1.5 text-sm">
         Cover image (optional, max 1 MB){defaults?.has_cover && " — leave empty to keep the current one"}
         <input type="file" name="cover" accept="image/png,image/jpeg,image/webp,image/gif" className="field" />
       </label>

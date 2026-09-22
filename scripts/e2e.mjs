@@ -226,6 +226,19 @@ edit.set("cover", new Blob([png], { type: "text/html" }), "x.html");
 assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: creator.cookie }, body: edit })).status, 400);
 step("edit listing + cover image + creator page; strangers and non-images refused");
 
+// preview link: https only, rendered as a button on the product page and a badge on cards
+edit.set("cover", new Blob([]));
+edit.set("previewUrl", "javascript:alert(1)");
+assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: creator.cookie }, body: edit })).status, 400);
+edit.set("previewUrl", "http://demo.example.com/x");
+assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: creator.cookie }, body: edit })).status, 400);
+edit.set("previewUrl", "https://demo.example.com/alpha");
+assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: creator.cookie }, body: edit })).status, 200);
+const prevPage = await (await fetch(BASE + `/p/${productId}`)).text();
+assert.ok(prevPage.includes('href="https://demo.example.com/alpha"') && prevPage.includes("Preview live product"));
+assert.ok((await (await fetch(BASE + "/")).text()).includes("Preview ↗"));
+step("preview link: https only, shown on product page and cards");
+
 assert.equal((await buyer.json("/api/reports", { productId, reason: "looks like a scam" })).status, 200);
 assert.equal((await buyer.json("/api/reports", { productId, reason: "x" })).status, 400);
 assert.equal((await creator.get("/admin")).status, 404);
@@ -295,7 +308,8 @@ assert.equal((await ghLaunch(ghForm("ghp_good", "not a repo"))).status, 400);
 res = await ghLaunch(ghForm("ghp_good"));
 assert.equal(res.status, 200, await res.clone().text());
 const { id: ghProduct } = await res.json();
-assert.ok((await (await fetch(BASE + `/p/${ghProduct}`)).text()).includes("github.com/acme/private-sdk"));
+const ghPage = await (await fetch(BASE + `/p/${ghProduct}`)).text();
+assert.ok(ghPage.includes("github.com/acme/private-sdk") && ghPage.includes('href="https://github.com/acme/private-sdk"')); // repos preview to GitHub by default
 const go = await (await buyer.json("/api/orders", { productId: ghProduct })).json();
 assert.equal((await buyer.json(`/api/purchases/${go.purchaseId}/github`, { username: "octocat" })).status, 404); // unpaid
 putTx(newSig(), go.reference, { [go.creator]: go.creatorAmount, [go.treasury]: go.fee });
