@@ -11,7 +11,7 @@ export function NavLinks({ signedIn, admin }: { signedIn: boolean; admin: boolea
   return (
     <nav className="flex flex-wrap items-center gap-1" aria-label="Primary">
       {links.map(([href, label]) => (
-        <Link key={href} href={href} className={`navlink${path === href ? " is-active" : ""}`} aria-current={path === href ? "page" : undefined}>
+        <Link key={href} href={href} className={`tab-pill${path === href ? " is-active" : ""}`} aria-current={path === href ? "page" : undefined}>
           {label}
         </Link>
       ))}
