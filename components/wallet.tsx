@@ -25,6 +25,21 @@ export type Ctx = {
   signTransaction(tx: Uint8Array, chain: string): Promise<Uint8Array>;
 };
 
+// Phantom's injected provider, used only as a fallback when its Wallet Standard surface misbehaves.
+type LegacyProvider = {
+  signMessage(message: Uint8Array, display?: "utf8" | "hex"): Promise<{ signature: Uint8Array }>;
+  signTransaction?<T>(tx: T): Promise<T>;
+};
+function legacyProvider(walletName: string): LegacyProvider | null {
+  if (!/phantom/i.test(walletName)) return null;
+  const w = window as unknown as { phantom?: { solana?: LegacyProvider & { isPhantom?: boolean } } };
+  return w.phantom?.solana?.isPhantom ? w.phantom.solana : null;
+}
+const isUnexpected = (e: unknown) => {
+  const err = e as { code?: number; message?: string };
+  return err?.code === -32603 || /unexpected error/i.test(err?.message ?? "");
+};
+
 const WalletCtx = createContext<Ctx | null>(null);
 const LAST = "everynth_wallet";
 const isSolana = (w: Wallet) =>
@@ -75,14 +90,30 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       if (!wallet || !account) throw new Error("Connect a wallet first");
       // Wallets compare the account by identity: always hand back their current instance.
       const live = wallet.accounts.find((a) => a.address === account.address) ?? account;
-      const [out] = await (wallet.features["solana:signMessage"] as SignMessageFeature).signMessage({ account: live, message });
-      return out.signature;
+      try {
+        const [out] = await (wallet.features["solana:signMessage"] as SignMessageFeature).signMessage({ account: live, message });
+        return out.signature;
+      } catch (e) {
+        // Some Phantom builds answer -32603 on the Wallet Standard path; its own injected API still works.
+        const legacy = legacyProvider(wallet.name);
+        if (!legacy || !isUnexpected(e)) throw e;
+        const out = await legacy.signMessage(message, "utf8");
+        return out.signature;
+      }
     },
     async signTransaction(transaction, chain) {
       if (!wallet || !account) throw new Error("Connect a wallet first");
       const live = wallet.accounts.find((a) => a.address === account.address) ?? account;
-      const [out] = await (wallet.features["solana:signTransaction"] as SignTxFeature).signTransaction({ account: live, transaction, chain });
-      return out.signedTransaction;
+      try {
+        const [out] = await (wallet.features["solana:signTransaction"] as SignTxFeature).signTransaction({ account: live, transaction, chain });
+        return out.signedTransaction;
+      } catch (e) {
+        const legacy = legacyProvider(wallet.name);
+        if (!legacy?.signTransaction || !isUnexpected(e)) throw e;
+        const { Transaction } = await import("@solana/web3.js");
+        const signed = await legacy.signTransaction(Transaction.from(transaction));
+        return new Uint8Array(signed.serialize());
+      }
     },
   }), [wallets, wallet, account, connect]);
 
