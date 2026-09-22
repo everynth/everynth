@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 export function NavLinks({ signedIn, admin }: { signedIn: boolean; admin: boolean }) {
   const path = usePathname();
-  const links: [string, string][] = [["/", "Market"], ["/launch", "Launch"]];
+  const links: [string, string][] = [["/", "Market"], ["/stats", "Live stats"], ["/launch", "Launch"]];
   if (signedIn) links.push(["/purchases", "Purchases"], ["/dashboard", "Dashboard"]);
   if (admin) links.push(["/admin", "Admin"]);
   return (
