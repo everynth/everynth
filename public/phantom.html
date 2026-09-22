@@ -1,0 +1,23 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Phantom plain test</title>
+<style>body{font:14px system-ui;background:#04070D;color:#eee;padding:40px}button{padding:10px 16px;margin:4px;border-radius:999px;border:0;cursor:pointer}pre{background:#111;padding:12px;border-radius:8px;white-space:pre-wrap}</style>
+<h2>Phantom plain test (no app code)</h2>
+<button onclick="go('connect')">1. connect</button>
+<button onclick="go('sign')">2. sign</button>
+<button onclick="localStorage.clear();sessionStorage.clear();location.reload()">Reset storage &amp; reload</button>
+<pre id="out">Phantom injected: (checking)</pre>
+<script>
+const out = document.getElementById("out");
+const log = (s) => (out.textContent += "\n" + new Date().toLocaleTimeString() + "  " + s);
+setTimeout(() => { out.textContent = "Phantom injected: " + (window.phantom && window.phantom.solana ? "yes" : "no") + " · window.solana: " + (window.solana ? (window.solana.isPhantom ? "phantom" : "other") : "none"); }, 500);
+async function go(step) {
+  const p = window.phantom && window.phantom.solana;
+  log("▶ " + step);
+  try {
+    if (!p) throw new Error("window.phantom.solana missing");
+    if (step === "connect") { const r = await p.connect(); log("✓ " + r.publicKey.toBase58()); }
+    else { const r = await p.signMessage(new TextEncoder().encode("plain test"), "utf8"); log("✓ signature " + r.signature.length + " bytes"); }
+  } catch (e) { log("✗ " + (e.name || "Error") + ": " + e.message + (e.code ? " (" + e.code + ")" : "")); }
+}
+</script>
