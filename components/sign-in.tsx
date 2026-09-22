@@ -1,38 +1,31 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
-import { useSignMessage, useWallets } from "@privy-io/react-auth/solana";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { loginMessage } from "@/lib/login-message";
+import { useWalletCtx } from "./wallet";
 
-// Two steps: Privy login (email / Google / Phantom …) gives the user a Solana wallet; then that
-// wallet signs our login message and the server issues the session cookie (unchanged server side).
+const issuedNow = () => Date.now(); // outside the component: event-time, never render-time
+
+// Connect a Solana wallet, sign one free message, get a session cookie. One signature, no third party.
 export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
-  const { ready, authenticated, login, logout } = usePrivy();
-  const { wallets, ready: walletsReady } = useWallets();
-  const { signMessage } = useSignMessage();
+  const { wallets, address, connect, disconnect, signMessage } = useWalletCtx();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const attempted = useRef(false);
-  const wallet = wallets[0];
+  const attempted = useRef<string | null>(null);
 
-  async function signIn() {
-    if (!wallet) return;
+  async function signIn(addr: string) {
     setBusy(true);
     setError("");
     try {
-      const issuedAt = Date.now();
-      const { signature } = await signMessage({
-        message: new TextEncoder().encode(loginMessage(location.host, wallet.address, issuedAt)),
-        wallet,
-        options: { uiOptions: { title: "Sign in to EVERYNTH", description: "Free. This does not move any funds." } },
-      });
+      const issuedAt = issuedNow();
+      const signature = await signMessage(new TextEncoder().encode(loginMessage(location.host, addr, issuedAt)));
       const res = await fetch("/api/session", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ wallet: wallet.address, issuedAt, signature: btoa(String.fromCharCode(...signature)) }),
+        body: JSON.stringify({ wallet: addr, issuedAt, signature: btoa(String.fromCharCode(...signature)) }),
       });
       if (!res.ok) throw new Error((await res.json()).error);
       router.refresh();
@@ -43,18 +36,30 @@ export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
     }
   }
 
-  // Right after Privy login, ask for the signature once without another click.
+  async function pick(w: (typeof wallets)[number]) {
+    setOpen(false);
+    setError("");
+    try {
+      const addr = await connect(w);
+      attempted.current = addr;
+      await signIn(addr);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not connect");
+    }
+  }
+
+  // Wallet reconnected silently on page load but the cookie is gone: ask for the signature once.
   useEffect(() => {
-    if (authenticated && wallet && !sessionWallet && !attempted.current) {
-      attempted.current = true;
-      void signIn();
+    if (address && !sessionWallet && attempted.current !== address) {
+      attempted.current = address;
+      void signIn(address);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authenticated, wallet?.address, sessionWallet]);
+  }, [address, sessionWallet]);
 
   async function signOut() {
     await fetch("/api/session", { method: "DELETE" });
-    await logout();
+    await disconnect();
     router.refresh();
   }
 
@@ -72,17 +77,33 @@ export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
   }
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      {!authenticated ? (
-        <button onClick={() => login()} disabled={!ready} className="btn">
-          Sign in
+    <div className="relative flex flex-col items-end gap-2">
+      {address ? (
+        <button onClick={() => signIn(address)} disabled={busy} className="btn">
+          {busy ? "Check your wallet…" : `Sign in as ${address.slice(0, 4)}…${address.slice(-4)}`}
         </button>
-      ) : !walletsReady || !wallet ? (
-        <span className="btn-ghost" aria-busy="true">Preparing your wallet…</span>
       ) : (
-        <button onClick={signIn} disabled={busy} className="btn">
-          {busy ? "Check your wallet…" : `Continue as ${wallet.address.slice(0, 4)}…${wallet.address.slice(-4)}`}
+        <button onClick={() => setOpen((o) => !o)} className="btn" aria-expanded={open} aria-haspopup="menu">
+          Connect wallet
         </button>
+      )}
+      {open && !address && (
+        <div className="wmenu" role="menu">
+          {wallets.length === 0 ? (
+            <p className="wmenu-empty">
+              No Solana wallet found. Install <a href="https://phantom.app" target="_blank" rel="noreferrer">Phantom</a> or{" "}
+              <a href="https://solflare.com" target="_blank" rel="noreferrer">Solflare</a>, then reload.
+            </p>
+          ) : (
+            wallets.map((w) => (
+              <button key={w.name} role="menuitem" onClick={() => pick(w)} className="wmenu-item">
+                {/* eslint-disable-next-line @next/next/no-img-element -- data: URI from the wallet itself */}
+                <img src={w.icon} alt="" width={22} height={22} />
+                <span>{w.name}</span>
+              </button>
+            ))
+          )}
+        </div>
       )}
       {error && (
         <p role="alert" className="max-w-xs text-right text-sm text-red-400">
