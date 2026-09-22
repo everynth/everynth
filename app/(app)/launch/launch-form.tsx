@@ -78,8 +78,8 @@ export function LaunchForm() {
 
   const kinds: [Kind, string][] = [
     ["file", "A file"],
-    ["secret", "Secret text (API key, invite link, credentials)"],
-    ["github", "Access to a private GitHub repository"],
+    ["secret", "Secret text"],
+    ["github", "GitHub repository"],
   ];
 
   return (
@@ -88,16 +88,26 @@ export function LaunchForm() {
 
       <fieldset className="flex flex-col gap-3 text-sm">
         <legend className="mb-2">What do buyers receive?</legend>
-        <div className="flex flex-wrap gap-x-5 gap-y-2">
+        <div className="seg" role="radiogroup" aria-label="Product kind">
           {kinds.map(([k, label]) => (
-            <label key={k} className="flex items-center gap-2">
-              <input type="radio" name="kind" value={k} checked={kind === k} onChange={() => setKind(k)} />
+            <label key={k} className={`seg-item${kind === k ? " is-active" : ""}`}>
+              <input type="radio" name="kind" value={k} checked={kind === k} onChange={() => setKind(k)} className="sr-only" />
               {label}
             </label>
           ))}
         </div>
-        {kind === "file" && <input type="file" name="file" required aria-label="Product file (max 200 MB)" className="field" />}
-        {kind === "secret" && <textarea name="secret" required rows={4} aria-label="Secret text" className="field font-mono" />}
+        {kind === "file" && (
+          <>
+            <p className="text-xs" style={{ color: "var(--mute)" }}>Dataset, research, template, code — up to 200 MB, encrypted before upload. Executables are refused.</p>
+            <input type="file" name="file" required aria-label="Product file (max 200 MB)" className="field" />
+          </>
+        )}
+        {kind === "secret" && (
+          <>
+            <p className="text-xs" style={{ color: "var(--mute)" }}>API key, invite link, credentials — up to 64 KB, shown to the buyer after payment.</p>
+            <textarea name="secret" required rows={4} aria-label="Secret text" className="field font-mono" />
+          </>
+        )}
         {kind === "github" && (
           <div className="flex flex-col gap-3">
             <input name="repo" required pattern="[\w.-]+/[\w.-]+" placeholder="owner/repository" aria-label="Repository" className="field font-mono" />
