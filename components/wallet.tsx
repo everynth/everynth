@@ -73,12 +73,15 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     },
     async signMessage(message) {
       if (!wallet || !account) throw new Error("Connect a wallet first");
-      const [out] = await (wallet.features["solana:signMessage"] as SignMessageFeature).signMessage({ account, message });
+      // Wallets compare the account by identity: always hand back their current instance.
+      const live = wallet.accounts.find((a) => a.address === account.address) ?? account;
+      const [out] = await (wallet.features["solana:signMessage"] as SignMessageFeature).signMessage({ account: live, message });
       return out.signature;
     },
     async signTransaction(transaction, chain) {
       if (!wallet || !account) throw new Error("Connect a wallet first");
-      const [out] = await (wallet.features["solana:signTransaction"] as SignTxFeature).signTransaction({ account, transaction, chain });
+      const live = wallet.accounts.find((a) => a.address === account.address) ?? account;
+      const [out] = await (wallet.features["solana:signTransaction"] as SignTxFeature).signTransaction({ account: live, transaction, chain });
       return out.signedTransaction;
     },
   }), [wallets, wallet, account, connect]);

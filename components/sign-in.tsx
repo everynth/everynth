@@ -6,6 +6,7 @@ import { loginMessage } from "@/lib/login-message";
 import { useWalletCtx } from "./wallet";
 
 const issuedNow = () => Date.now(); // outside the component: event-time, never render-time
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // Connect a Solana wallet, sign one free message, get a session cookie. One signature, no third party.
 export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
@@ -14,14 +15,26 @@ export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const signing = useRef(false); // never two signature requests in flight: Phantom answers "Unexpected error"
   const attempted = useRef<string | null>(null);
 
   async function signIn(addr: string) {
+    if (signing.current) return;
+    signing.current = true;
     setBusy(true);
     setError("");
     try {
       const issuedAt = issuedNow();
-      const signature = await signMessage(new TextEncoder().encode(loginMessage(location.host, addr, issuedAt)));
+      const bytes = new TextEncoder().encode(loginMessage(location.host, addr, issuedAt));
+      let signature: Uint8Array;
+      try {
+        signature = await signMessage(bytes);
+      } catch (e) {
+        // Phantom sometimes fails the first request right after its connect popup closes. Once more, after a beat.
+        if (!/unexpected error/i.test(String((e as Error)?.message))) throw e;
+        await sleep(600);
+        signature = await signMessage(bytes);
+      }
       const res = await fetch("/api/session", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -30,8 +43,10 @@ export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
       if (!res.ok) throw new Error((await res.json()).error);
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Sign-in failed");
+      const err = e as { message?: string; code?: number };
+      setError(`${err?.message ?? "Sign-in failed"}${err?.code ? ` (${err.code})` : ""}`);
     } finally {
+      signing.current = false;
       setBusy(false);
     }
   }
@@ -40,26 +55,26 @@ export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
     setOpen(false);
     setError("");
     try {
-      const addr = await connect(w);
-      attempted.current = addr;
-      await signIn(addr);
+      await connect(w); // the effect below asks for the signature once the address lands in state
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not connect");
+      const err = e as { message?: string; code?: number };
+      setError(`${err?.message ?? "Could not connect"}${err?.code ? ` (${err.code})` : ""}`);
     }
   }
 
-  // Wallet reconnected silently on page load but the cookie is gone: ask for the signature once.
+  // One trigger for the signature: whenever a wallet is connected and there is no session yet.
   useEffect(() => {
-    if (address && !sessionWallet && attempted.current !== address) {
-      attempted.current = address;
-      void signIn(address);
-    }
+    if (!address || sessionWallet || attempted.current === address) return;
+    attempted.current = address;
+    const t = setTimeout(() => void signIn(address), 400); // let the wallet popup settle first
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address, sessionWallet]);
 
   async function signOut() {
     await fetch("/api/session", { method: "DELETE" });
     await disconnect();
+    attempted.current = null;
     router.refresh();
   }
 
