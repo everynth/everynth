@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/config";
-import { listProducts, newest, PAGE_SIZE, pulse, SORTS, topCreators, trending, type Listed, type Sort } from "@/lib/market";
+import { listProducts, PAGE_SIZE, pulse, SORTS, topCreators, trending, type Listed, type Sort } from "@/lib/market";
 import { formatSol } from "@/lib/money";
 
 const short = (w: string) => `${w.slice(0, 4)}…${w.slice(-4)}`;
@@ -15,8 +15,8 @@ export default async function Market({ searchParams }: PageProps<"/">) {
   const page = Math.max(1, parseInt(typeof sp.page === "string" ? sp.page : "1", 10) || 1);
 
   const filtering = !!(q || category); // search mode: just the results, no panels
-  const [hot, fresh, creators, p, list] = await Promise.all([
-    filtering ? [] : trending(6), filtering ? [] : newest(5), filtering ? [] : topCreators(6),
+  const [hot, creators, p, list] = await Promise.all([
+    filtering ? [] : trending(6), filtering ? [] : topCreators(6),
     filtering ? null : pulse(), listProducts({ q, category, sort, page }),
   ]);
   const pages = Math.max(1, Math.ceil(list.total / PAGE_SIZE));
@@ -81,34 +81,6 @@ export default async function Market({ searchParams }: PageProps<"/">) {
         </section>
       </div>}
 
-      {/* row 2: newest products as covers */}
-      {!filtering && <div className="dash-cards">
-        {fresh.map((x, i) => (
-          <Link key={x.id} href={`/p/${x.id}`} className="pcardx rise" style={{ animationDelay: `${120 + i * 60}ms` }}>
-            <span className="pcardx-cover">
-              {x.has_cover ? (
-                // eslint-disable-next-line @next/next/no-img-element -- our own API route
-                <img src={`/api/products/${x.id}/cover`} alt="" />
-              ) : (
-                <span className="cover-blank"><span className="chrome">{kindLabel[x.kind].toLowerCase()}</span></span>
-              )}
-            </span>
-            <span className="pcardx-avatar"><Avatar seed={x.creator} /></span>
-            <span className="pcardx-title">{x.title}</span>
-            <span className="pcardx-by">{short(x.creator)}</span>
-            <span className="pcardx-desc">{x.description}</span>
-            <span className={`pill${x.age_days < 3 ? " pill-live" : ""}`}>{x.age_days < 3 ? "● New" : `${formatSol(x.price)} SOL · ${x.sales} sold`}</span>
-          </Link>
-        ))}
-        {fresh.length === 0 && (
-          <div className="pcardx pcardx-empty rise">
-            <span className="pcardx-title">Nothing launched yet</span>
-            <span className="pcardx-desc">Be the first: encrypted delivery, paid in SOL.</span>
-            <Link href="/launch" className="btn">Launch a product</Link>
-          </div>
-        )}
-      </div>}
-
       {/* section head + filters */}
       <div className="dash-sec rise rise-3">
         <div>
@@ -139,28 +111,38 @@ export default async function Market({ searchParams }: PageProps<"/">) {
         <button className="btn-ghost">Filter</button>
       </form>
 
-      {/* table */}
+      {/* full card grid of the listing */}
+      <div className="dash-cards dash-cards-all">
+        {list.rows.length === 0 && (
+          <div className="pcardx pcardx-empty rise">
+            <span className="pcardx-title">{filtering ? "No products match." : "Nothing launched yet"}</span>
+            <span className="pcardx-desc">{filtering ? "Try another word or category." : "Be the first: encrypted delivery, paid in SOL."}</span>
+            {!filtering && <Link href="/launch" className="btn">Launch a product</Link>}
+          </div>
+        )}
+        {list.rows.map((x: Listed, i) => (
+          <Link key={x.id} href={`/p/${x.id}`} className="pcardx rise" style={{ animationDelay: `${120 + Math.min(i, 10) * 50}ms` }}>
+            <span className="pcardx-cover">
+              {x.has_cover ? (
+                // eslint-disable-next-line @next/next/no-img-element -- our own API route
+                <img src={`/api/products/${x.id}/cover`} alt="" />
+              ) : (
+                <span className="cover-blank"><span className="chrome">{kindLabel[x.kind].toLowerCase()}</span></span>
+              )}
+            </span>
+            <span className="pcardx-avatar"><Avatar seed={x.creator} /></span>
+            <span className="pcardx-title">{x.title}</span>
+            <span className="pcardx-by">{x.category} · {short(x.creator)} · {age(x.age_days)}</span>
+            <span className="pcardx-desc">{x.description}</span>
+            <span className="pcardx-meta">
+              <span className="mono"><b className="chrome">{formatSol(x.price)}</b> SOL</span>
+              <span className="mono">{x.sales} sold</span>
+            </span>
+            <span className={`pill${x.age_days < 3 ? " pill-live" : ""}`}>{x.age_days < 3 ? "● New" : kindLabel[x.kind]}</span>
+          </Link>
+        ))}
+      </div>
       <div className="panel panel-table rise rise-4">
-        <table className="dtable">
-          <thead>
-            <tr><th>Product</th><th>Category</th><th>Kind</th><th>Price</th><th>Sold</th><th>Earned</th><th>Age</th><th>Creator</th></tr>
-          </thead>
-          <tbody>
-            {list.rows.length === 0 && <tr><td colSpan={8} className="pempty">No products match.</td></tr>}
-            {list.rows.map((x: Listed) => (
-              <tr key={x.id}>
-                <td><Link href={`/p/${x.id}`} className="prow prow-inline"><Avatar seed={x.title} /><span className="prow-name">{x.title}<small>{short(x.id)}</small></span></Link></td>
-                <td>{x.category}</td>
-                <td><span className="pill pill-sm">{kindLabel[x.kind]}</span></td>
-                <td className="mono"><b className="chrome">{formatSol(x.price)}</b> SOL</td>
-                <td className="mono">{x.sales}</td>
-                <td className="mono">{formatSol(x.earned)} SOL</td>
-                <td>{age(x.age_days)}</td>
-                <td><Link href={`/u/${x.creator}`} className="mono navlink">{short(x.creator)}</Link></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
         <footer className="dtable-foot">
           <span>{list.total} products · {PAGE_SIZE} per page</span>
           <nav className="pager" aria-label="Pages">
