@@ -44,7 +44,8 @@ export function SignIn({ sessionWallet }: { sessionWallet: string | null }) {
       router.refresh();
     } catch (e) {
       const err = e as { message?: string; code?: number };
-      setError(`${err?.message ?? "Sign-in failed"}${err?.code ? ` (${err.code})` : ""}`);
+      const hint = err?.code === -32603 ? " — if this account is on a Ledger, Phantom cannot sign messages with it; use a regular account." : "";
+      setError(`${err?.message ?? "Sign-in failed"}${err?.code ? ` (${err.code})` : ""}${hint}`);
     } finally {
       signing.current = false;
       setBusy(false);
