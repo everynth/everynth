@@ -1,3 +1,4 @@
+import { verifyLaunch } from "@/lib/auth";
 import { BLOCKED_EXTENSIONS, KINDS, MAX_SECRET_BYTES } from "@/lib/config";
 import { query } from "@/lib/db";
 import { checkRepoAdmin, REPO_RE } from "@/lib/github";
@@ -35,6 +36,14 @@ export async function POST(request: Request) {
 
   const kind = formText(form, "kind");
   if (!(KINDS as readonly string[]).includes(kind)) return bad("unknown kind");
+
+  // Second signature: the creator confirms these exact terms in their wallet. The session cookie
+  // alone is not enough to put something on sale under their address.
+  const issuedAt = Number(formText(form, "issuedAt"));
+  const terms = { title: fields.title, price: fields.price, kind };
+  if (!verifyLaunch(request.headers.get("host") ?? "", creator, terms, issuedAt, formText(form, "signature"))) {
+    return bad("launch confirmation signature is missing, expired, or does not match these terms", 401);
+  }
 
   // What gets wrapped with the master key: the content key, or (github) the creator's token.
   let secret: Buffer;

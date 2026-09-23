@@ -19,6 +19,8 @@ const bs58 = require("bs58").default ?? require("bs58");
 const { upload } = require("@vercel/blob/client");
 const { del } = require("@vercel/blob");
 const { loginMessage } = await import(pathToFileURL(project + "lib/login-message.ts").href);
+const { launchMessage } = await import(pathToFileURL(project + "lib/launch-message.ts").href);
+const { parseSol } = await import(pathToFileURL(project + "lib/money.ts").href);
 const { encryptContent, decryptContent } = await import(pathToFileURL(project + "lib/content-crypto.ts").href);
 
 const BASE = "http://localhost:3100";
@@ -106,9 +108,20 @@ async function makeUser(admin = false) {
   const cookie = res.headers.get("set-cookie").split(";")[0];
   const json = (path, body) => fetch(BASE + path, { method: "POST", headers: { cookie, "content-type": "application/json" }, body: JSON.stringify(body ?? {}) });
   const get = (path) => fetch(BASE + path, { headers: { cookie } });
-  return { wallet, cookie, json, get };
+  return { wallet, cookie, json, get, privateKey };
 }
 const step = (name) => console.log("ok  ", name);
+
+// The browser signs the terms of every launch in the wallet; do the same here.
+function signLaunch(user, form) {
+  const issuedAt = Date.now();
+  const terms = { title: String(form.get("title") ?? "").trim(), price: parseSol(String(form.get("price") ?? "")), kind: form.get("kind") };
+  form.set("issuedAt", String(issuedAt));
+  form.set("signature", sign(null, Buffer.from(launchMessage("localhost:3100", user.wallet, terms, issuedAt)), user.privateKey).toString("base64"));
+  return form;
+}
+const launch = (user, form) => fetch(BASE + "/api/products", { method: "POST", headers: { cookie: user.cookie }, body: signLaunch(user, form) });
+const cloneForm = (f) => { const o = new FormData(); for (const [k, v] of f.entries()) o.set(k, v); return o; };
 
 // ---- flow ----
 const creator = await makeUser();
@@ -121,16 +134,32 @@ const { key, payload } = await encryptContent(new TextEncoder().encode(SECRET));
 const form = new FormData();
 for (const [k, v] of Object.entries({ title: "Alpha Signals API", description: "Private trading signals API key, 30 days.", category: "API", price: "1", kind: "secret", key: Buffer.from(key).toString("base64") })) form.set(k, v);
 form.set("payload", new Blob([payload]));
-let res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: form });
+let res = await launch(creator, form);
 assert.equal(res.status, 200, await res.clone().text());
 const { id: productId } = await res.json();
 step("creator launches an encrypted product");
 
 const anonForm = new FormData(); anonForm.set("title", "x");
 assert.equal((await fetch(BASE + "/api/products", { method: "POST", body: anonForm })).status, 401);
-form.set("price", "-5");
-assert.equal((await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: form })).status, 400);
+const badPrice = cloneForm(form); badPrice.set("price", "-5");
+assert.equal((await launch(creator, badPrice)).status, 400);
 step("launch rejects anonymous users and bad prices");
+
+// the confirmation signature covers the exact terms: no signature, or terms changed after signing, is refused
+const unsigned = cloneForm(form);
+unsigned.delete("issuedAt"); unsigned.delete("signature");
+res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: unsigned });
+assert.equal(res.status, 401);
+assert.match((await res.json()).error, /confirmation/i);
+const tampered = signLaunch(creator, cloneForm(form));
+tampered.set("price", "0.02"); // signed 1 SOL, submitted 0.02
+assert.equal((await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: tampered })).status, 401);
+const stale = cloneForm(form);
+const longAgo = Date.now() - 10 * 60 * 1000;
+stale.set("issuedAt", String(longAgo));
+stale.set("signature", sign(null, Buffer.from(launchMessage("localhost:3100", creator.wallet, { title: "Alpha Signals API", price: SOL, kind: "secret" }, longAgo)), creator.privateKey).toString("base64"));
+assert.equal((await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: stale })).status, 401);
+step("launch needs a fresh wallet confirmation over the exact terms");
 
 const market = await (await fetch(BASE + "/?q=signals")).text();
 assert.ok(market.includes("Alpha Signals API") && !market.includes(SECRET));
@@ -263,7 +292,7 @@ step("ownership check: owned only by the buyer, CORS open");
 const exeForm = new FormData();
 for (const [k, val] of Object.entries({ title: "Bad tool", description: "Definitely not malware, trust me.", category: "Tool", price: "1", kind: "file", fileName: "setup.exe", key: Buffer.from(key).toString("base64") })) exeForm.set(k, val);
 exeForm.set("payload", new Blob([payload]));
-res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: exeForm });
+res = await launch(creator, exeForm);
 assert.equal(res.status, 400);
 assert.match((await res.json()).error, /executables/i);
 step("executables and installers refused");
@@ -276,11 +305,11 @@ const blob = await upload("dataset.zip.enc", new Blob([enc.payload]), {
 });
 const fileForm = new FormData();
 for (const [k, val] of Object.entries({ title: "Onchain dataset", description: "300 KB of very real market data.", category: "Dataset", price: "1", kind: "file", fileName: "dataset.zip", fileType: "application/zip", key: Buffer.from(enc.key).toString("base64"), payloadUrl: blob.url })) fileForm.set(k, val);
-res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: fileForm });
+res = await launch(creator, fileForm);
 assert.equal(res.status, 200, await res.clone().text());
 const { id: fileProduct } = await res.json();
 fileForm.set("payloadUrl", "https://evil.example.com/x.enc");
-assert.equal((await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: fileForm })).status, 400);
+assert.equal((await launch(creator, fileForm)).status, 400);
 assert.equal((await fetch(BASE + "/api/upload", { method: "POST", body: "{}" })).status, 401);
 const fo = await (await buyer.json("/api/orders", { productId: fileProduct })).json();
 putTx(newSig(), fo.reference, { [fo.creator]: fo.creatorAmount, [fo.treasury]: fo.fee });
@@ -301,7 +330,7 @@ const ghForm = (token, repo = "acme/private-sdk") => {
   for (const [k, val] of Object.entries({ title: "Private SDK repo", description: "Read access to our private SDK repository.", category: "Tool", price: "1", kind: "github", repo, token })) f.set(k, val);
   return f;
 };
-const ghLaunch = (f) => fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: f });
+const ghLaunch = (f) => launch(creator, f);
 assert.equal((await ghLaunch(ghForm("ghp_bad"))).status, 400);
 assert.match((await (await ghLaunch(ghForm("ghp_weak"))).json()).error, /admin/);
 assert.equal((await ghLaunch(ghForm("ghp_good", "not a repo"))).status, 400);
@@ -332,17 +361,17 @@ if (process.env.SKIP_ADMIN !== "1") {
   const adminPage = await admin.get("/admin");
   assert.equal(adminPage.status, 200, "start the server with ADMIN_WALLETS=" + ADMIN_WALLET);
   form.set("price", "1");
-  res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: form });
+  res = await launch(creator, form);
   const { id: p2 } = await res.json();
   assert.equal((await stranger.json(`/api/products/${p2}/remove`, { block: true })).status, 404);
   assert.equal((await admin.json(`/api/products/${p2}/remove`, { block: true })).status, 200);
   assert.equal((await fetch(BASE + `/p/${p2}`)).status, 404);
-  res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: form });
+  res = await launch(creator, form);
   assert.equal(res.status, 403);
   assert.ok((await (await admin.get("/admin")).text()).includes(creator.wallet));
   assert.equal((await stranger.json("/api/admin/unblock", { wallet: creator.wallet })).status, 404);
   assert.equal((await admin.json("/api/admin/unblock", { wallet: creator.wallet })).status, 200);
-  res = await fetch(BASE + "/api/products", { method: "POST", headers: { cookie: creator.cookie }, body: form });
+  res = await launch(creator, form);
   assert.equal(res.status, 200);
   step("admin block: creator unlisted + cannot launch; unblock restores");
 }

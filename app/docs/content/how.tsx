@@ -150,12 +150,19 @@ export function Encryption() {
         nothing it can open — is the goal state and arrives together with private buyer–creator chat.
       </p>
 
-      <H2 id="login">Sign-in signatures</H2>
+      <H2 id="login">Wallet signatures</H2>
       <p>
         Login is an ed25519 signature over a fixed message that includes the site host, the wallet and a timestamp.
         The server verifies the signature, rejects anything older than five minutes, and issues an HMAC-signed session
         cookie valid for seven days. No nonce store is needed: the host binding stops cross-site replay and the window
         limits any replay to five minutes.
+      </p>
+      <p>
+        Launching asks for a second signature, over the listing terms themselves — title, price in lamports, delivery
+        kind, creator, timestamp. The server rebuilds that message from what was actually submitted and verifies it
+        against the session wallet, so a session cookie on its own cannot list anything, and nothing can be altered
+        between the wallet dialog and the database row. Buying needs no extra message: the payment transaction is
+        itself the signed instruction.
       </p>
     </>
   );
