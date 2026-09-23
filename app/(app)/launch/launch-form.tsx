@@ -151,12 +151,12 @@ export function LaunchForm({ wallet }: { wallet: string }) {
           <div className="term-bar"><span className="term-dots"><i /><i /><i /></span> session</div>
           <dl className="lx-facts">
             <dt>signer</dt><dd>{wallet.slice(0, 4)}…{wallet.slice(-4)}</dd>
-            <dt>network</dt><dd>mainnet-beta</dd>
-            <dt>you keep</dt><dd>95%</dd>
-            <dt>platform fee</dt><dd>5%</dd>
+            <dt>network</dt><dd className="v-info">mainnet-beta</dd>
+            <dt>you keep</dt><dd className="v-good">95%</dd>
+            <dt>platform fee</dt><dd className="v-fee">5%</dd>
             <dt>min price</dt><dd>0.02 SOL</dd>
             <dt>max file</dt><dd>200 MB</dd>
-            <dt>listing cost</dt><dd>free</dd>
+            <dt>listing cost</dt><dd className="v-good">free</dd>
           </dl>
         </div>
         <div className="term">
@@ -180,7 +180,7 @@ export function LaunchForm({ wallet }: { wallet: string }) {
         <div className="term-bar">
           <span className="term-dots"><i /><i /><i /></span>
           ~/everynth/launch
-          <span className="lx-bar-right">{busy ? "running" : "ready"}</span>
+          <span className={`lx-bar-right ${busy ? "is-run" : "is-ready"}`}>{busy ? "running" : "ready"}</span>
         </div>
         <div className="term-body">
           <p className="lx-cmd"><span>$</span> everynth launch --new</p>
@@ -268,7 +268,7 @@ export function LaunchForm({ wallet }: { wallet: string }) {
                 <input type="file" name="file" required aria-label="Product file (max 200 MB)"
                   onChange={(e) => pickPayload(e.target.files?.[0] ?? null)} className="lx-in lx-file" />
                 {payload && (
-                  <p className={payload.blocked ? "lx-err" : "lx-meta"}>
+                  <p className={payload.blocked ? "lx-err" : "lx-ok"}>
                     {payload.blocked
                       ? `${payload.name} is an executable — zip the source or ship a document instead`
                       : `${payload.name} · ${size(payload.bytes)} · sealed ≈ ${size(payload.bytes + 28)}`}
@@ -340,19 +340,19 @@ export function LaunchForm({ wallet }: { wallet: string }) {
               ) : (
                 <div className="cover-blank">{(title.trim()[0] ?? "◆").toUpperCase()}</div>
               )}
-              <span className="pill pill-sm lx-prev-badge">{category}</span>
+              <span className="pill pill-sm lx-prev-badge" data-cat={category}>{category}</span>
             </div>
             <b className="lx-prev-title">{title.trim() || "Untitled product"}</b>
             <p className="lx-prev-desc">{desc.trim() || "Your description shows here, trimmed to two lines on the market grid."}</p>
             <div className="lx-prev-foot">
-              <span>{priceOk ? `${sol} SOL` : "— SOL"}</span>
+              <span className={priceOk ? "is-price" : ""}>{priceOk ? `${sol} SOL` : "— SOL"}</span>
               <span>{wallet.slice(0, 4)}…{wallet.slice(-4)}</span>
             </div>
           </div>
           <dl className="lx-facts lx-facts-split">
-            <dt>you receive</dt><dd>{priceOk ? `${(sol * 0.95).toFixed(4)} SOL` : "—"}</dd>
-            <dt>platform fee</dt><dd>{priceOk ? `${(sol * 0.05).toFixed(4)} SOL` : "—"}</dd>
-            <dt>per 10 sales</dt><dd>{priceOk ? `${(sol * 9.5).toFixed(3)} SOL` : "—"}</dd>
+            <dt>you receive</dt><dd className={priceOk ? "v-good" : ""}>{priceOk ? `${(sol * 0.95).toFixed(4)} SOL` : "—"}</dd>
+            <dt>platform fee</dt><dd className={priceOk ? "v-fee" : ""}>{priceOk ? `${(sol * 0.05).toFixed(4)} SOL` : "—"}</dd>
+            <dt>per 10 sales</dt><dd className={priceOk ? "v-info" : ""}>{priceOk ? `${(sol * 9.5).toFixed(3)} SOL` : "—"}</dd>
           </dl>
         </div>
 

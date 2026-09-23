@@ -29,17 +29,17 @@ export default async function StatsPage() {
           <dl className="pulse">
             <div><dt>Live products</dt><dd className="chrome">{p.live}</dd></div>
             <div><dt>Purchases settled</dt><dd className="chrome">{p.sales}</dd></div>
-            <div><dt>Volume</dt><dd className="chrome">{formatSol(p.volume)}<small> SOL</small></dd></div>
+            <div><dt>Volume</dt><dd className="v-info">{formatSol(p.volume)}<small> SOL</small></dd></div>
             <div><dt>Creators</dt><dd className="chrome">{p.creators}</dd></div>
-            <div><dt>Last 7 days</dt><dd className="chrome">{last7}<small> {prev7 ? `${last7 >= prev7 ? "+" : ""}${last7 - prev7} vs prior 7` : "purchases"}</small></dd></div>
-            <div><dt>To creators</dt><dd className="chrome">{formatSol(Math.round(p.volume * 0.95))}<small> SOL</small></dd></div>
+            <div><dt>Last 7 days</dt><dd className={last7 >= prev7 ? "v-good" : "v-fee"}>{last7}<small> {prev7 ? `${last7 >= prev7 ? "+" : ""}${last7 - prev7} vs prior 7` : "purchases"}</small></dd></div>
+            <div><dt>To creators</dt><dd className="v-good">{formatSol(Math.round(p.volume * 0.95))}<small> SOL</small></dd></div>
           </dl>
         </div>
         <div className="feature-art">
           <p className="kicker">Purchases · last 30 days</p>
-          <Spark days={p.days} height={150} />
+          <Spark days={p.days} height={150} tone="green" />
           <p className="kicker" style={{ marginTop: 8 }}>Volume · SOL per day</p>
-          <Spark days={p.volumeDays} height={90} />
+          <Spark days={p.volumeDays} height={90} tone="cyan" />
         </div>
       </section>
 
@@ -83,10 +83,10 @@ export default async function StatsPage() {
             {cats.map((c) => (
               <li key={c.category} className="catrow">
                 <Link href={`/?category=${encodeURIComponent(c.category)}`} className="prow">
-                  <span className="prow-name">{c.category}<small>{c.products} live</small></span>
+                  <span className="prow-name"><b className="cat" data-cat={c.category}>{c.category}</b><small>{c.products} live</small></span>
                   <span className="prow-val"><b className="chrome">{c.sales}</b></span>
                 </Link>
-                <span className="bar-track" aria-hidden="true"><span className="bar-fill" style={{ width: `${(c.sales / maxCat) * 100}%` }} /></span>
+                <span className="bar-track" data-cat={c.category} aria-hidden="true"><span className="bar-fill" style={{ width: `${(c.sales / maxCat) * 100}%` }} /></span>
               </li>
             ))}
           </ol>

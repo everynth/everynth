@@ -66,7 +66,7 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
           </div>
 
           <div className="rise rise-2">
-            <p className="kicker">{product.category} · {kind.label}</p>
+            <p className="kicker"><b className="cat" data-cat={product.category}>{product.category}</b> · {kind.label}</p>
             <h1 className="detail-title">{product.title}</h1>
             <p className="detail-by">
               <Avatar seed={product.creator} size={26} />
@@ -109,8 +109,8 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
         <aside className="detail-side">
           <div className="panel buy-panel rise rise-2">
             <p className="kicker">Price</p>
-            <p className="buy-price"><span className="chrome">{formatSol(product.price)}</span> <small>SOL</small></p>
-            <p className="buy-split">{formatSol(creatorAmount)} SOL to the creator · {formatSol(product.price - creatorAmount)} SOL fee</p>
+            <p className="buy-price"><span className="is-price">{formatSol(product.price)}</span> <small>SOL</small></p>
+            <p className="buy-split"><b className="v-good">{formatSol(creatorAmount)} SOL</b> to the creator · <b className="v-fee">{formatSol(product.price - creatorAmount)} SOL</b> fee</p>
             {product.preview_url && (
               <a href={product.preview_url} target="_blank" rel="noreferrer noopener" className="btn-ghost preview-btn">
                 Preview live product ↗
