@@ -111,7 +111,9 @@ Issued at: 1758445200000`}</Code>
       </p>
       <Note>
         <p>
-          There is no email, no password and no account to create. Your wallet address is your identity.
+          There is no email, no password and no account to create. Your wallet address is your identity. Your wallet
+          asks for a signature twice more only: once to confirm each launch, and once per purchase (that one is the
+          payment itself).
         </p>
       </Note>
 
@@ -120,7 +122,10 @@ Issued at: 1758445200000`}</Code>
         <li>Open <Link href="/launch">Launch</Link>.</li>
         <li>Fill in title, description, category and a price in SOL (minimum 0.02).</li>
         <li>Choose what buyers receive: a file, secret text, or access to a GitHub repository.</li>
-        <li>Press <em>Encrypt &amp; launch</em>. The product is live immediately.</li>
+        <li>
+          Press <em>Confirm, encrypt &amp; launch</em> and sign the confirmation your wallet shows (free, no funds
+          move). The product is live immediately.
+        </li>
       </ol>
       <p>Full details in <Link href="/docs/selling">Selling</Link>.</p>
 

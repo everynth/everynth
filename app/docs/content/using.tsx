@@ -52,15 +52,39 @@ export function Selling() {
           product page.
         </li>
         <li>Choose the kind and attach the file, paste the text, or enter the repository and token.</li>
-        <li>Press <em>Encrypt &amp; launch</em>.</li>
+        <li>
+          Press <em>Confirm, encrypt &amp; launch</em>. Your wallet asks you to sign a confirmation of the terms —
+          free, moves no funds. See <a href="#confirm">the confirmation signature</a> below.
+        </li>
       </ol>
       <p>What happens in your browser when you press the button:</p>
-      <Code>{`1. generate a random AES-256-GCM key
-2. encrypt the file / text with it            (plaintext never leaves this tab)
-3. file:   upload the ciphertext straight to blob storage
+      <Code>{`1. ask the wallet to sign the terms            (title, price, delivery kind)
+2. generate a random AES-256-GCM key
+3. encrypt the file / text with it            (plaintext never leaves this tab)
+4. file:   upload the ciphertext straight to blob storage
    secret: send the small ciphertext with the form
-4. send the key + listing details to EVERYNTH (over TLS)
-5. the server stores the key wrapped with its master key`}</Code>
+5. send the key + listing details + signature to EVERYNTH (over TLS)
+6. the server re-checks the signature, then stores the key wrapped with its master key`}</Code>
+
+      <H3 id="confirm">The confirmation signature</H3>
+      <p>
+        Signing in proves the address is yours. Launching asks for a second signature, over the listing itself, so
+        that a stolen session cookie cannot put something on sale under your address on terms you never saw:
+      </p>
+      <Code>{`everynth.vercel.app wants you to confirm this launch on EVERYNTH.
+This is free and does not move any funds.
+
+Title: Alpha Signals API
+Price: 1000000000 lamports
+Delivery: secret
+Creator: 7uNq…UV8h
+Issued at: 1758445200000`}</Code>
+      <p>
+        The server rebuilds that exact text from what was submitted and checks it against your address. Change the
+        title, the price or the delivery kind after signing and it no longer matches, so the launch is refused. The
+        signature is valid for five minutes and only for this domain. The price is written in lamports (1 SOL =
+        1,000,000,000) because an integer reads the same everywhere.
+      </p>
       <p>The product is live on the market the moment the request succeeds. There is no approval queue.</p>
 
       <H2 id="after-launch">After launch</H2>

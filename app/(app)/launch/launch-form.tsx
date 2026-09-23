@@ -3,8 +3,11 @@
 import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useWalletCtx } from "@/components/wallet";
 import { BLOCKED_EXTENSIONS, CATEGORIES, MAX_PAYLOAD_BYTES, MAX_SECRET_BYTES } from "@/lib/config";
 import { encryptContent } from "@/lib/content-crypto";
+import { launchMessage } from "@/lib/launch-message";
+import { parseFields } from "@/lib/product-form";
 
 type Kind = "file" | "secret" | "github";
 type Level = "sys" | "in" | "ok" | "warn" | "err";
@@ -12,6 +15,7 @@ type Line = { t: string; k: Level; s: string };
 
 // Event-time only: the React Compiler rejects clock reads during render.
 const stamp = () => new Date().toLocaleTimeString("en-GB", { hour12: false });
+const issuedNow = () => Date.now();
 const size = (b: number) => (b < 1024 ? `${b} B` : b < 1024 ** 2 ? `${(b / 1024).toFixed(1)} KB` : `${(b / 1024 ** 2).toFixed(2)} MB`);
 const bar = (pct: number) => `[${"█".repeat(Math.round(pct / 5)).padEnd(20, "░")}] ${pct.toFixed(0).padStart(3)}%`;
 const MARK: Record<Level, string> = { sys: "·", in: "›", ok: "✓", warn: "!", err: "✗" };
@@ -24,6 +28,7 @@ const KINDS: { k: Kind; flag: string; label: string; hint: string }[] = [
 
 export function LaunchForm({ wallet }: { wallet: string }) {
   const router = useRouter();
+  const { signMessage } = useWalletCtx();
   const [kind, setKind] = useState<Kind>("file");
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
@@ -85,6 +90,18 @@ export function LaunchForm({ wallet }: { wallet: string }) {
       const secretField = form.get("secret");
       form.delete("file");
       form.delete("secret");
+
+      // Confirm the terms in the wallet first: asking after a 200 MB upload would waste it.
+      const fields = parseFields(form);
+      if (typeof fields === "string") throw new Error(fields);
+      const issuedAt = issuedNow();
+      say("sys", "waiting for wallet confirmation…");
+      const signature = await signMessage(
+        new TextEncoder().encode(launchMessage(location.host, wallet, { title: fields.title, price: fields.price, kind }, issuedAt)),
+      );
+      form.set("issuedAt", String(issuedAt));
+      form.set("signature", btoa(String.fromCharCode(...signature)));
+      say("ok", `confirmed · ${fields.title} · ${fields.price} lamports · ${kind}`);
 
       if (kind === "github") {
         // Nothing to encrypt here: the server checks the token against GitHub and stores it wrapped.
@@ -162,7 +179,7 @@ export function LaunchForm({ wallet }: { wallet: string }) {
         <div className="term">
           <div className="term-bar">pipeline</div>
           <ol className="lx-steps">
-            {["describe the listing", "attach what buyers get", "encrypt + upload", "live on the market"].map((s, i) => (
+            {["describe the listing", "attach what buyers get", "confirm, encrypt, upload", "live on the market"].map((s, i) => (
               <li key={s} className={i < step ? "is-done" : i === step ? "is-now" : ""}>
                 <b>{String(i + 1).padStart(2, "0")}</b>
                 <span>{s}</span>
@@ -319,10 +336,12 @@ export function LaunchForm({ wallet }: { wallet: string }) {
 
           <div className="lx-submit">
             <button disabled={busy} className="btn">
-              {busy ? (pct === null ? "Working…" : `Uploading ${pct.toFixed(0)}%`) : kind === "github" ? "Launch" : "Encrypt & launch"}
+              {busy ? (pct === null ? "Check your wallet…" : `Uploading ${pct.toFixed(0)}%`) : kind === "github" ? "Confirm & launch" : "Confirm, encrypt & launch"}
             </button>
             <span className="lx-hint">
-              {busy ? "Keep this tab open until it goes live." : "Encryption runs on this device. The file never leaves it in the clear."}
+              {busy
+                ? "Keep this tab open until it goes live."
+                : "Your wallet asks you to confirm the title, price and delivery. Signing is free and moves no funds; encryption then runs on this device."}
             </span>
           </div>
         </div>

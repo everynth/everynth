@@ -100,11 +100,16 @@ price        "0.02" … "1000000", ≤ 9 decimals (SOL)
 kind         file | secret | github
 cover        image/png|jpeg|webp|gif ≤ 1 MB           (optional)
 
+issuedAt     ms timestamp, ≤ 5 min old
+signature    base64 ed25519 over the launch message, by the session wallet
+
 kind=file    key (base64, 32 bytes)  fileName  fileType  payloadUrl (our blob host only)
 kind=secret  key (base64, 32 bytes)  payload   (Blob: iv‖ciphertext, ≤ 64 KB + 28)
 kind=github  repo ("owner/name")     token     (checked live: must have admin on the repo)
 
-→ 200 { "id": "<uuid>" } · 400 validation · 403 wallet blocked · 413 too large`}</Code>
+→ 200 { "id": "<uuid>" } · 400 validation · 401 bad confirmation · 403 wallet blocked · 413 too large`}</Code>
+        <p>The launch message, rebuilt server-side from the submitted title, price (in lamports) and kind:</p>
+        <Code>{`\${host} wants you to confirm this launch on EVERYNTH.\\nThis is free and does not move any funds.\\n\\nTitle: \${title}\\nPrice: \${lamports} lamports\\nDelivery: \${kind}\\nCreator: \${wallet}\\nIssued at: \${issuedAt}`}</Code>
       </Route>
       <Route method="PATCH" path="/api/products/:id" auth="creator">
         <p>Edit listing details: <code>title description category price cover</code> (same rules). Content is immutable. <code>→ 200 {`{ ok }`}</code> · 404 not yours.</p>
