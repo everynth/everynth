@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 export function NavLinks({ signedIn, admin }: { signedIn: boolean; admin: boolean }) {
   const path = usePathname();
-  const links: [string, string][] = [["/", "Market"], ["/stats", "Live stats"], ["/launch", "Launch"]];
+  const links: [string, string][] = [["/", "Market"], ["/stats", "Live stats"], ["/launch", "Launch"], ["/launchpad", "Launchpad"]];
   if (signedIn) links.push(["/purchases", "Purchases"], ["/dashboard", "Dashboard"]);
   if (admin) links.push(["/admin", "Admin"]);
   return (
@@ -13,6 +13,7 @@ export function NavLinks({ signedIn, admin }: { signedIn: boolean; admin: boolea
       {links.map(([href, label]) => (
         <Link key={href} href={href} className={`tab-pill${path === href ? " is-active" : ""}`} aria-current={path === href ? "page" : undefined}>
           {label}
+          {href === "/launchpad" && <span className="tab-soon">soon</span>}
         </Link>
       ))}
     </nav>
