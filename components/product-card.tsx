@@ -16,12 +16,12 @@ export function ProductGrid({ products }: { products: Product[] }) {
                 <span className="chrome">{p.kind === "github" ? "repo" : p.kind === "file" ? "file" : "key"}</span>
               </div>
             )}
-            <span className="kicker text-[10.5px]">{p.category}</span>
+            <span className="kicker text-[10.5px]"><b className="cat" data-cat={p.category}>{p.category}</b></span>
             <h2 className="text-lg font-medium tracking-tight">{p.title}</h2>
             <p className="line-clamp-3 flex-1 text-sm" style={{ color: "var(--mute)" }}>{p.description}</p>
             <span className="flex items-center justify-between font-mono text-sm">
-              <span><span className="chrome font-semibold">{formatSol(p.price)}</span> <span style={{ color: "var(--mute)" }}>SOL</span></span>
-              {p.preview_url && <span className="pill pill-sm">Preview ↗</span>}
+              <span><span className="v-good font-semibold">{formatSol(p.price)}</span> <span style={{ color: "var(--mute)" }}>SOL</span></span>
+              {p.preview_url && <span className="pill pill-sm pill-prev">Preview ↗</span>}
             </span>
           </Link>
         </li>
