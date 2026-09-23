@@ -44,6 +44,8 @@ body {
 .top, .docs-top { position: sticky; top: 0; z-index: 20; padding: 14px 0; border-bottom: 1px solid var(--hair);
   background: var(--background); }
 .wrap, .docs-wrap { width: min(100%, 1240px); margin-inline: auto; padding-inline: clamp(18px, 4.5vw, 56px); }
+.brand-mark { display: block; width: 22px; height: 22px; object-fit: contain; align-self: center; flex: none; }
+.brand-mark-sm { width: 16px; height: 16px; }
 .brand, .docs-brand { display: inline-flex; align-items: baseline; gap: .55rem; font-family: var(--font-geist-mono), monospace; font-size: .8rem; letter-spacing: .16em; font-weight: 600; text-decoration: none; color: var(--foreground); }
 .navlink, .docs-link { color: var(--mute); text-decoration: none; padding: .45rem .7rem; border-radius: 999px; font-size: .9rem; transition: color .2s, background .2s; }
 .navlink:hover, .docs-link:hover, .navlink.is-active { color: var(--foreground); background: rgba(255,255,255,.06); }
