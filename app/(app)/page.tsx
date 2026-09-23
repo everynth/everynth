@@ -76,15 +76,15 @@ export default async function Market({ searchParams }: PageProps<"/">) {
             </span>
             <span className="pcardx-avatar"><Avatar seed={x.creator} /></span>
             <span className="pcardx-title">{x.title}</span>
-            <span className="pcardx-by">{x.category} · {short(x.creator)} · {age(x.age_days)}</span>
+            <span className="pcardx-by"><b className="cat" data-cat={x.category}>{x.category}</b> · {short(x.creator)} · {age(x.age_days)}</span>
             <span className="pcardx-desc">{x.description}</span>
             <span className="pcardx-meta">
-              <span className="mono"><b className="chrome">{formatSol(x.price)}</b> SOL</span>
+              <span className="mono"><b className="is-price">{formatSol(x.price)}</b> SOL</span>
               <span className="mono">{x.sales} sold</span>
             </span>
             <span className="pcardx-foot">
               <span className={`pill${x.age_days < 3 ? " pill-live" : ""}`}>{x.age_days < 3 ? "● New" : kindLabel[x.kind]}</span>
-              {x.preview_url && <span className="pill">Preview ↗</span>}
+              {x.preview_url && <span className="pill pill-prev">Preview ↗</span>}
             </span>
           </Link>
         ))}
