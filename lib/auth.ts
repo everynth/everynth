@@ -1,16 +1,32 @@
 import { createHmac, createPublicKey, timingSafeEqual, verify } from "node:crypto";
 import { PublicKey } from "@solana/web3.js";
+import { launchMessage, type LaunchTerms } from "./launch-message.ts";
 import { loginMessage } from "./login-message.ts";
 
 export const SESSION_COOKIE = "everynth_session";
 export const SESSION_TTL_S = 7 * 24 * 3600;
-const LOGIN_WINDOW_MS = 5 * 60 * 1000;
+const SIGN_WINDOW_MS = 5 * 60 * 1000;
 // DER prefix that turns a raw 32-byte ed25519 key into an SPKI public key
 const ED25519_SPKI_PREFIX = Buffer.from("302a300506032b6570032100", "hex");
 
-
 // ponytail: stateless replay guard (host-bound message + 5 min window), no nonce store.
 // A captured signature is replayable inside the window; add one-time nonces if that matters.
+const fresh = (issuedAt: number, now: number) => Number.isFinite(issuedAt) && Math.abs(now - issuedAt) <= SIGN_WINDOW_MS;
+
+// Was this exact text signed by the private key behind this wallet address?
+function signedBy(message: string, wallet: string, signatureB64: string): boolean {
+  try {
+    const key = createPublicKey({
+      key: Buffer.concat([ED25519_SPKI_PREFIX, new PublicKey(wallet).toBytes()]),
+      format: "der",
+      type: "spki",
+    });
+    return verify(null, Buffer.from(message), key, Buffer.from(signatureB64, "base64"));
+  } catch {
+    return false; // malformed wallet or signature
+  }
+}
+
 export function verifyLogin(
   host: string,
   wallet: string,
@@ -18,18 +34,20 @@ export function verifyLogin(
   signatureB64: string,
   now = Date.now(),
 ): boolean {
-  if (!Number.isFinite(issuedAt) || Math.abs(now - issuedAt) > LOGIN_WINDOW_MS) return false;
-  try {
-    const key = createPublicKey({
-      key: Buffer.concat([ED25519_SPKI_PREFIX, new PublicKey(wallet).toBytes()]),
-      format: "der",
-      type: "spki",
-    });
-    const signature = Buffer.from(signatureB64, "base64");
-    return verify(null, Buffer.from(loginMessage(host, wallet, issuedAt)), key, signature);
-  } catch {
-    return false; // malformed wallet or signature
-  }
+  return fresh(issuedAt, now) && signedBy(loginMessage(host, wallet, issuedAt), wallet, signatureB64);
+}
+
+// Second signature, asked for at launch: the creator confirms the terms that will be stored.
+// Change the title, the price or the delivery kind after signing and this no longer matches.
+export function verifyLaunch(
+  host: string,
+  wallet: string,
+  terms: LaunchTerms,
+  issuedAt: number,
+  signatureB64: string,
+  now = Date.now(),
+): boolean {
+  return fresh(issuedAt, now) && signedBy(launchMessage(host, wallet, terms, issuedAt), wallet, signatureB64);
 }
 
 function sign(payload: string, secret: string): string {
