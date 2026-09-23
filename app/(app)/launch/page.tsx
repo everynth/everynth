@@ -4,14 +4,30 @@ import { LaunchForm } from "./launch-form";
 export default async function LaunchPage() {
   const wallet = await sessionWallet();
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <p className="kicker rise">Creator · Launch</p>
-      <h1 className="chrome shimmer rise rise-2 text-3xl font-medium tracking-tight sm:text-5xl">Launch a product</h1>
-      <p className="rise rise-3" style={{ color: "var(--ink2)" }}>
-        Your file or secret is encrypted on this device before upload. Buyers unlock it after paying in SOL. You
-        receive 95% straight to your wallet; nothing is held by the platform.
-      </p>
-      {wallet ? <div className="rise rise-4"><LaunchForm /></div> : <p className="card rise rise-4">Connect your wallet and sign in (top right) to launch.</p>}
+    <div className="dash">
+      <div className="dash-sec">
+        <div>
+          <p className="kicker rise">Creator · Launch</p>
+          <h1 className="chrome rise rise-2 mt-2 text-3xl font-medium tracking-tight sm:text-4xl">Launch console</h1>
+          <p className="dash-sec-sub rise rise-3">
+            Encrypted on this device, priced in SOL, paid wallet-to-wallet. Fill the left, watch the right.
+          </p>
+        </div>
+        <p className="mono rise rise-3 text-[11px] uppercase tracking-widest" style={{ color: "var(--dim)" }}>
+          aes-256-gcm · client-side · no custody
+        </p>
+      </div>
+      {wallet ? (
+        <div className="rise rise-4"><LaunchForm wallet={wallet} /></div>
+      ) : (
+        <div className="term rise rise-4">
+          <div className="term-bar"><span className="term-dots"><i /><i /><i /></span> auth required</div>
+          <div className="term-body">
+            <p className="lx-cmd"><span>$</span> everynth launch --new</p>
+            <p className="lx-log-line is-err"><span className="lx-log-m">✗</span><span>no session — connect your wallet and sign in (top right) to launch.</span></p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
