@@ -11,6 +11,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       <header className="top">
         <div className="wrap-wide flex flex-wrap items-center gap-x-4 gap-y-3">
           <Link href="/" className="brand">
+            {/* eslint-disable-next-line @next/next/no-img-element -- static mark, no layout shift to optimise away */}
+            <img src="/logo.png" alt="" width={22} height={22} className="brand-mark" />
             <span className="chrome">EVERYNTH</span>
           </Link>
           <div className="tabs">
@@ -27,6 +29,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       <main className="wrap-wide flex-1 py-6">{children}</main>
       <footer className="foot">
         <div className="wrap-wide flex flex-wrap items-center gap-x-6 gap-y-2">
+          {/* eslint-disable-next-line @next/next/no-img-element -- static mark */}
+          <img src="/logo.png" alt="" width={16} height={16} className="brand-mark brand-mark-sm" />
           <span className="chrome font-mono text-xs tracking-widest">EVERYNTH</span>
           <Link href="/terms" className="navlink">Terms</Link>
           <Link href="/developers" className="navlink">For developers</Link>
