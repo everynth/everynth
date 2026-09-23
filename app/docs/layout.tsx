@@ -12,6 +12,8 @@ export default function DocsLayout({ children }: LayoutProps<"/docs">) {
       <header className="docs-top">
         <div className="docs-wrap flex items-center gap-5">
           <Link href="/docs" className="docs-brand">
+            {/* eslint-disable-next-line @next/next/no-img-element -- static mark */}
+            <img src="/logo.png" alt="" width={22} height={22} className="brand-mark" />
             <span className="chrome">EVERYNTH</span>
             <span className="docs-brand-sep" aria-hidden="true">/</span>
             <span>Docs</span>
