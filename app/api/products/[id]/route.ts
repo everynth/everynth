@@ -1,5 +1,7 @@
+import { verifyAction } from "@/lib/auth";
 import { query } from "@/lib/db";
-import { parseCover, parseFields } from "@/lib/product-form";
+import { editFields } from "@/lib/launch-message";
+import { formText, parseCover, parseFields } from "@/lib/product-form";
 import { sessionWallet } from "@/lib/session";
 
 const bad = (error: string, status = 400) => Response.json({ error }, { status });
@@ -15,6 +17,12 @@ export async function PATCH(request: Request, { params }: RouteContext<"/api/pro
   if (typeof fields === "string") return bad(fields);
   const cover = await parseCover(form);
   if (typeof cover === "string") return bad(cover);
+
+  const issuedAt = Number(formText(form, "issuedAt"));
+  const fieldLines = editFields(id, fields.title, fields.price);
+  if (!verifyAction(request.headers.get("host") ?? "", wallet, "edit listing", fieldLines, issuedAt, formText(form, "signature"))) {
+    return bad("confirmation signature is missing, expired, or does not match these details", 401);
+  }
 
   const rows = await query(
     `update products set title = $1, description = $2, category = $3, price = $4,

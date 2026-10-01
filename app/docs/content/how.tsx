@@ -164,6 +164,12 @@ export function Encryption() {
         between the wallet dialog and the database row. Buying needs no extra message: the payment transaction is
         itself the signed instruction.
       </p>
+      <p>
+        The same rule covers everything else that changes what a buyer sees: <strong>editing a listing</strong> is
+        signed over the new title and price, and <strong>taking one down</strong> is signed over the product id and
+        whether the creator is being blocked with it. A stolen session can therefore read, but it cannot list,
+        reprice or empty someone&apos;s shop.
+      </p>
     </>
   );
 }

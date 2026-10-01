@@ -10,6 +10,7 @@ export const MAX_PRICE_LAMPORTS = 1_000_000 * 10 ** SOL_DECIMALS; // keeps amoun
 export const MAX_PAYLOAD_BYTES = 200 * 1024 * 1024;
 export const MAX_SECRET_BYTES = 64 * 1024; // secret text is stored inline in the database
 export const MAX_COVER_BYTES = 1024 * 1024; // cover image, stored inline as bytea
+export const MAX_REVIEW_BODY = 500; // a review is a verdict, not an essay
 // Executables and installers are refused by file name. Content is encrypted in the browser, so this
 // is the only check the server can make; archives are not inspected.
 export const BLOCKED_EXTENSIONS = /\.(exe|msi|bat|cmd|com|scr|pif|vbs|vbe|ps1|dll|dmg|pkg|app|apk|deb|rpm|jar|lnk)$/i;

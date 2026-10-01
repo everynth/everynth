@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { age, Avatar, short } from "@/components/avatar";
+import { Score } from "@/components/stars";
 import { CATEGORIES } from "@/lib/config";
 import { listProducts, PAGE_SIZE, SORTS, type Listed, type Sort } from "@/lib/market";
 import { formatSol } from "@/lib/money";
@@ -42,7 +43,7 @@ export default async function Market({ searchParams }: PageProps<"/">) {
         <div className="tabs" role="tablist" aria-label="Sort">
           {SORTS.map((s) => (
             <Link key={s} href={href({ sort: s, page: 1 })} className={`tab-pill${sort === s ? " is-active" : ""}`} role="tab" aria-selected={sort === s}>
-              {s === "trending" ? "🔥 Trending" : s === "new" ? "New" : "Price"}
+              {s === "trending" ? "🔥 Trending" : s === "new" ? "New" : s === "rated" ? "★ Top rated" : "Price"}
             </Link>
           ))}
         </div>
@@ -80,7 +81,7 @@ export default async function Market({ searchParams }: PageProps<"/">) {
             <span className="pcardx-desc">{x.description}</span>
             <span className="pcardx-meta">
               <span className="mono"><b className="is-price">{formatSol(x.price)}</b> SOL</span>
-              <span className="mono">{x.sales} sold</span>
+              <span className="mono">{x.reviews ? <Score rating={x.rating} reviews={x.reviews} size={12} /> : `${x.sales} sold`}</span>
             </span>
             <span className="pcardx-foot">
               <span className={`pill${x.age_days < 3 ? " pill-live" : ""}`}>{x.age_days < 3 ? "● New" : kindLabel[x.kind]}</span>
