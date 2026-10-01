@@ -1,10 +1,12 @@
 import { query } from "@/lib/db";
+import { allow, callerKey, tooMany } from "@/lib/limit";
 import { sessionWallet } from "@/lib/session";
 
 // One report per wallet per product; admins review them on /admin.
 export async function POST(request: Request) {
   const reporter = await sessionWallet();
   if (!reporter) return Response.json({ error: "sign in first" }, { status: 401 });
+  if (!(await allow("report", callerKey(request, reporter)))) return tooMany("report");
   const { productId, reason } = (await request.json().catch(() => null)) ?? {};
   if (typeof productId !== "string" || typeof reason !== "string" || reason.trim().length < 5 || reason.length > 1000) {
     return Response.json({ error: "productId and a reason (5-1000 characters) are required" }, { status: 400 });
