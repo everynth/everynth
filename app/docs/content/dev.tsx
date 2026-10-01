@@ -84,6 +84,20 @@ export function Api() {
         <p>Sign out. Clears the cookie. <code>→ 200 {`{ "ok": true }`}</code></p>
       </Route>
 
+      <H2 id="limits">Rate limits</H2>
+      <p>
+        Counted per wallet (per IP when there is no session), in fixed windows, in the database — so every serverless
+        instance counts into the same bucket. Over budget returns <code>429</code> with a <code>retry-after</code>
+        header. Nothing here is near what normal use looks like.
+      </p>
+      <Code>{`POST /api/session              30 / 10 min
+POST /api/products             25 / hour
+POST /api/upload               20 / hour
+POST /api/orders               40 / hour
+POST /api/purchases/:id/review 20 / hour
+POST /api/reports              10 / hour
+GET  /api/verify              300 / minute   (per IP)`}</Code>
+
       <H2 id="products">Products</H2>
       <Route method="POST" path="/api/upload" auth="session">
         <p>

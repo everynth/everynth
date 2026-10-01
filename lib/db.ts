@@ -52,6 +52,13 @@ create table if not exists reports (
   created_at timestamptz not null default now(),
   unique (product_id, reporter)
 );
+-- Rate limiting lives in the database so every serverless instance counts into the same bucket.
+create table if not exists rate_limits (
+  bucket_key text not null,
+  bucket bigint not null,
+  n int not null default 0,
+  primary key (bucket_key, bucket)
+);
 -- One paid purchase buys the right to exactly one review: the purchase id IS the key.
 create table if not exists reviews (
   purchase_id text primary key references purchases(id),

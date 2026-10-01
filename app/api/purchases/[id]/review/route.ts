@@ -1,4 +1,5 @@
 import { query } from "@/lib/db";
+import { allow, callerKey, tooMany } from "@/lib/limit";
 import { parseReview, upsertReview } from "@/lib/reviews";
 import { sessionWallet } from "@/lib/session";
 
@@ -8,6 +9,7 @@ export async function POST(request: Request, { params }: RouteContext<"/api/purc
   const { id } = await params;
   const wallet = await sessionWallet();
   if (!wallet) return Response.json({ error: "sign in first" }, { status: 401 });
+  if (!(await allow("review", callerKey(request, wallet)))) return tooMany("review");
 
   const parsed = parseReview(await request.json().catch(() => null));
   if (typeof parsed === "string") return Response.json({ error: parsed }, { status: 400 });

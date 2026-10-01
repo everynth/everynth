@@ -1,5 +1,6 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { MAX_PAYLOAD_BYTES } from "@/lib/config";
+import { allow, callerKey, tooMany } from "@/lib/limit";
 import { sessionWallet } from "@/lib/session";
 
 // Hands the creator's browser a short-lived token to upload the (already encrypted) file straight to
@@ -7,6 +8,7 @@ import { sessionWallet } from "@/lib/session";
 export async function POST(request: Request) {
   const wallet = await sessionWallet();
   if (!wallet) return Response.json({ error: "sign in first" }, { status: 401 });
+  if (!(await allow("upload", callerKey(request, wallet)))) return tooMany("upload");
   const body = (await request.json().catch(() => null)) as HandleUploadBody | null;
   if (!body) return Response.json({ error: "bad request" }, { status: 400 });
   try {
