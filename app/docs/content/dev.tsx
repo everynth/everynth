@@ -111,11 +111,28 @@ kind=github  repo ("owner/name")     token     (checked live: must have admin on
         <p>The launch message, rebuilt server-side from the submitted title, price (in lamports) and kind:</p>
         <Code>{`\${host} wants you to confirm this launch on EVERYNTH.\\nThis is free and does not move any funds.\\n\\nTitle: \${title}\\nPrice: \${lamports} lamports\\nDelivery: \${kind}\\nCreator: \${wallet}\\nIssued at: \${issuedAt}`}</Code>
       </Route>
-      <Route method="PATCH" path="/api/products/:id" auth="creator">
-        <p>Edit listing details: <code>title description category price cover</code> (same rules). Content is immutable. <code>→ 200 {`{ ok }`}</code> · 404 not yours.</p>
+      <Route method="PATCH" path="/api/products/:id" auth="creator + signature">
+        <p>
+          Edit listing details: <code>title description category price cover</code> (same rules), plus{" "}
+          <code>issuedAt</code> and <code>signature</code>. Content is immutable. <code>→ 200 {`{ ok }`}</code> · 401
+          bad confirmation · 404 not yours.
+        </p>
+        <Code>{`\${host} wants you to confirm: edit listing.\\nThis is free and does not move any funds.\\n\\nItem: \${id}\\nTitle: \${title}\\nPrice: \${lamports} lamports\\nWallet: \${wallet}\\nIssued at: \${issuedAt}`}</Code>
       </Route>
-      <Route method="POST" path="/api/products/:id/remove" auth="creator or admin">
-        <p>Unlist. Body optional: <code>{`{ "block": true }`}</code> (admins) also blocks the creator and unlists all their products. <code>→ 200 {`{ ok }`}</code></p>
+      <Route method="POST" path="/api/products/:id/remove" auth="creator or admin + signature">
+        <p>
+          Unlist. Body: <code>{`{ "block": true }`}</code> (admins) also blocks the creator and unlists all their
+          products, plus <code>issuedAt</code> and <code>signature</code>. <code>→ 200 {`{ ok }`}</code> · 401 bad
+          confirmation
+        </p>
+        <Code>{`\${host} wants you to confirm: remove from market.\\nThis is free and does not move any funds.\\n\\nItem: \${id}\\nScope: product | product and creator\\nWallet: \${wallet}\\nIssued at: \${issuedAt}`}</Code>
+      </Route>
+      <Route method="POST" path="/api/purchases/:id/review" auth="buyer">
+        <p>
+          Review a product you paid for. One review per purchase; posting again rewrites it.{" "}
+          <code>{`{ "rating": 1-5, "body": "≤ 500 chars" }`}</code> <code>→ 200 {`{ ok }`}</code> · 400 bad rating or
+          too long · 404 no paid purchase of yours.
+        </p>
       </Route>
       <Route method="GET" path="/api/products/:id/cover" auth="public">
         <p>The cover image bytes, or 404. Cached 5 minutes.</p>

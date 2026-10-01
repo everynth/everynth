@@ -19,7 +19,7 @@ const bs58 = require("bs58").default ?? require("bs58");
 const { upload } = require("@vercel/blob/client");
 const { del } = require("@vercel/blob");
 const { loginMessage } = await import(pathToFileURL(project + "lib/login-message.ts").href);
-const { launchMessage } = await import(pathToFileURL(project + "lib/launch-message.ts").href);
+const { launchMessage, actionMessage, editFields, removeFields } = await import(pathToFileURL(project + "lib/launch-message.ts").href);
 const { parseSol } = await import(pathToFileURL(project + "lib/money.ts").href);
 const { encryptContent, decryptContent } = await import(pathToFileURL(project + "lib/content-crypto.ts").href);
 
@@ -122,6 +122,24 @@ function signLaunch(user, form) {
 }
 const launch = (user, form) => fetch(BASE + "/api/products", { method: "POST", headers: { cookie: user.cookie }, body: signLaunch(user, form) });
 const cloneForm = (f) => { const o = new FormData(); for (const [k, v] of f.entries()) o.set(k, v); return o; };
+
+// Editing and unlisting are signed in the browser too; mirror that here.
+const signAction = (user, action, fields, issuedAt) =>
+  sign(null, Buffer.from(actionMessage("localhost:3100", user.wallet, action, fields, issuedAt)), user.privateKey).toString("base64");
+
+function signEdit(user, id, form) {
+  const issuedAt = Date.now();
+  const fields = editFields(id, String(form.get("title") ?? "").trim(), parseSol(String(form.get("price") ?? "")));
+  form.set("issuedAt", String(issuedAt));
+  form.set("signature", signAction(user, "edit listing", fields, issuedAt));
+  return form;
+}
+const patch = (user, id, form) => fetch(BASE + `/api/products/${id}`, { method: "PATCH", headers: { cookie: user.cookie }, body: signEdit(user, id, form) });
+
+function unlist(user, id, block = false) {
+  const issuedAt = Date.now();
+  return user.json(`/api/products/${id}/remove`, { block, issuedAt, signature: signAction(user, "remove from market", removeFields(id, block), issuedAt) });
+}
 
 // ---- flow ----
 const creator = await makeUser();
@@ -241,8 +259,13 @@ const png = Buffer.from("89504e470d0a1a0a0000000d4948445200000001000000010806000
 const edit = new FormData();
 for (const [k, v] of Object.entries({ title: "Alpha Signals API v2", description: "Private trading signals API key, 60 days.", category: "API", price: "2" })) edit.set(k, v);
 edit.set("cover", new Blob([png], { type: "image/png" }), "c.png");
-assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: stranger.cookie }, body: edit })).status, 404);
-assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: creator.cookie }, body: edit })).status, 200);
+assert.equal((await patch(stranger, productId, edit)).status, 404);
+const unsignedEdit = cloneForm(edit); unsignedEdit.delete("issuedAt"); unsignedEdit.delete("signature");
+assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: creator.cookie }, body: unsignedEdit })).status, 401);
+const forgedEdit = signEdit(creator, productId, cloneForm(edit)); // signed for this price…
+forgedEdit.set("price", "0.02"); // …submitted with another
+assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: creator.cookie }, body: forgedEdit })).status, 401);
+assert.equal((await patch(creator, productId, edit)).status, 200);
 const coverRes = await fetch(BASE + `/api/products/${productId}/cover`);
 assert.equal(coverRes.status, 200);
 assert.equal(coverRes.headers.get("content-type"), "image/png");
@@ -252,27 +275,44 @@ assert.ok(page.includes("Alpha Signals API v2") && page.includes(`/api/products/
 assert.ok((await (await fetch(BASE + `/u/${creator.wallet}`)).text()).includes("Alpha Signals API v2"));
 assert.equal((await fetch(BASE + "/u/not-a-wallet")).status, 404);
 edit.set("cover", new Blob([png], { type: "text/html" }), "x.html");
-assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: creator.cookie }, body: edit })).status, 400);
-step("edit listing + cover image + creator page; strangers and non-images refused");
+assert.equal((await patch(creator, productId, edit)).status, 400);
+step("edit listing + cover image + creator page; strangers, unsigned and forged edits refused");
 
 // preview link: https only, rendered as a button on the product page and a badge on cards
 edit.set("cover", new Blob([]));
 edit.set("previewUrl", "javascript:alert(1)");
-assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: creator.cookie }, body: edit })).status, 400);
+assert.equal((await patch(creator, productId, edit)).status, 400);
 edit.set("previewUrl", "http://demo.example.com/x");
-assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: creator.cookie }, body: edit })).status, 400);
+assert.equal((await patch(creator, productId, edit)).status, 400);
 edit.set("previewUrl", "https://demo.example.com/alpha");
-assert.equal((await fetch(BASE + `/api/products/${productId}`, { method: "PATCH", headers: { cookie: creator.cookie }, body: edit })).status, 200);
+assert.equal((await patch(creator, productId, edit)).status, 200);
 const prevPage = await (await fetch(BASE + `/p/${productId}`)).text();
 assert.ok(prevPage.includes('href="https://demo.example.com/alpha"') && prevPage.includes("Preview live product"));
 assert.ok((await (await fetch(BASE + "/")).text()).includes("Preview ↗"));
 step("preview link: https only, shown on product page and cards");
 
+// reviews: the right to one comes from a paid purchase, and stays one however often it is rewritten
+const review = (user, body) => user.json(`/api/purchases/${order.purchaseId}/review`, body);
+assert.equal((await review(stranger, { rating: 5 })).status, 404); // not their purchase
+assert.equal((await review(creator, { rating: 5 })).status, 404); // sellers cannot review themselves
+assert.equal((await review(buyer, { rating: 9 })).status, 400);
+assert.equal((await review(buyer, { rating: 2.5 })).status, 400);
+assert.equal((await review(buyer, { rating: 4, body: "x".repeat(501) })).status, 400);
+assert.equal((await review(buyer, { rating: 4, body: "Worked exactly as described." })).status, 200);
+assert.equal((await review(buyer, { rating: 5, body: "Even better after the update." })).status, 200);
+const reviewed = await (await fetch(BASE + `/p/${productId}`)).text();
+assert.ok(reviewed.includes("Even better after the update."), "latest review text shows");
+assert.ok(!reviewed.includes("Worked exactly as described."), "rewriting replaces, never duplicates");
+assert.ok(reviewed.includes("bought it"), "reviews are badged as verified purchases");
+assert.ok((await (await fetch(BASE + "/?sort=rated")).text()).includes("Alpha Signals API"), "Top rated lists it");
+step("reviews: paid buyers only, one per purchase, rewritable, shown on page and in Top rated");
+
 assert.equal((await buyer.json("/api/reports", { productId, reason: "looks like a scam" })).status, 200);
 assert.equal((await buyer.json("/api/reports", { productId, reason: "x" })).status, 400);
 assert.equal((await creator.get("/admin")).status, 404);
-assert.equal((await stranger.json(`/api/products/${productId}/remove`)).status, 404);
-assert.equal((await creator.json(`/api/products/${productId}/remove`)).status, 200);
+assert.equal((await stranger.json(`/api/products/${productId}/remove`, {})).status, 401); // unsigned
+assert.equal((await unlist(stranger, productId)).status, 404);
+assert.equal((await unlist(creator, productId)).status, 200);
 assert.ok(!(await (await fetch(BASE + "/")).text()).includes("Alpha Signals API"));
 assert.equal((await fetch(BASE + `/p/${productId}`)).status, 404);
 assert.equal((await buyer.get(`/p/${productId}`)).status, 200);
@@ -363,8 +403,8 @@ if (process.env.SKIP_ADMIN !== "1") {
   form.set("price", "1");
   res = await launch(creator, form);
   const { id: p2 } = await res.json();
-  assert.equal((await stranger.json(`/api/products/${p2}/remove`, { block: true })).status, 404);
-  assert.equal((await admin.json(`/api/products/${p2}/remove`, { block: true })).status, 200);
+  assert.equal((await unlist(stranger, p2, true)).status, 404);
+  assert.equal((await unlist(admin, p2, true)).status, 200);
   assert.equal((await fetch(BASE + `/p/${p2}`)).status, 404);
   res = await launch(creator, form);
   assert.equal(res.status, 403);

@@ -52,6 +52,16 @@ create table if not exists reports (
   created_at timestamptz not null default now(),
   unique (product_id, reporter)
 );
+-- One paid purchase buys the right to exactly one review: the purchase id IS the key.
+create table if not exists reviews (
+  purchase_id text primary key references purchases(id),
+  product_id text not null references products(id),
+  buyer text not null,
+  rating int not null check (rating between 1 and 5),
+  body text not null default '',
+  created_at timestamptz not null default now()
+);
+create index if not exists reviews_product on reviews (product_id, created_at desc);
 `;
 
 type Client = { query<T>(sql: string, params?: unknown[]): Promise<{ rows: T[] }> };

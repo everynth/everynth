@@ -87,6 +87,23 @@ Issued at: 1758445200000`}</Code>
       </p>
       <p>The product is live on the market the moment the request succeeds. There is no approval queue.</p>
 
+      <H2 id="reviews">Reviews</H2>
+      <p>
+        Payment is final and there are no refunds, so the only thing protecting the next buyer is what the last one
+        said. A review can only be written by a wallet whose purchase of that product is <strong>paid</strong> — the
+        purchase id is the key, so one purchase is one review, forever. There is no way to buy, farm or brigade them.
+      </p>
+      <ul>
+        <li>Score from 1 to 5 stars, plus up to 500 characters of text (optional).</li>
+        <li>A buyer can rewrite their review at any time; it replaces the old one instead of adding another.</li>
+        <li>Creators cannot review their own products, and cannot delete or edit what buyers wrote.</li>
+        <li>Every review is badged <em>✓ bought it</em>, because no other kind can exist.</li>
+      </ul>
+      <p>
+        The average and the count show on the product page, on market cards, and in the <em>★ Top rated</em> sort.
+        A product with no reviews says so plainly rather than showing an empty five stars.
+      </p>
+
       <H2 id="after-launch">After launch</H2>
       <H3 id="edit">Edit</H3>
       <p>

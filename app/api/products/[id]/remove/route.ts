@@ -1,4 +1,6 @@
+import { verifyAction } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { removeFields } from "@/lib/launch-message";
 import { isAdmin, sessionWallet } from "@/lib/session";
 
 // Unlist a product: its creator or an admin (takedown). Existing buyers keep their access.
@@ -8,7 +10,12 @@ export async function POST(request: Request, { params }: RouteContext<"/api/prod
   const wallet = await sessionWallet();
   if (!wallet) return Response.json({ error: "sign in first" }, { status: 401 });
   const admin = isAdmin(wallet);
-  const { block } = (await request.json().catch(() => null)) ?? {};
+  const { block, issuedAt, signature } = (await request.json().catch(() => null)) ?? {};
+
+  const fields = removeFields(id, block === true);
+  if (!verifyAction(request.headers.get("host") ?? "", wallet, "remove from market", fields, Number(issuedAt), String(signature ?? ""))) {
+    return Response.json({ error: "confirmation signature is missing, expired, or does not match" }, { status: 401 });
+  }
 
   const rows = await query<{ creator: string }>(
     `update products set status = 'removed' where id = $1 and (creator = $2 or $3) returning creator`,

@@ -1,22 +1,28 @@
 import { query, type Product } from "./db.ts";
+import { RATING_COLS } from "./reviews.ts";
 
-// Read models for the market dashboard. Everything derives from products + purchases.
+// Read models for the market dashboard. Everything derives from products + purchases + reviews.
 
-export type Listed = Product & { sales: number; earned: number; age_days: number };
+export type Listed = Product & { sales: number; earned: number; age_days: number; rating: number; reviews: number };
 
 // Same columns as PRODUCT_COLS, qualified with the products alias, plus the aggregates.
 const LISTED_COLS = `p.id, p.creator, p.title, p.description, p.category, p.price::float8 as price, p.kind, p.file_name, p.github_repo, p.preview_url, p.status,
   (p.cover is not null) as has_cover, p.created_at,
   count(x.id)::int as sales, coalesce(sum(x.creator_amount), 0)::float8 as earned,
-  extract(epoch from now() - p.created_at)::float8 / 86400 as age_days`;
+  extract(epoch from now() - p.created_at)::float8 / 86400 as age_days,
+  ${RATING_COLS}`;
 const LISTED_FROM = `from products p left join purchases x on x.product_id = p.id and x.status = 'paid'`;
 
-export const SORTS = ["trending", "new", "price"] as const;
+export const SORTS = ["trending", "new", "rated", "price"] as const;
 export type Sort = (typeof SORTS)[number];
 export const PAGE_SIZE = 12;
 
 export async function listProducts(opts: { q: string; category: string; sort: Sort; page: number }) {
-  const order = opts.sort === "new" ? "p.created_at desc" : opts.sort === "price" ? "p.price desc" : "sales desc, p.created_at desc";
+  const order =
+    opts.sort === "new" ? "p.created_at desc"
+    : opts.sort === "price" ? "p.price desc"
+    : opts.sort === "rated" ? "rating desc, reviews desc, p.created_at desc"
+    : "sales desc, p.created_at desc";
   const rows = await query<Listed & { total: number }>(
     `select ${LISTED_COLS}, count(*) over()::int as total ${LISTED_FROM}
      where p.status = 'live'
