@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://everynth.vercel.app";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://everynth.org";
 const DESCRIPTION = "Launch and sell digital products on Solana. Encrypted in your browser, paid wallet-to-wallet, 95% straight to the creator.";
 
 export const metadata: Metadata = {

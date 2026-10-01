@@ -71,7 +71,7 @@ export function Selling() {
         Signing in proves the address is yours. Launching asks for a second signature, over the listing itself, so
         that a stolen session cookie cannot put something on sale under your address on terms you never saw:
       </p>
-      <Code>{`everynth.vercel.app wants you to confirm this launch on EVERYNTH.
+      <Code>{`everynth.org wants you to confirm this launch on EVERYNTH.
 This is free and does not move any funds.
 
 Title: Alpha Signals API
