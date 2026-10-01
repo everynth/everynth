@@ -10,14 +10,14 @@
 <meta property="og:site_name" content="EVERYNTH">
 <meta property="og:title" content="EVERYNTH — The Private Commerce Layer">
 <meta property="og:description" content="Launch and sell digital products on Solana. Encrypted in your browser, paid wallet-to-wallet, 95% straight to the creator.">
-<meta property="og:url" content="https://everynth.vercel.app/landing.html">
-<meta property="og:image" content="https://everynth.vercel.app/og.png">
+<meta property="og:url" content="https://everynth.org/landing.html">
+<meta property="og:image" content="https://everynth.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="EVERYNTH — The Private Commerce Layer">
 <meta name="twitter:description" content="Launch and sell digital products on Solana. Encrypted in your browser, paid wallet-to-wallet, 95% straight to the creator.">
-<meta name="twitter:image" content="https://everynth.vercel.app/og.png">
+<meta name="twitter:image" content="https://everynth.org/og.png">
 <link rel="icon" type="image/png" href="/logo-mark.png">
 <link rel="apple-touch-icon" href="/logo-mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1297,12 +1297,12 @@ permission: pull
           <button class="btn copy" type="button" id="copyBtn">Copy</button>
 <pre id="snippet"><span class="c">// gate your own app with one request</span>
 <span class="kw">const</span> res = <span class="kw">await</span> fetch(
-  <span class="s">"https://everynth.vercel.app/api/verify?product="</span>
+  <span class="s">"https://everynth.org/api/verify?product="</span>
   + PRODUCT_ID + <span class="s">"&amp;wallet="</span> + wallet
 );
 <span class="kw">const</span> { owned, since } = <span class="kw">await</span> res.json();
 <span class="kw">if</span> (!owned) location.href =
-  <span class="s">"https://everynth.vercel.app/p/"</span> + PRODUCT_ID;
+  <span class="s">"https://everynth.org/p/"</span> + PRODUCT_ID;
 
 <span class="c">// prove wallet control first — a signed message,</span>
 <span class="c">// exactly as EVERYNTH does at sign-in.</span></pre>

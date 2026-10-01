@@ -100,7 +100,7 @@ export function GettingStarted() {
         Press <em>Connect wallet</em>, pick your wallet, approve the connection. Your wallet then asks you to sign one
         short message. This proves you control the address; it costs nothing and moves no funds. The message looks like:
       </p>
-      <Code>{`everynth.vercel.app wants you to sign in to EVERYNTH.
+      <Code>{`everynth.org wants you to sign in to EVERYNTH.
 This is free and does not move any funds.
 
 Wallet: 7uNq…UV8h
