@@ -173,6 +173,14 @@ export function Faq() {
         <em>Report this product</em> on its page; a human reviews reports and can take the listing down.
       </p>
 
+      <H3 id="reviews">Can I trust the reviews?</H3>
+      <p>
+        A review can only come from a wallet that paid for that exact product, and one purchase can only ever hold one
+        review. Creators cannot review their own products, cannot delete what buyers wrote, and cannot buy more
+        reviews — each one would need a real purchase at the real price, paid to themselves minus the 5% fee. See{" "}
+        <Link href="/docs/selling#reviews">Reviews</Link>.
+      </p>
+
       <H3 id="browser-closed">My browser closed after I paid. Did I lose the money?</H3>
       <p>
         No. Open the product again and press Buy. Before creating a new order the server looks up your existing one on

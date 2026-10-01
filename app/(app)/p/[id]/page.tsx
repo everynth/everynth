@@ -4,8 +4,11 @@ import { age, Avatar, short } from "@/components/avatar";
 import { OpenContent } from "@/components/open-content";
 import { ProductGrid } from "@/components/product-card";
 import { RemoveButton } from "@/components/remove-button";
+import { ReviewForm } from "@/components/review-form";
+import { Score, Stars } from "@/components/stars";
 import { PRODUCT_COLS, query, type Product } from "@/lib/db";
 import { formatSol, splitPrice } from "@/lib/money";
+import { listReviews, reviewFor } from "@/lib/reviews";
 import { isAdmin, sessionWallet } from "@/lib/session";
 import { BuyButton } from "./buy-button";
 import { ReportForm } from "./report-form";
@@ -28,10 +31,13 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
     [id],
   );
   if (!product) notFound();
+  const reviews = await listReviews(id);
+  const score = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : 0;
 
   const [purchase] = wallet
     ? await query<{ id: string }>(`select id from purchases where product_id = $1 and buyer = $2 and status = 'paid'`, [id, wallet])
     : [];
+  const [mine] = purchase ? await reviewFor(purchase.id) : [];
   const isCreator = wallet === product.creator;
   // Removed products stay visible only to people with a reason to see them.
   if (product.status === "removed" && !purchase && !isCreator && !isAdmin(wallet)) notFound();
@@ -73,6 +79,7 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
               <Link href={`/u/${product.creator}`} className="mono">{short(product.creator)}</Link>
               <span>·</span><span>listed {age(product.age_days)}</span>
               <span>·</span><span>{product.sales} sold</span>
+              <span>·</span><a href="#reviews" className="detail-score"><Score rating={score} reviews={reviews.length} /></a>
             </p>
           </div>
 
@@ -95,6 +102,40 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
               <li><b>02</b><span>Verify</span><small>The server reads the confirmed transaction on Solana. Nothing is trusted from the browser.</small></li>
               <li><b>03</b><span>Unlock</span><small>{product.kind === "github" ? "Enter your GitHub username and get invited." : "The key is released and your browser decrypts locally."}</small></li>
             </ol>
+          </section>
+
+          <section className="panel rise rise-4" id="reviews" aria-labelledby="reviews-h">
+            <header className="panel-head">
+              <h2 id="reviews-h">Reviews</h2>
+              <span>{reviews.length ? `${score.toFixed(1)} average · ${reviews.length} total` : "buyers only"}</span>
+            </header>
+            {purchase ? (
+              <ReviewForm purchaseId={purchase.id} existing={mine} />
+            ) : (
+              <p className="rv-note">
+                {isCreator
+                  ? "Your buyers can review this product here. You cannot review your own."
+                  : "Only a wallet that paid for this product can review it. That is the whole moderation policy: no purchase, no voice."}
+              </p>
+            )}
+            {reviews.length > 0 && (
+              <ul className="rv-list">
+                {reviews.map((r) => (
+                  <li key={r.purchase_id} className="rv-item">
+                    <Avatar seed={r.buyer} size={28} />
+                    <div className="rv-item-main">
+                      <p className="rv-item-head">
+                        <Link href={`/u/${r.buyer}`} className="mono">{short(r.buyer)}</Link>
+                        <Stars value={r.rating} size={12} />
+                        <span className="rv-item-age">{age(r.age_days)}</span>
+                        <span className="pill pill-sm pill-verified">✓ bought it</span>
+                      </p>
+                      {r.body && <p className="rv-item-body">{r.body}</p>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           {more.length > 0 && (

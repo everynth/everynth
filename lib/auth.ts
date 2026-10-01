@@ -1,6 +1,6 @@
 import { createHmac, createPublicKey, timingSafeEqual, verify } from "node:crypto";
 import { PublicKey } from "@solana/web3.js";
-import { launchMessage, type LaunchTerms } from "./launch-message.ts";
+import { actionMessage, launchMessage, type LaunchTerms } from "./launch-message.ts";
 import { loginMessage } from "./login-message.ts";
 
 export const SESSION_COOKIE = "everynth_session";
@@ -48,6 +48,19 @@ export function verifyLaunch(
   now = Date.now(),
 ): boolean {
   return fresh(issuedAt, now) && signedBy(launchMessage(host, wallet, terms, issuedAt), wallet, signatureB64);
+}
+
+// Editing a listing and taking one down are signed too: a session cookie alone changes nothing a buyer sees.
+export function verifyAction(
+  host: string,
+  wallet: string,
+  action: string,
+  fields: string[],
+  issuedAt: number,
+  signatureB64: string,
+  now = Date.now(),
+): boolean {
+  return fresh(issuedAt, now) && signedBy(actionMessage(host, wallet, action, fields, issuedAt), wallet, signatureB64);
 }
 
 function sign(payload: string, secret: string): string {
