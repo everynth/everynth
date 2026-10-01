@@ -1,6 +1,7 @@
 import { verifyLaunch } from "@/lib/auth";
 import { BLOCKED_EXTENSIONS, KINDS, MAX_SECRET_BYTES } from "@/lib/config";
 import { query } from "@/lib/db";
+import { allow, callerKey, tooMany } from "@/lib/limit";
 import { checkRepoAdmin, REPO_RE } from "@/lib/github";
 import { masterKey, wrapKey } from "@/lib/keywrap";
 import { formText, parseCover, parseFields } from "@/lib/product-form";
@@ -23,6 +24,7 @@ function isOurBlob(url: string): boolean {
 export async function POST(request: Request) {
   const creator = await sessionWallet();
   if (!creator) return bad("sign in first", 401);
+  if (!(await allow("launch", callerKey(request, creator)))) return tooMany("launch");
   if ((await query(`select 1 from blocked_wallets where wallet = $1`, [creator])).length) {
     return bad("this wallet is blocked from launching", 403);
   }

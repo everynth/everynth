@@ -1,5 +1,6 @@
 import { Keypair } from "@solana/web3.js";
 import { PRODUCT_COLS, query, type Product } from "@/lib/db";
+import { allow, callerKey, sweepLimits, tooMany } from "@/lib/limit";
 import { splitPrice } from "@/lib/money";
 import { sessionWallet } from "@/lib/session";
 import { PURCHASE_COLS, settle, type Purchase } from "@/lib/settle";
@@ -11,6 +12,8 @@ const fail = (error: string, status: number) => Response.json({ error }, { statu
 export async function POST(request: Request) {
   const buyer = await sessionWallet();
   if (!buyer) return fail("sign in first", 401);
+  if (!(await allow("order", callerKey(request, buyer)))) return tooMany("order");
+  await sweepLimits(); // the busiest signed-in route: let it take out the old buckets now and then
   const { productId } = (await request.json().catch(() => null)) ?? {};
   if (typeof productId !== "string") return fail("productId is required", 400);
 

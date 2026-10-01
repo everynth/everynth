@@ -309,6 +309,19 @@ step("reviews: paid buyers only, one per purchase, rewritable, shown on page and
 
 assert.equal((await buyer.json("/api/reports", { productId, reason: "looks like a scam" })).status, 200);
 assert.equal((await buyer.json("/api/reports", { productId, reason: "x" })).status, 400);
+
+// rate limit: one wallet cannot flood an endpoint, and the refusal says so properly
+const flooder = await makeUser();
+let limited = null;
+for (let i = 0; i < 12 && !limited; i++) {
+  const res = await flooder.json("/api/reports", { productId, reason: `flood attempt number ${i}` });
+  if (res.status === 429) limited = res;
+}
+assert.ok(limited, "reports should start refusing inside 12 tries");
+assert.ok(limited.headers.get("retry-after"), "429 must say when to come back");
+assert.match((await limited.json()).error, /too many/i);
+assert.equal((await buyer.json("/api/reports", { productId, reason: "a different wallet is unaffected" })).status, 200);
+step("rate limit: one wallet floods itself out, everyone else carries on");
 assert.equal((await creator.get("/admin")).status, 404);
 assert.equal((await stranger.json(`/api/products/${productId}/remove`, {})).status, 401); // unsigned
 assert.equal((await unlist(stranger, productId)).status, 404);
