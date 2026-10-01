@@ -6,10 +6,10 @@ const SNIPPET = `// 1. Ask the visitor to connect their wallet and sign a messag
 //    verify that signature on your side. Now you trust \`wallet\`.
 // 2. Ask EVERYNTH whether that wallet bought your product:
 const res = await fetch(
-  "https://everynth.vercel.app/api/verify?product=YOUR_PRODUCT_ID&wallet=" + wallet
+  "https://everynth.org/api/verify?product=YOUR_PRODUCT_ID&wallet=" + wallet
 );
 const { owned } = await res.json(); // { owned: true, since: "2026-09-21T10:00:00Z" }
-if (!owned) location.href = "https://everynth.vercel.app/p/YOUR_PRODUCT_ID";`;
+if (!owned) location.href = "https://everynth.org/p/YOUR_PRODUCT_ID";`;
 
 export default function DevelopersPage() {
   return (

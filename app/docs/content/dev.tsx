@@ -12,7 +12,7 @@ export function OwnershipCheck() {
       </p>
 
       <H2 id="endpoint">The endpoint</H2>
-      <Code>{`GET https://everynth.vercel.app/api/verify?product=<productId>&wallet=<address>
+      <Code>{`GET https://everynth.org/api/verify?product=<productId>&wallet=<address>
 
 200  { "owned": true,  "since": "2026-09-21T10:00:00.000Z" }
 200  { "owned": false, "since": null }
@@ -44,9 +44,9 @@ const ok = verify(null, msg, createPublicKey({ key: spki, format: "der", type: "
       <H2 id="gate">Gate the app</H2>
       <Code lang="js">{`const PRODUCT = "d80f8bf3-9c1a-4e06-b4c1-b24d6866a838";   // from your product's URL, /p/<id>
 
-const res = await fetch(\`https://everynth.vercel.app/api/verify?product=\${PRODUCT}&wallet=\${wallet}\`);
+const res = await fetch(\`https://everynth.org/api/verify?product=\${PRODUCT}&wallet=\${wallet}\`);
 const { owned } = await res.json();
-if (!owned) location.href = \`https://everynth.vercel.app/p/\${PRODUCT}\`;`}</Code>
+if (!owned) location.href = \`https://everynth.org/p/\${PRODUCT}\`;`}</Code>
       <p>
         Cache the answer for a few minutes per wallet if your app is busy; ownership never goes away once granted, so
         stale answers only ever err on the side of a buyer who bought seconds ago.
@@ -66,7 +66,7 @@ export function Api() {
   return (
     <>
       <p>
-        Base URL <code>https://everynth.vercel.app</code>. Requests and responses are JSON unless noted. Routes marked{" "}
+        Base URL <code>https://everynth.org</code>. Requests and responses are JSON unless noted. Routes marked{" "}
         <em>session</em> need the cookie set by <code>POST /api/session</code>; the browser sends it automatically.
         Errors are <code>{`{ "error": "message" }`}</code> with a 4xx status.
       </p>

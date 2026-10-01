@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { query } from "@/lib/db";
 import { DOCS } from "@/lib/docs";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://everynth.vercel.app";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://everynth.org";
 
 // Static pages, every doc permalink, and every live product.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
