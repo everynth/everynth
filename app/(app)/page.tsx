@@ -35,7 +35,7 @@ export default async function Market({ searchParams }: PageProps<"/">) {
           </p>
         </div>
         <div className="dash-sec-actions">
-          <Link href="/launch" className="btn">Launch a product</Link>
+          <Link href="/launch/product" className="btn">Launch a product</Link>
           <a href="/landing.html" className="btn-ghost">How it works →</a>
         </div>
       </div>
@@ -62,7 +62,7 @@ export default async function Market({ searchParams }: PageProps<"/">) {
           <div className="pcardx pcardx-empty rise">
             <span className="pcardx-title">{filtering ? "No products match." : "Nothing launched yet"}</span>
             <span className="pcardx-desc">{filtering ? "Try another word or category." : "Be the first: encrypted delivery, paid in SOL."}</span>
-            {!filtering && <Link href="/launch" className="btn">Launch a product</Link>}
+            {!filtering && <Link href="/launch/product" className="btn">Launch a product</Link>}
           </div>
         )}
         {list.rows.map((x: Listed, i) => (
