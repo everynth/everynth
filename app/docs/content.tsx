@@ -2,13 +2,16 @@ import type { ComponentType } from "react";
 import { Api, OwnershipCheck, SelfHosting } from "./content/dev";
 import { Architecture, Encryption, Payments } from "./content/how";
 import { Faq, GettingStarted, Overview } from "./content/start";
+import { tutorialPage } from "./content/tutorials";
 import { Buying, GithubAccess, Moderation, Selling } from "./content/using";
+import { TUTORIALS } from "@/lib/tutorials";
 
 // slug -> page body. Keep in sync with lib/docs.ts.
 export const CONTENT: Record<string, ComponentType> = {
   overview: Overview,
   "getting-started": GettingStarted,
   faq: Faq,
+  ...Object.fromEntries(TUTORIALS.map((t) => [t.slug, tutorialPage(t.slug)])),
   selling: Selling,
   buying: Buying,
   "github-access": GithubAccess,
