@@ -1,5 +1,7 @@
 // Every tutorial in one list. Adding the next one is a new entry here — the docs nav, the index,
 // the pages and the sitemap all read from this.
+// Slugs are nested under `tutorial/` so a permalink says what it teaches: /docs/tutorial/launch-product
+// can never be mistaken for the token launchpad, the way a bare "launch" could.
 // Videos live in the blob store, never in the repository: a git history full of MP4s is forever.
 
 export type Chapter = { at: number; label: string };
@@ -18,7 +20,7 @@ const BLOB = "https://zuayad0lbjhrm0ma.public.blob.vercel-storage.com/docs";
 
 export const TUTORIALS: Tutorial[] = [
   {
-    slug: "tutorial-launch",
+    slug: "tutorial/launch-product",
     title: "Launch a product",
     summary: "The whole thing end to end: a zip on your laptop becomes a listing priced in SOL, in under a minute.",
     video: { src: `${BLOB}/tutorial-launch.mp4`, poster: `${BLOB}/tutorial-launch-poster.jpg`, seconds: 55 },
@@ -54,7 +56,7 @@ export const TUTORIALS: Tutorial[] = [
     ],
   },
   {
-    slug: "tutorial-buying",
+    slug: "tutorial/buy-and-unlock",
     title: "Buy and unlock",
     summary: "What a purchase looks like from the buyer's side, including what happens if the tab closes mid-payment.",
     steps: [
@@ -67,7 +69,7 @@ export const TUTORIALS: Tutorial[] = [
     notes: ["If your browser closes after paying, press Buy again: the server finds the paid order on the chain and unlocks it. You are never charged twice."],
   },
   {
-    slug: "tutorial-manage",
+    slug: "tutorial/edit-and-remove",
     title: "Edit, unlist and delete",
     summary: "Changing a listing after launch, taking it down, and what your buyers keep either way.",
     steps: [
@@ -78,7 +80,7 @@ export const TUTORIALS: Tutorial[] = [
     ],
   },
   {
-    slug: "tutorial-chat",
+    slug: "tutorial/message-a-creator",
     title: "Message a creator",
     summary: "Private buyer-to-creator messages. Not built yet — this page will carry the walkthrough when it ships.",
     steps: [],

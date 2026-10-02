@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
     return [
       { source: "/launch", destination: "/launch/product", permanent: true },
       { source: "/launch/token", destination: "/launchpad", permanent: true },
+      // The tutorials moved under /docs/tutorial/ for the same reason, a day after they went up.
+      { source: "/docs/tutorial-launch", destination: "/docs/tutorial/launch-product", permanent: true },
+      { source: "/docs/tutorial-buying", destination: "/docs/tutorial/buy-and-unlock", permanent: true },
+      { source: "/docs/tutorial-manage", destination: "/docs/tutorial/edit-and-remove", permanent: true },
+      { source: "/docs/tutorial-chat", destination: "/docs/tutorial/message-a-creator", permanent: true },
     ];
   },
 };
