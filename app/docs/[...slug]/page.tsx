@@ -2,17 +2,19 @@ import { notFound } from "next/navigation";
 import { DOCS, docBySlug } from "@/lib/docs";
 import { CONTENT } from "../content";
 
+// A catch-all so a permalink can be nested: /docs/payments stays flat, /docs/tutorial/launch-product
+// says which launch it teaches. The slug is simply the path after /docs.
 export function generateStaticParams() {
-  return DOCS.map((d) => ({ slug: d.slug }));
+  return DOCS.map((d) => ({ slug: d.slug.split("/") }));
 }
 
-export async function generateMetadata({ params }: PageProps<"/docs/[slug]">) {
-  const doc = docBySlug((await params).slug);
+export async function generateMetadata({ params }: PageProps<"/docs/[...slug]">) {
+  const doc = docBySlug((await params).slug.join("/"));
   return { title: doc ? `${doc.title} — EVERYNTH docs` : "EVERYNTH docs", description: doc?.summary };
 }
 
-export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {
-  const { slug } = await params;
+export default async function DocPage({ params }: PageProps<"/docs/[...slug]">) {
+  const slug = (await params).slug.join("/");
   const doc = docBySlug(slug);
   const Body = CONTENT[slug];
   if (!doc || !Body) notFound();
