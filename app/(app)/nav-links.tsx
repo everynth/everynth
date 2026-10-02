@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 
 export function NavLinks({ signedIn, admin }: { signedIn: boolean; admin: boolean }) {
   const path = usePathname();
-  const links: [string, string][] = [["/", "Market"], ["/stats", "Live stats"], ["/launch", "Launch"], ["/launchpad", "Launchpad"]];
+  // Named so the pair cannot be confused: one lists a product, the other will mint a token.
+  const links: [string, string][] = [["/", "Market"], ["/stats", "Live stats"], ["/launch/product", "Launch product"], ["/launchpad", "Launch token"]];
   if (signedIn) links.push(["/purchases", "Purchases"], ["/dashboard", "Dashboard"]);
   if (admin) links.push(["/admin", "Admin"]);
   return (
