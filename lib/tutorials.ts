@@ -23,7 +23,7 @@ export const TUTORIALS: Tutorial[] = [
     summary: "The whole thing end to end: a zip on your laptop becomes a listing priced in SOL, in under a minute.",
     video: { src: `${BLOB}/tutorial-launch.mp4`, poster: `${BLOB}/tutorial-launch-poster.jpg`, seconds: 55 },
     steps: [
-      "Sign in with your wallet, then open Launch.",
+      "Sign in with your wallet, then open Launch product (/launch/product).",
       "Title: what you are selling, 3–80 characters.",
       "Description: what it is, who it is for, and what it is not.",
       "Category and price. The minimum is 0.02 SOL; the split updates as you type.",

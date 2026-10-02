@@ -119,7 +119,7 @@ Issued at: 1758445200000`}</Code>
 
       <H2 id="first-product">3. Launch your first product</H2>
       <ol>
-        <li>Open <Link href="/launch">Launch</Link>.</li>
+        <li>Open <Link href="/launch/product">Launch product</Link> — that is the one that lists something for sale; <Link href="/launchpad">Launch token</Link> is a different, unbuilt thing.</li>
         <li>Fill in title, description, category and a price in SOL (minimum 0.02).</li>
         <li>Choose what buyers receive: a file, secret text, or access to a GitHub repository.</li>
         <li>

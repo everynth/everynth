@@ -39,7 +39,7 @@ export function Selling() {
 
       <H2 id="launch">Launching</H2>
       <ol>
-        <li>Sign in, open <Link href="/launch">Launch</Link>.</li>
+        <li>Sign in, open <Link href="/launch/product">Launch product</Link>.</li>
         <li>
           <strong>Title</strong> (3–80 characters), <strong>description</strong> (10–4000), <strong>category</strong>:
           AI Agent, API, Dataset, Tool, Research, Service or Community.
@@ -254,7 +254,7 @@ export function GithubAccess() {
           requires admin rights; a token with only <em>Contents</em> or <em>Metadata</em> is rejected at launch.
         </li>
         <li>
-          On <Link href="/launch">Launch</Link>, choose <em>Access to a private GitHub repository</em>, enter{" "}
+          On <Link href="/launch/product">Launch</Link>, choose <em>Access to a private GitHub repository</em>, enter{" "}
           <code>owner/repository</code> and paste the token.
         </li>
       </ol>

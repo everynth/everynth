@@ -60,10 +60,11 @@ export default async function LaunchpadPage() {
     <div className="dash">
       <div className="dash-sec rise">
         <div>
-          <p className="kicker">Creator · Launchpad</p>
+          <p className="kicker">Creator · Launch token</p>
           <h1 className="chrome mt-2 text-3xl font-medium tracking-tight sm:text-4xl">Launchpad</h1>
           <p className="dash-sec-sub">
             Give a token to a utility that already works. Not a token first and a product later — the other way round.
+            To put something on sale instead, that is <Link href="/launch/product" className="navlink" style={{ padding: 0 }}>Launch product</Link>.
           </p>
         </div>
         <span className="pill pill-soon">◷ Coming soon</span>
@@ -144,7 +145,7 @@ export default async function LaunchpadPage() {
           </p>
         </div>
         <div className="dash-sec-actions">
-          <Link href="/launch" className="btn">Launch a product</Link>
+          <Link href="/launch/product" className="btn">Launch a product</Link>
           <Link href="/docs/overview" className="btn-ghost">How the market works →</Link>
         </div>
       </section>
