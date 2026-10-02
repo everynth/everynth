@@ -1,3 +1,5 @@
+import { TUTORIAL_DOCS } from "./tutorials.ts";
+
 // Docs navigation. Each slug is a permalink: /docs/<slug>. Content lives in app/docs/content/<slug>.tsx.
 export type Doc = { slug: string; title: string; summary: string };
 export type DocGroup = { group: string; docs: Doc[] };
@@ -11,6 +13,8 @@ export const DOC_GROUPS: DocGroup[] = [
       { slug: "faq", title: "FAQ", summary: "Refunds, lost keys, what the platform can and cannot see." },
     ],
   },
+  // Watch it happen. The list comes from lib/tutorials.ts, so a new recording needs nothing here.
+  { group: "Tutorials", docs: TUTORIAL_DOCS },
   {
     group: "Using EVERYNTH",
     docs: [
