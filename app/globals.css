@@ -393,6 +393,7 @@ details > summary::-webkit-details-marker { display: none; }
 .lx-log-line.is-ok .lx-log-m { color: var(--c-green); }
 .lx-log-line.is-warn, .lx-log-line.is-warn .lx-log-m { color: var(--c-amber); }
 .lx-log-line.is-err, .lx-log-line.is-err .lx-log-m { color: var(--c-red); }
+.lx-auth { display: flex; gap: 10px; font-size: 13px; line-height: 1.6; color: var(--c-red); padding-top: 2px; }
 .lx-blink { color: var(--c-green); animation: lx-blink 1.1s steps(1) infinite; }
 @keyframes lx-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .lx-blink, .lx-log-line { animation: none; } }
