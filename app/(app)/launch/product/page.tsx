@@ -24,7 +24,9 @@ export default async function LaunchPage() {
           <div className="term-bar"><span className="term-dots"><i /><i /><i /></span> auth required</div>
           <div className="term-body">
             <p className="lx-cmd"><span>$</span> everynth launch --new</p>
-            <p className="lx-log-line is-err"><span className="lx-log-m">✗</span><span>no session — connect your wallet and sign in (top right) to launch.</span></p>
+            {/* Not a log line: that class is a three-column grid and this message has no timestamp,
+                so it would land in the 12px marker column and wrap one letter per row. */}
+            <p className="lx-auth"><span>✗</span><span>no session — connect your wallet and sign in (top right) to launch.</span></p>
           </div>
         </div>
       )}
