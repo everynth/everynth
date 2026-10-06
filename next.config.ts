@@ -4,6 +4,19 @@ const nextConfig: NextConfig = {
   // PGlite ships WASM + data files it loads relative to itself; keep it out of the bundle.
   serverExternalPackages: ["@electric-sql/pglite"],
 
+  // everynth.org is the pitch, app.everynth.org is the product. Both hosts serve the same
+  // deployment; only the front door differs, so no link anywhere has to break.
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: "/", has: [{ type: "host", value: "everynth.org" }], destination: "/landing.html" },
+        { source: "/", has: [{ type: "host", value: "www.everynth.org" }], destination: "/landing.html" },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
+
   // "Launch" meant two different things once the launchpad was announced. The permalinks now say
   // which: /launch/product lists something for sale, /launch/token is the (unbuilt) token side.
   // The bare /launch is kept forever so older links, posts and screenshots still land correctly.
