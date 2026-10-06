@@ -430,10 +430,27 @@ details > summary::-webkit-details-marker { display: none; }
 /* ── docs chrome: a floating bar, three columns, and the page's own headings on the right ── */
 .docs-bar { display: flex; align-items: center; gap: 1.5rem; }
 .docs-topnav { display: flex; align-items: center; gap: .35rem; margin-left: auto; }
+.docs-cta { white-space: nowrap; }
 .docs-link.is-current { color: var(--d-ink); position: relative; }
 .docs-link.is-current::after { content: ""; position: absolute; left: .7rem; right: .7rem; bottom: .1rem; height: 2px; border-radius: 2px;
   background: linear-gradient(90deg, var(--c-cyan), var(--c-violet)); }
-.docs-body { display: grid; gap: 2.5rem; padding: 3.5rem 0 2rem; grid-template-columns: minmax(0, 1fr); }
+/* padding-block, never the `padding` shorthand: the shorthand would wipe out the side padding
+   .docs-wrap sets on this same element, and the text would run into the edge of a phone. */
+.docs-body { display: grid; gap: 2.5rem; padding-block: 3.5rem 2rem; grid-template-columns: minmax(0, 1fr); }
+
+/* On a phone the brand takes its own line and the links sit under it, with the button at the end. */
+@media (max-width: 780px) {
+  .docs-bar { flex-direction: column; align-items: stretch; gap: .85rem; }
+  /* wrap, or the button's intrinsic width drags the whole document wider than the screen */
+  .docs-topnav { margin-left: 0; width: 100%; gap: .15rem; flex-wrap: wrap; row-gap: .6rem; }
+  .docs-topnav .docs-cta { margin-left: auto; }
+  .docs-link { padding: .45rem .55rem; font-size: .85rem; }
+  .docs-body { padding-block: 2rem 1.5rem; gap: 1.5rem; }
+  .docs-nav details { margin-bottom: .5rem; }
+  /* a wide table scrolls inside itself instead of stretching the page */
+  .doc table { display: block; width: 100%; overflow-x: auto; }
+  .doc .docs-title { font-size: clamp(2rem, 9vw, 2.6rem); }
+}
 @media (min-width: 1024px) { .docs-body { grid-template-columns: 210px minmax(0, 1fr); } }
 @media (min-width: 1400px) { .docs-body { grid-template-columns: 210px minmax(0, 1fr) 200px; } }
 
