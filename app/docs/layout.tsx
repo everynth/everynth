@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DOC_GROUPS } from "@/lib/docs";
+import { APP, SITE } from "@/lib/site";
 import { DocsNav } from "./nav";
 
 export const metadata: Metadata = { title: "EVERYNTH Docs" };
@@ -19,8 +20,8 @@ export default function DocsLayout({ children }: LayoutProps<"/docs">) {
             <span>Docs</span>
           </Link>
           <nav className="ml-auto flex items-center gap-2 text-sm" aria-label="Docs header">
-            <a href="/landing.html" className="docs-link">Home</a>
-            <Link href="/" className="docs-cta">Open the market →</Link>
+            <a href={SITE} className="docs-link">Home</a>
+            <a href={APP} className="docs-cta">Open the market →</a>
           </nav>
         </div>
       </header>
