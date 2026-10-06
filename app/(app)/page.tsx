@@ -4,6 +4,7 @@ import { Score } from "@/components/stars";
 import { CATEGORIES } from "@/lib/config";
 import { listProducts, PAGE_SIZE, SORTS, type Listed, type Sort } from "@/lib/market";
 import { formatSol } from "@/lib/money";
+import { SITE } from "@/lib/site";
 
 const kindLabel = { file: "File", secret: "Secret", github: "Repo" } as const;
 
@@ -36,7 +37,7 @@ export default async function Market({ searchParams }: PageProps<"/">) {
         </div>
         <div className="dash-sec-actions">
           <Link href="/launch/product" className="btn">Launch a product</Link>
-          <a href="/landing.html" className="btn-ghost">How it works →</a>
+          <a href={SITE} className="btn-ghost">How it works →</a>
         </div>
       </div>
       <form method="get" className="dash-filters rise rise-4">
