@@ -44,3 +44,5 @@ export const DOC_GROUPS: DocGroup[] = [
 
 export const DOCS: Doc[] = DOC_GROUPS.flatMap((g) => g.docs);
 export const docBySlug = (slug: string) => DOCS.find((d) => d.slug === slug);
+// Which section a page belongs to, for the line above its title.
+export const groupOf = (slug: string) => DOC_GROUPS.find((g) => g.docs.some((d) => d.slug === slug))?.group ?? "Docs";

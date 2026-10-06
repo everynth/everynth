@@ -7,13 +7,24 @@ import type { DocGroup } from "@/lib/docs";
 export function DocsNav({ groups }: { groups: DocGroup[] }) {
   const path = usePathname();
   return (
-    <nav aria-label="Documentation" className="docs-nav lg:sticky lg:top-24 lg:self-start">
+    <nav aria-label="Documentation" className="docs-nav">
       <details className="lg:hidden">
         <summary className="docs-cta inline-block cursor-pointer">Docs menu</summary>
-        <div className="mt-3">{groups.map((g, i) => group(g, path, i))}</div>
+        <div className="mt-3">{body(groups, path)}</div>
       </details>
-      <div className="hidden lg:block">{groups.map((g, i) => group(g, path, i))}</div>
+      <div className="hidden lg:block lg:sticky lg:top-24">{body(groups, path)}</div>
     </nav>
+  );
+}
+
+function body(groups: DocGroup[], path: string) {
+  return (
+    <>
+      <Link href="/docs" className={`docs-all${path === "/docs" ? " is-active" : ""}`}>
+        All docs
+      </Link>
+      {groups.map((g, i) => group(g, path, i))}
+    </>
   );
 }
 

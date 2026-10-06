@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { DOCS, docBySlug } from "@/lib/docs";
+import { DOCS, docBySlug, groupOf } from "@/lib/docs";
 import { CONTENT } from "../content";
 
 // A catch-all so a permalink can be nested: /docs/payments stays flat, /docs/tutorial/launch-product
@@ -22,9 +22,10 @@ export default async function DocPage({ params }: PageProps<"/docs/[...slug]">) 
   const next = DOCS[i + 1];
   return (
     <article className="docs-rise">
-      <p className="docs-kicker">Docs · {String(i + 1).padStart(2, "0")}</p>
-      <h1 className="chrome shimmer">{doc.title}</h1>
+      <p className="docs-kicker">{groupOf(slug)}</p>
+      <h1 className="docs-title">{doc.title}</h1>
       <p className="lead">{doc.summary}</p>
+      <hr className="docs-rule" />
       <Body />
       {next && (
         <a href={`/docs/${next.slug}`} className="docs-next no-underline">

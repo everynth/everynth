@@ -426,6 +426,56 @@ details > summary::-webkit-details-marker { display: none; }
   font-family: var(--font-geist-sans), Inter, system-ui, sans-serif;
 }
 .docs-brand-sep { opacity: .3; font-weight: 400; }
+
+/* ── docs chrome: a floating bar, three columns, and the page's own headings on the right ── */
+.docs-bar { display: flex; align-items: center; gap: 1.5rem; }
+.docs-topnav { display: flex; align-items: center; gap: .35rem; margin-left: auto; }
+.docs-link.is-current { color: var(--d-ink); position: relative; }
+.docs-link.is-current::after { content: ""; position: absolute; left: .7rem; right: .7rem; bottom: .1rem; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--c-cyan), var(--c-violet)); }
+.docs-body { display: grid; gap: 2.5rem; padding: 3.5rem 0 2rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1024px) { .docs-body { grid-template-columns: 210px minmax(0, 1fr); } }
+@media (min-width: 1400px) { .docs-body { grid-template-columns: 210px minmax(0, 1fr) 200px; } }
+
+.docs-all { display: inline-block; margin: 0 0 1.4rem .7rem; font-size: .9rem; color: var(--d-ink2);
+  text-decoration: underline; text-underline-offset: 4px; }
+.docs-all:hover { color: var(--d-ink); }
+
+/* the page title block */
+.docs-title { font-size: clamp(2.4rem, 4.6vw, 3.6rem); font-weight: 500; letter-spacing: -0.045em; line-height: 1.02;
+  margin: .7rem 0 1rem; color: var(--d-ink); }
+.docs-rule { border: 0; border-top: 1px solid var(--d-line); margin: 2.2rem 0 0; }
+.doc .lead { font-size: 1.22rem; line-height: 1.55; color: var(--d-ink2); opacity: .95; max-width: 62ch; }
+
+/* on this page */
+.docs-toc { display: none; }
+@media (min-width: 1400px) {
+  .docs-toc { display: block; position: sticky; top: 6rem; align-self: start; max-height: calc(100vh - 8rem); overflow-y: auto; }
+}
+.docs-toc-label { font-family: var(--font-geist-mono), monospace; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--d-dim); margin-bottom: .7rem; }
+.docs-toc ul { list-style: none; margin: 0; padding: 0; }
+.docs-toc-item { display: block; padding: .3rem 0 .3rem .75rem; font-size: .84rem; line-height: 1.45; color: var(--d-mute);
+  text-decoration: none; border-left: 2px solid transparent; transition: color .2s, border-color .2s; }
+.docs-toc-item:hover { color: var(--d-ink); }
+.docs-toc-item.is-sub { padding-left: 1.6rem; font-size: .8rem; }
+.docs-toc-item.is-active { color: var(--d-ink); border-left-color: var(--c-cyan); }
+
+/* the index: one card per section */
+.docs-groups { display: grid; gap: 18px; margin-top: 2.6rem; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); }
+.docs-gcard { position: relative; padding: 1.6rem 1.7rem 1.8rem; border-radius: 1rem; border: 1px solid var(--d-line);
+  background: linear-gradient(180deg, rgba(255,255,255,.025), transparent 60%); overflow: hidden; }
+.docs-gcard::after { content: ""; position: absolute; top: 0; right: 0; width: 38px; height: 38px;
+  background: linear-gradient(225deg, var(--c-cyan), var(--c-violet)); clip-path: polygon(100% 0, 0 0, 100% 100%); opacity: .35; }
+.docs-gcard-n { font-family: var(--font-geist-mono), monospace; font-size: 11px; letter-spacing: .18em; color: var(--d-dim); }
+/* beats the generic `.doc h2` spacing: inside a card the number and the title belong together */
+.doc .docs-gcard-h { font-size: 1.8rem; font-weight: 500; letter-spacing: -0.03em; margin: .3rem 0 0; padding: 0; border: 0; }
+.docs-gcard ul { display: flex; flex-direction: column; gap: 1.05rem; margin: 0; padding-top: 1.1rem; border-top: 1px solid var(--d-hair); }
+.docs-gcard li { margin: 0; }
+.docs-gcard-link { display: block; font-size: 1rem; font-weight: 500; color: var(--d-ink); text-decoration: underline;
+  text-underline-offset: 4px; text-decoration-color: color-mix(in srgb, var(--c-cyan) 45%, transparent); }
+.docs-gcard-link:hover { text-decoration-color: var(--c-cyan); }
+.docs-gcard-sum { display: block; margin-top: .3rem; font-size: .86rem; line-height: 1.5; color: var(--d-mute); }
 .docs-cta { color: #05070C; background: #fff; text-decoration: none; padding: .5rem .95rem; border-radius: 999px; font-weight: 600; font-size: .85rem; transition: background .2s; }
 .docs-cta:hover { background: #dfe6f0; }
 
@@ -477,10 +527,8 @@ details > summary::-webkit-details-marker { display: none; }
 
 /* Documentation prose (app/docs). Plain CSS: no typography plugin needed. */
 .doc h1 { font-size: clamp(2rem, 3.4vw, 2.9rem); font-weight: 500; letter-spacing: -0.035em; line-height: 1.08; margin: 0.6rem 0 0.9rem; display: inline-block; }
-.doc .lead { font-size: 1.1rem; line-height: 1.6; color: var(--d-ink2, inherit); opacity: 0.8; max-width: 60ch; }
-.doc h2 { font-size: 1.45rem; font-weight: 500; letter-spacing: -0.025em; margin: 2.8rem 0 0.8rem; padding-top: 1.2rem; border-top: 1px solid var(--d-hair, transparent); }
-.doc h2:first-of-type { border-top: 0; padding-top: 0; margin-top: 2rem; }
-.doc h3 { font-size: 1.05rem; font-weight: 600; margin: 1.75rem 0 0.5rem; }
+.doc h2 { font-size: 1.9rem; font-weight: 500; letter-spacing: -0.035em; margin: 3rem 0 1rem; padding-top: 0; border-top: 0; }
+.doc h3 { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.015em; margin: 2rem 0 0.6rem; }
 .doc .group a[aria-label="Permalink"] { text-decoration: none; color: var(--d-acc, inherit); }
 .doc strong { color: var(--d-ink, inherit); font-weight: 600; }
 .doc em { color: var(--d-acc2, inherit); font-style: normal; }
@@ -503,9 +551,13 @@ details > summary::-webkit-details-marker { display: none; }
 .doc code { font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 0.88em; background: color-mix(in srgb, var(--foreground) 8%, transparent); padding: 0.1em 0.35em; border-radius: 0.3em; }
 .doc pre { margin: 1rem 0; padding: 1rem 1.1rem; border-radius: 0.9rem; border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent); background: color-mix(in srgb, var(--foreground) 5%, transparent); overflow-x: auto; font-size: 0.82rem; line-height: 1.6; max-width: 100%; }
 .doc pre code { background: none; padding: 0; font-size: inherit; }
-.doc table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
-.doc th, .doc td { text-align: left; padding: 0.55rem 0.6rem 0.55rem 0; border-bottom: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent); vertical-align: top; }
-.doc th { font-family: var(--font-geist-mono), monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6; font-weight: 500; }
+/* boxed tables, like the reference: a quiet header row and a hairline grid */
+.doc table { width: 100%; border-collapse: collapse; margin: 1.4rem 0; font-size: 0.9rem;
+  border: 1px solid var(--d-line); border-radius: .7rem; overflow: hidden; }
+.doc th, .doc td { text-align: left; padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--d-hair); vertical-align: top; }
+.doc tr:last-child td { border-bottom: 0; }
+.doc th { font-family: var(--font-geist-mono), monospace; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--d-dim); font-weight: 500; background: rgba(255,255,255,.03); border-bottom-color: var(--d-line); }
 .doc .callout { margin: 1.25rem 0; padding: 0.9rem 1.1rem; border-radius: 0.9rem; border: 1px solid; max-width: 68ch; font-size: 0.95rem; }
 .doc .callout p { margin: 0.35rem 0; }
 .doc .callout-note { border-color: color-mix(in srgb, #4a78b0 40%, transparent); background: color-mix(in srgb, #4a78b0 10%, transparent); }
