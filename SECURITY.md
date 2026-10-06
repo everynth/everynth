@@ -5,7 +5,7 @@ we want to hear it from you before we hear it from a buyer.
 
 ## Reporting a vulnerability
 
-Report privately through a [security advisory](https://github.com/presagemarkets/everynth/security/advisories/new).
+Report privately through a [security advisory](https://github.com/everynth/everynth/security/advisories/new).
 Please do not open a public issue for a vulnerability.
 
 - **First response:** within 3 working days.

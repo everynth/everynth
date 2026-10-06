@@ -9,9 +9,9 @@
 A marketplace on Solana for digital products. The content is encrypted in the creator's browser,<br>
 the buyer pays the creator's wallet directly, and the platform holds neither the money nor the goods.
 
-<a href="https://github.com/presagemarkets/everynth/actions/workflows/ci.yml"><img src="https://github.com/presagemarkets/everynth/actions/workflows/ci.yml/badge.svg" alt="CI status" height="20"></a>
-<a href="https://github.com/presagemarkets/everynth/actions/workflows/codeql.yml"><img src="https://github.com/presagemarkets/everynth/actions/workflows/codeql.yml/badge.svg" alt="CodeQL status" height="20"></a>
-<a href="https://scorecard.dev/viewer/?uri=github.com/presagemarkets/everynth"><img src="https://api.scorecard.dev/projects/github.com/presagemarkets/everynth/badge" alt="OpenSSF Scorecard" height="20"></a>
+<a href="https://github.com/everynth/everynth/actions/workflows/ci.yml"><img src="https://github.com/everynth/everynth/actions/workflows/ci.yml/badge.svg" alt="CI status" height="20"></a>
+<a href="https://github.com/everynth/everynth/actions/workflows/codeql.yml"><img src="https://github.com/everynth/everynth/actions/workflows/codeql.yml/badge.svg" alt="CodeQL status" height="20"></a>
+<a href="https://scorecard.dev/viewer/?uri=github.com/everynth/everynth"><img src="https://api.scorecard.dev/projects/github.com/everynth/everynth/badge" alt="OpenSSF Scorecard" height="20"></a>
 <a href="#no-contract-to-trust"><img src="https://img.shields.io/badge/smart%20contract-none-7BE0A8" alt="Smart contract: none" height="20"></a>
 <a href="#no-contract-to-trust"><img src="https://img.shields.io/badge/custody-none-7BE0A8" alt="Custody: none" height="20"></a>
 <a href="#the-checks"><img src="https://img.shields.io/badge/end--to--end%20checks-25-79D2F2" alt="End-to-end checks: 25" height="20"></a>
@@ -103,10 +103,10 @@ Every claim above is a test, not a sentence in a README.
 | **Abuse limits** | One wallet floods itself out of an endpoint while another carries on, verified in the same run. |
 | **Code scanning** | CodeQL's `security-extended` queries run on every push and weekly. |
 | **Pinned actions** | Every GitHub action is pinned by commit SHA, not by a movable tag. |
-| **Independent score** | The [OpenSSF Scorecard](https://scorecard.dev/viewer/?uri=github.com/presagemarkets/everynth) is recomputed and published on every push. |
+| **Independent score** | The [OpenSSF Scorecard](https://scorecard.dev/viewer/?uri=github.com/everynth/everynth) is recomputed and published on every push. |
 
 Found a vulnerability? Report it privately through
-[a security advisory](https://github.com/presagemarkets/everynth/security/advisories/new), not in a
+[a security advisory](https://github.com/everynth/everynth/security/advisories/new), not in a
 public issue. [SECURITY.md](SECURITY.md) has the scope and the response times.
 
 ## What it is
@@ -158,7 +158,7 @@ flowchart LR
 ### Try it
 
 ```sh
-git clone https://github.com/presagemarkets/everynth.git
+git clone https://github.com/everynth/everynth.git
 cd everynth
 npm ci
 cp .env.example .env.local
