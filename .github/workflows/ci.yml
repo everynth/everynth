@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Nothing here needs write access to anything.
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Actions are pinned by commit, not by tag: a tag can be moved, a commit cannot.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # No database and no real secrets in CI: a blank DATABASE_URL makes the app fall back to
+          # the embedded Postgres, and these values are only here so the build has something to read.
+          DATABASE_URL: ""
+          SESSION_SECRET: ci-placeholder-secret-that-is-long-enough
+          MASTER_KEY: ci-placeholder-master-key-0000000000000000000000
+          NEXT_PUBLIC_RPC_URL: https://api.mainnet-beta.solana.com
