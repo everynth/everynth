@@ -1,8 +1,22 @@
-﻿import { sessionWallet } from "@/lib/session";
+﻿import { CATEGORIES } from "@/lib/config";
+import { sessionWallet } from "@/lib/session";
 import { LaunchForm } from "./launch-form";
 
-export default async function LaunchPage() {
+const text = (v: string | string[] | undefined, max: number) => (typeof v === "string" ? v.slice(0, max) : "");
+
+// A launch can be started from a link: /launch/product?title=…&price=1. Handy for handing someone a
+// half-filled form. Only the typed fields travel — the file and the signature are always yours.
+export default async function LaunchPage({ searchParams }: PageProps<"/launch/product">) {
   const wallet = await sessionWallet();
+  const sp = await searchParams;
+  const category = text(sp.category, 40);
+  const initial = {
+    title: text(sp.title, 80),
+    description: text(sp.description, 4000),
+    category: (CATEGORIES as readonly string[]).includes(category) ? category : CATEGORIES[0],
+    price: text(sp.price, 20),
+    previewUrl: text(sp.preview, 500),
+  };
   return (
     <div className="dash">
       <div className="dash-sec">
@@ -18,7 +32,7 @@ export default async function LaunchPage() {
         </p>
       </div>
       {wallet ? (
-        <div className="rise rise-4"><LaunchForm wallet={wallet} /></div>
+        <div className="rise rise-4"><LaunchForm wallet={wallet} initial={initial} /></div>
       ) : (
         <div className="term rise rise-4">
           <div className="term-bar"><span className="term-dots"><i /><i /><i /></span> auth required</div>
