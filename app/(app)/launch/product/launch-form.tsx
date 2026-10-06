@@ -26,15 +26,18 @@ const KINDS: { k: Kind; flag: string; label: string; hint: string }[] = [
   { k: "github", flag: "--github", label: "GitHub repo", hint: "Buyers enter their GitHub username and are added as read-only collaborators automatically." },
 ];
 
-export function LaunchForm({ wallet }: { wallet: string }) {
+export type Initial = { title: string; description: string; category: string; price: string; previewUrl: string };
+
+export function LaunchForm({ wallet, initial }: { wallet: string; initial?: Initial }) {
   const router = useRouter();
   const { signMessage } = useWalletCtx();
   const [kind, setKind] = useState<Kind>("file");
-  const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
-  const [category, setCategory] = useState<string>(CATEGORIES[0]);
-  const [price, setPrice] = useState("");
-  const [preview, setPreview] = useState("");
+  // Seeded from the URL when the link carried a draft; empty otherwise.
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [desc, setDesc] = useState(initial?.description ?? "");
+  const [category, setCategory] = useState<string>(initial?.category ?? CATEGORIES[0]);
+  const [price, setPrice] = useState(initial?.price ?? "");
+  const [preview, setPreview] = useState(initial?.previewUrl ?? "");
   const [cover, setCover] = useState<{ url: string; name: string; bytes: number } | null>(null);
   const [payload, setPayload] = useState<{ name: string; bytes: number; blocked: boolean } | null>(null);
   const [secret, setSecret] = useState("");
