@@ -9,8 +9,13 @@ export function NavLinks({ signedIn, admin }: { signedIn: boolean; admin: boolea
   const active = useRef<HTMLAnchorElement>(null);
 
   // On a phone the row scrolls sideways, so the page you are on can start out off-screen.
+  // Move the strip itself rather than calling scrollIntoView, which is also allowed to scroll
+  // every ancestor — including the document, which drags the whole page sideways.
   useEffect(() => {
-    active.current?.scrollIntoView({ block: "nearest", inline: "center" });
+    const el = active.current;
+    const strip = el?.closest<HTMLElement>(".tabs");
+    if (!el || !strip || strip.scrollWidth <= strip.clientWidth) return;
+    strip.scrollLeft = Math.max(0, el.offsetLeft - (strip.clientWidth - el.offsetWidth) / 2);
   }, [path]);
 
   // Named so the pair cannot be confused: one lists a product, the other will mint a token.
