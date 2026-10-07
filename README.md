@@ -20,6 +20,8 @@ the buyer pays the creator's wallet directly, and the platform holds neither the
 
 [Website](https://everynth.org) · [Market](https://app.everynth.org) · [Docs](https://everynth.org/docs) · [Launch a product](https://everynth.org/docs/tutorial/launch-product) · [API](https://everynth.org/docs/api) · [Security policy](SECURITY.md)
 
+[X](https://x.com/evrynth) · [Telegram](https://t.me/evrynth_privacy)
+
 </div>
 
 <br>

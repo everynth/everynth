@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Providers } from "@/components/providers";
 import { SignIn } from "@/components/sign-in";
 import { isAdmin, sessionWallet } from "@/lib/session";
+import { SOCIALS } from "@/lib/site";
 import { NavLinks } from "./nav-links";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
@@ -34,6 +35,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           <span className="chrome font-mono text-xs tracking-widest">EVERYNTH</span>
           <Link href="/terms" className="navlink">Terms</Link>
           <Link href="/developers" className="navlink">For developers</Link>
+          {SOCIALS.map((s) => (
+            <a key={s.name} href={s.url} target="_blank" rel="noreferrer noopener" className="navlink">{s.name} ↗</a>
+          ))}
           <span className="ml-auto font-mono text-[11px] uppercase tracking-widest opacity-50">non-custodial · no program · encrypted in your browser</span>
         </div>
       </footer>

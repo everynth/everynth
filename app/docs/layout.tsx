@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { DocsToc } from "@/components/docs-toc";
 import { DOC_GROUPS } from "@/lib/docs";
-import { APP, SITE } from "@/lib/site";
+import { APP, SITE, SOCIALS } from "@/lib/site";
 import { DocsNav } from "./nav";
 
 export const metadata: Metadata = { title: "EVERYNTH Docs" };
@@ -41,7 +41,9 @@ export default function DocsLayout({ children }: LayoutProps<"/docs">) {
           <span className="chrome font-mono text-xs tracking-widest">EVERYNTH</span>
           <Link href="/terms" className="docs-link">Terms</Link>
           <Link href="/developers" className="docs-link">Developers</Link>
-          <a href="https://github.com/everynth/everynth" className="docs-link">GitHub</a>
+          {SOCIALS.map((s) => (
+            <a key={s.name} href={s.url} target="_blank" rel="noreferrer noopener" className="docs-link">{s.name} ↗</a>
+          ))}
           <span className="ml-auto font-mono text-[11px] uppercase tracking-widest opacity-50">non-custodial · no program · encrypted in your browser</span>
         </div>
       </footer>
