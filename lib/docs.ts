@@ -25,6 +25,17 @@ export const DOC_GROUPS: DocGroup[] = [
     ],
   },
   {
+    // Designed in the open, not shipped. Every page in this group says so at the top.
+    group: "Launchpad (design)",
+    docs: [
+      { slug: "launchpad/overview", title: "Launchpad overview", summary: "Two halves of one market: a utility proves itself, then a token is attached to it." },
+      { slug: "launchpad/hooks", title: "Hooks", summary: "What a hook is, the catalogue, and how several stack into one token's behaviour." },
+      { slug: "launchpad/hook-marketplace", title: "Hook marketplace", summary: "Anyone can write a module and be paid when other people's tokens use it." },
+      { slug: "launchpad/economics", title: "Economics", summary: "Protocol revenue, what the native token is for, fee discounts and hook mining." },
+      { slug: "launchpad/architecture", title: "Architecture", summary: "Token-2022 transfer hooks, what they cannot do, and the gap that has to be designed." },
+    ],
+  },
+  {
     group: "How it works",
     docs: [
       { slug: "payments", title: "Payments", summary: "Native SOL, two transfers in one transaction, the reference key, and how the server verifies." },

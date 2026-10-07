@@ -88,7 +88,10 @@ export default async function LaunchpadPage() {
           <p className="lx-hint">
             Nothing here can be bought today and there is no waitlist to pay for. When it opens it will open to
             whatever is already on this market. The honest reason for the order: a token before real usage is a
-            promise, and this project decided not to sell promises.
+            promise, and this project decided not to sell promises. The full design — hooks, the hook marketplace,
+            the economics and the Solana architecture it needs — is published at{" "}
+            <Link href="/docs/launchpad/overview" className="navlink" style={{ padding: 0 }}>docs/launchpad</Link>,
+            so it can be argued with before it is built.
           </p>
         </div>
       </div>
@@ -146,7 +149,7 @@ export default async function LaunchpadPage() {
         </div>
         <div className="dash-sec-actions">
           <Link href="/launch/product" className="btn">Launch a product</Link>
-          <Link href="/docs/overview" className="btn-ghost">How the market works →</Link>
+          <Link href="/docs/launchpad/overview" className="btn-ghost">Read the launchpad design →</Link>
         </div>
       </section>
     </div>

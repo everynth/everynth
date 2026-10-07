@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { Api, OwnershipCheck, SelfHosting } from "./content/dev";
 import { Architecture, Encryption, Payments } from "./content/how";
+import { HookMarketplace, LaunchpadArchitecture, LaunchpadEconomics, LaunchpadHooks, LaunchpadOverview } from "./content/launchpad";
 import { Faq, GettingStarted, Overview } from "./content/start";
 import { tutorialPage } from "./content/tutorials";
 import { Buying, GithubAccess, Moderation, Selling } from "./content/using";
@@ -12,6 +13,11 @@ export const CONTENT: Record<string, ComponentType> = {
   "getting-started": GettingStarted,
   faq: Faq,
   ...Object.fromEntries(TUTORIALS.map((t) => [t.slug, tutorialPage(t.slug)])),
+  "launchpad/overview": LaunchpadOverview,
+  "launchpad/hooks": LaunchpadHooks,
+  "launchpad/hook-marketplace": HookMarketplace,
+  "launchpad/economics": LaunchpadEconomics,
+  "launchpad/architecture": LaunchpadArchitecture,
   selling: Selling,
   buying: Buying,
   "github-access": GithubAccess,
