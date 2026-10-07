@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { query } from "@/lib/db";
 import { sessionWallet } from "@/lib/session";
+import { HookStudio } from "./hook-studio";
 
 export const metadata = {
   title: "Launchpad · EVERYNTH",
@@ -95,6 +96,19 @@ export default async function LaunchpadPage() {
           </p>
         </div>
       </div>
+
+      <div className="dash-sec rise rise-3">
+        <div>
+          <h2 className="dash-sec-title">Preview: pick what the token does</h2>
+          <p className="dash-sec-sub">
+            A working mock-up of the launch screen. Tick the mechanics, reorder them, and watch where the fees go —
+            the arithmetic is real, the deployment is not. The full design is in{" "}
+            <Link href="/docs/launchpad/hooks" className="navlink" style={{ padding: 0 }}>the docs</Link>.
+          </p>
+        </div>
+        <span className="pill pill-soon">◷ Mock-up</span>
+      </div>
+      <div className="rise rise-3"><HookStudio /></div>
 
       <div className="dash-sec rise rise-3">
         <div>

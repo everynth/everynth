@@ -261,6 +261,54 @@ details > summary::-webkit-details-marker { display: none; }
 .rv-item-body { margin-top: 5px; font-size: .92rem; line-height: 1.6; color: var(--ink2); white-space: pre-wrap; max-width: 68ch; }
 .pill-verified { color: var(--c-green); border-color: color-mix(in srgb, var(--c-green) 40%, transparent); background: color-mix(in srgb, var(--c-green) 10%, transparent); }
 
+/* ── hook studio: the launchpad mock-up ── */
+.hk { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.hk-side { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 84px; }
+.hk-family { margin-top: 14px; }
+.hk-family-label { font-family: var(--font-geist-mono), monospace; font-size: 10.5px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--c-cyan); margin-bottom: 8px; }
+.hk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 7px; }
+.hk-chip { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 8px; padding: 9px 11px; border-radius: 11px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.14); background: transparent; color: var(--ink2); font: inherit; text-align: left;
+  transition: border-color .2s, background .2s, transform .35s cubic-bezier(.16,1,.3,1); }
+.hk-chip:hover { border-color: rgba(255,255,255,.45); transform: translateY(-2px); }
+.hk-chip b { font-weight: 400; color: var(--dim); }
+.hk-chip span { font-size: 12.5px; font-weight: 500; }
+.hk-chip small { grid-column: 2; font-size: 10.5px; font-family: var(--font-geist-mono), monospace; color: var(--dim); }
+.hk-chip.is-on { border-color: color-mix(in srgb, var(--c-cyan) 70%, transparent); background: color-mix(in srgb, var(--c-cyan) 9%, transparent); }
+.hk-chip.is-on b, .hk-chip.is-on span { color: #fff; }
+.hk-chip.is-on small { color: var(--c-cyan); }
+
+.hk-stack { list-style: none; display: flex; flex-direction: column; padding: 10px 12px 12px; }
+.hk-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,.10); }
+.hk-item:last-child { border-bottom: 0; }
+.hk-item-n { font-family: var(--font-geist-mono), monospace; font-size: 11px; color: var(--c-cyan); }
+.hk-item-main { display: flex; flex-direction: column; min-width: 0; }
+.hk-item-main b { font-size: 13px; font-weight: 600; }
+.hk-item-main small { font-size: 11px; color: var(--dim); font-family: var(--font-geist-mono), monospace; }
+.hk-item-tools { display: flex; gap: 3px; }
+.hk-item-tools button { width: 24px; height: 24px; border-radius: 7px; border: 1px solid rgba(255,255,255,.14);
+  background: transparent; color: var(--mute); font: inherit; font-size: 12px; cursor: pointer; transition: background .2s, color .2s; }
+.hk-item-tools button:hover:not(:disabled) { background: rgba(255,255,255,.08); color: #fff; }
+.hk-item-tools button:disabled { opacity: .3; cursor: default; }
+
+.hk-flow { padding: 10px 14px 4px; font-family: var(--font-geist-mono), monospace; font-size: 12px; }
+.hk-flow-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 68px; gap: 10px; align-items: baseline; padding: 5px 0; color: var(--ink2); }
+.hk-flow-row b { color: var(--c-amber); font-weight: 600; }
+.hk-flow-row small { text-align: right; color: var(--dim); font-size: 10.5px; }
+.hk-flow-row.is-rest { border-top: 1px solid var(--hair); margin-top: 4px; padding-top: 9px; color: var(--mute); }
+.hk-flow-row.is-rest b { color: var(--c-green); }
+.hk-note { padding: 4px 14px 14px; font-size: 11.5px; line-height: 1.6; color: var(--mute); }
+.hk-note strong { color: var(--c-red); }
+.hk-empty { padding: 14px; font-size: 12.5px; color: var(--dim); }
+.hk-summary { padding: 12px 14px 14px; }
+.hk-summary-h { font-family: var(--font-geist-mono), monospace; font-size: 13px; color: #fff; margin-bottom: 10px; }
+.hk-summary .checks { font-size: .85rem; }
+.hk-launch { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.hk-launch .lx-hint { margin: 0; flex: 1 1 180px; }
+@media (max-width: 1100px) { .hk { grid-template-columns: minmax(0, 1fr); } .hk-side { position: static; } }
+
 /* ── launchpad: announced, not shipped ── */
 .tab-soon { margin-left: 6px; padding: 2px 6px; border-radius: 999px; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
   font-family: var(--font-geist-mono), monospace; color: var(--c-amber); border: 1px solid color-mix(in srgb, var(--c-amber) 40%, transparent); }
