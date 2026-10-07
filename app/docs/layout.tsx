@@ -14,13 +14,17 @@ export default function DocsLayout({ children }: LayoutProps<"/docs">) {
     <div className="docs-shell flex min-h-full flex-1 flex-col">
       <header className="docs-top">
         <div className="docs-wrap docs-bar">
-          <Link href="/docs" className="docs-brand">
-            {/* eslint-disable-next-line @next/next/no-img-element -- static mark */}
-            <img src="/logo.png" alt="" width={22} height={22} className="brand-mark" />
-            <span className="chrome">EVERYNTH</span>
+          {/* Read as a trail: the mark goes home, "Docs" goes to the docs index. */}
+          <span className="docs-brand">
+            <a href={SITE} className="docs-brand-home brand-home" aria-label="Back to everynth.org">
+              <span className="brand-back" aria-hidden="true">←</span>
+              {/* eslint-disable-next-line @next/next/no-img-element -- static mark */}
+              <img src="/logo.png" alt="" width={22} height={22} className="brand-mark" />
+              <span className="chrome">EVERYNTH</span>
+            </a>
             <span className="docs-brand-sep" aria-hidden="true">/</span>
-            <span>Docs</span>
-          </Link>
+            <Link href="/docs">Docs</Link>
+          </span>
           <nav className="docs-topnav" aria-label="Docs header">
             <a href={SITE} className="docs-link">Home</a>
             <Link href="/docs" className="docs-link is-current">Docs</Link>

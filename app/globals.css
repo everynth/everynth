@@ -46,6 +46,18 @@ body {
 .wrap, .docs-wrap { width: min(100%, 1240px); margin-inline: auto; padding-inline: clamp(18px, 4.5vw, 56px); }
 .brand-mark { display: block; width: 22px; height: 22px; object-fit: contain; align-self: center; flex: none; }
 .brand-mark-sm { width: 16px; height: 16px; }
+
+/* The mark doubles as the way home. The arrow only shows on hover or focus, so the header stays
+   quiet until someone looks for a way out. */
+.brand-home { position: relative; }
+.brand-back { position: absolute; left: -16px; top: 50%; translate: 4px -50%; opacity: 0;
+  font-size: 13px; line-height: 1; color: var(--c-cyan); pointer-events: none;
+  transition: opacity .2s, translate .25s cubic-bezier(.16,1,.3,1); }
+.brand-home:hover .brand-back, .brand-home:focus-visible .brand-back { opacity: 1; translate: 0 -50%; }
+.brand-home:hover .brand-mark { translate: 2px 0; }
+.brand-mark { transition: translate .25s cubic-bezier(.16,1,.3,1); }
+.docs-brand-home { display: inline-flex; align-items: baseline; gap: .55rem; text-decoration: none; color: inherit; }
+@media (max-width: 880px) { .brand-back { display: none; } }
 .brand, .docs-brand { display: inline-flex; align-items: baseline; gap: .55rem; font-family: var(--font-geist-mono), monospace; font-size: .8rem; letter-spacing: .16em; font-weight: 600; text-decoration: none; color: var(--foreground); }
 .navlink, .docs-link { color: var(--mute); text-decoration: none; padding: .45rem .7rem; border-radius: 999px; font-size: .9rem; transition: color .2s, background .2s; }
 .navlink:hover, .docs-link:hover, .navlink.is-active { color: var(--foreground); background: rgba(255,255,255,.06); }

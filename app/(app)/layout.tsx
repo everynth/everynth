@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Providers } from "@/components/providers";
 import { SignIn } from "@/components/sign-in";
 import { isAdmin, sessionWallet } from "@/lib/session";
-import { SOCIALS } from "@/lib/site";
+import { SITE, SOCIALS } from "@/lib/site";
 import { NavLinks } from "./nav-links";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
@@ -11,11 +11,14 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     <Providers>
       <header className="top">
         <div className="wrap-wide flex flex-wrap items-center gap-x-4 gap-y-3">
-          <Link href="/" className="brand">
+          {/* The mark is the way back to everynth.org. The market has its own tab, so the logo does
+              not need to point there too — and from a product page there was no way home at all. */}
+          <a href={SITE} className="brand brand-home" aria-label="Back to everynth.org">
+            <span className="brand-back" aria-hidden="true">←</span>
             {/* eslint-disable-next-line @next/next/no-img-element -- static mark, no layout shift to optimise away */}
             <img src="/logo.png" alt="" width={22} height={22} className="brand-mark" />
             <span className="chrome">EVERYNTH</span>
-          </Link>
+          </a>
           <div className="tabs">
             <NavLinks signedIn={!!wallet} admin={isAdmin(wallet)} />
           </div>
