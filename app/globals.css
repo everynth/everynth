@@ -118,7 +118,33 @@ body {
 .dash-sec-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .dash-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16); background: var(--background); }
-.tab-pill { padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--mute); text-decoration: none; transition: color .2s, background .2s; }
+.tab-pill { padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--mute); text-decoration: none; white-space: nowrap; flex: none; transition: color .2s, background .2s; }
+
+/* On a phone the tabs take their own line and scroll sideways. Wrapping them inside the pill
+   leaves a two-storey capsule with a stray tab in the basement.
+   Scoped to the header: the market's sort tabs use the same class and must not be reordered. */
+@media (max-width: 880px) {
+  .top .wrap-wide { gap: 10px 12px; }
+  .top .tabs { order: 3; width: 100%; max-width: 100%; overflow-x: auto; justify-content: flex-start;
+    scrollbar-width: none; -ms-overflow-style: none; }
+  .top .tabs::-webkit-scrollbar { display: none; }
+  .top .tab-pill { padding: 7px 12px; font-size: 12.5px; }
+}
+
+/* The market's own controls: sort first, then a full-width search, then category and filter. */
+@media (max-width: 640px) {
+  .dash-filters { gap: 8px; }
+  .dash-filters .tabs { order: -1; width: 100%; max-width: 100%; overflow-x: auto; justify-content: flex-start;
+    scrollbar-width: none; -ms-overflow-style: none; }
+  .dash-filters .tabs::-webkit-scrollbar { display: none; }
+  /* two classes, so these beat the base rules further down the file */
+  .dash-filters .dash-search { flex: 1 1 100%; max-width: none; }
+  .dash-filters .dash-cat { flex: 1 1 auto; width: auto; }
+  .dash-filters .btn-ghost { flex: none; }
+  .dash-sec-actions { width: 100%; }
+  .pcardx { padding: 8px 10px 12px; }
+  .pcardx-desc { -webkit-line-clamp: 3; min-height: 0; }
+}
 .tab-pill:hover { color: var(--foreground); }
 .tab-pill.is-active { color: #05070C; background: #fff; }
 .dash-search { flex: 1 1 220px; max-width: 420px; border-radius: 999px; padding-left: 1rem; }
