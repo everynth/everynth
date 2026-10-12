@@ -318,12 +318,30 @@ details > summary::-webkit-details-marker { display: none; }
 .agent-link { text-decoration: none; }
 .agent-link:hover .agent-name { color: var(--ink); }
 
+/* The desk characters. Four tones per domain, read by the gradients inside the figure. */
+.afig { display: block; --f-top: #a9f0ff; --f-mid: #43c6ea; --f-left: #2a7fa8; --f-deep: #0d2a3f; }
+.afig[data-domain="AI"] { --f-top: #d8c9ff; --f-mid: #9b7cf0; --f-left: #5f3fae; --f-deep: #241a52; }
+.afig[data-domain="Privacy"] { --f-top: #b6f5dd; --f-mid: #4fd9a8; --f-left: #2a8f78; --f-deep: #0f3a35; }
+.afig-bob { animation-name: afig-bob; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+.afig-eye { animation: afig-eye 2.4s ease-in-out infinite; }
+@keyframes afig-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+@keyframes afig-eye { 0%, 100% { opacity: .3; } 45% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .afig-bob, .afig-eye { animation: none; } }
+
 .desks { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 18px; }
 @media (max-width: 860px) { .desks { grid-template-columns: minmax(0, 1fr); } }
 .desk { border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 15px 16px 13px; background: var(--background); min-width: 0; }
+.desk-art { display: grid; place-items: center; margin: -4px 0 6px; }
+.desk-hero { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .desk-head { display: flex; align-items: center; gap: 10px; }
 .desk-id { display: flex; align-items: baseline; gap: 2px; min-width: 0; }
 .desk-id b { font-size: 15px; font-weight: 600; }
+.desk-next { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+.desk-next span { font-family: var(--font-geist-mono), monospace; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.desk-next b { font-size: 13px; font-weight: 600; color: var(--ink2); text-align: right; }
+.desk-stage { display: flex; justify-content: space-between; margin-top: 7px; font-family: var(--font-geist-mono), monospace; font-size: 10.5px; color: var(--dim); }
+.desk-stage b { color: var(--dom); font-weight: 600; }
+.desk-nums { border-top: 1px solid rgba(255,255,255,.08); padding-top: 9px; }
 .desk-line { margin: 10px 0 12px; font-size: 12.5px; line-height: 1.5; color: var(--mute); }
 .desk-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.08); overflow: hidden; }
 .desk-bar i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, color-mix(in srgb, var(--dom) 55%, transparent), var(--dom)); }

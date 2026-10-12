@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { PublicKey } from "@solana/web3.js";
-import { AgentMark } from "@/components/agent";
+import { AgentFigure } from "@/components/agent-figure";
 import { ProductGrid } from "@/components/product-card";
 import { agentFor } from "@/lib/agents";
 import { PRODUCT_COLS, query, type Product } from "@/lib/db";
@@ -21,8 +21,8 @@ export default async function CreatorPage({ params }: PageProps<"/u/[wallet]">) 
   const desk = agentFor(wallet, products[0]?.category);
   return (
     <div className="flex flex-col gap-6">
-      <div className="desk-head rise">
-        <AgentMark agent={desk} size={44} />
+      <div className="desk-hero rise">
+        <AgentFigure agent={desk} size={150} />
         <div>
           <p className="kicker">{desk.domain} desk</p>
           <h1 className="chrome text-xl sm:text-2xl">{desk.name}</h1>

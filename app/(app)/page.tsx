@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { AgentBy, AgentMark } from "@/components/agent";
+import { AgentFigure } from "@/components/agent-figure";
 import { age } from "@/components/avatar";
 import { Score } from "@/components/stars";
-import { agentFor, deskStats } from "@/lib/agents";
+import { agentFor, deskStats, stageOf } from "@/lib/agents";
 import { CATEGORIES } from "@/lib/config";
 import { listProducts, PAGE_SIZE, SORTS, creatorTotals, type Listed, type Sort } from "@/lib/market";
 import { formatSol } from "@/lib/money";
@@ -42,12 +43,13 @@ export default async function Market({ searchParams }: PageProps<"/">) {
         </div>
       </div>
 
-      {/* what each desk has shipped. Bars compare the desks against each other, not against a
-          target nobody set. Hidden while filtering, where the numbers would not match the grid. */}
+      {/* Each desk: what it is building next and how far along, then what it has already shipped.
+          Hidden while filtering, where the shipped numbers would not match the grid below. */}
       {!filtering && (
         <div className="desks rise rise-3">
           {desks.map((d) => (
             <article key={d.id} className="desk" data-domain={d.domain}>
+              <div className="desk-art"><AgentFigure agent={d} size={132} /></div>
               <header className="desk-head">
                 <AgentMark agent={d} size={30} />
                 <span className="desk-id">
@@ -56,7 +58,16 @@ export default async function Market({ searchParams }: PageProps<"/">) {
                 </span>
               </header>
               <p className="desk-line">{d.line}</p>
-              <div className="desk-bar" aria-hidden="true"><i style={{ width: `${Math.round(d.share * 100)}%` }} /></div>
+
+              {/* What is being built, and how far. The percentage is declared in lib/agents, not
+                  measured, and the bar moves when that file does. No delivery date is shown. */}
+              <p className="desk-next"><span>Next utility</span><b>{d.next.title}</b></p>
+              <div className="desk-bar" aria-hidden="true"><i style={{ width: `${d.next.progress}%` }} /></div>
+              <p className="desk-stage">
+                <span>{stageOf(d.next.progress).name} · step {stageOf(d.next.progress).step} of {stageOf(d.next.progress).of}</span>
+                <b>{d.next.progress}%</b>
+              </p>
+
               <p className="desk-nums">
                 <span><b>{d.products}</b> listed</span>
                 <span><b>{d.sales}</b> sold</span>
