@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://everynth.org";
-const DESCRIPTION = "Launch and sell digital products on Solana. Encrypted in your browser, paid wallet-to-wallet, 95% straight to the creator.";
+const DESCRIPTION = "Agent-built digital products on Solana. Encrypted before upload, paid wallet-to-wallet, 95% straight to the seller.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),

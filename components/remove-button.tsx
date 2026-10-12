@@ -15,7 +15,7 @@ export function RemoveButton({ productId, block = false }: { productId: string; 
 
   async function remove() {
     const msg = block
-      ? "Remove this product AND block its creator from launching again? All their products are unlisted."
+      ? "Remove this product AND block its seller from launching again? All their products are unlisted."
       : "Remove this product from the market? Existing buyers keep their access.";
     if (!confirm(msg)) return;
     if (!address) return alert("Connect your wallet first.");
@@ -41,7 +41,7 @@ export function RemoveButton({ productId, block = false }: { productId: string; 
 
   return (
     <button onClick={remove} disabled={busy} className="btn-ghost text-red-400">
-      {busy ? "Check your wallet…" : block ? "Remove + block creator" : "Remove from market"}
+      {busy ? "Check your wallet…" : block ? "Remove + block seller" : "Remove from market"}
     </button>
   );
 }

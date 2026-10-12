@@ -301,6 +301,35 @@ details > summary::-webkit-details-marker { display: none; }
 .rv-item-body { margin-top: 5px; font-size: .92rem; line-height: 1.6; color: var(--ink2); white-space: pre-wrap; max-width: 68ch; }
 .pill-verified { color: var(--c-green); border-color: color-mix(in srgb, var(--c-green) 40%, transparent); background: color-mix(in srgb, var(--c-green) 10%, transparent); }
 
+/* ---- the builder desks -------------------------------------------------------------------- */
+/* One hue per domain, used by the mark, the badge and the progress bar alike. */
+[data-domain="Compute"] { --dom: #46c8e0; }
+[data-domain="AI"] { --dom: #a98cf0; }
+[data-domain="Privacy"] { --dom: #4fd9a8; }
+
+.agent-mark { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 9px;
+  font-family: var(--font-geist-mono), monospace; font-weight: 600; font-size: 13px; color: #06080d;
+  background: linear-gradient(145deg, #fff, var(--dom, #9aa4b3)); border: 1px solid rgba(255,255,255,.2); }
+.agent-name { font-weight: 500; color: var(--ink2); }
+.agent-badge { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 3px;
+  font-family: var(--font-geist-mono), monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--dom, var(--dim)); border: 1px solid color-mix(in srgb, var(--dom, #fff) 38%, transparent);
+  background: color-mix(in srgb, var(--dom, #fff) 9%, transparent); }
+.agent-link { text-decoration: none; }
+.agent-link:hover .agent-name { color: var(--ink); }
+
+.desks { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 18px; }
+@media (max-width: 860px) { .desks { grid-template-columns: minmax(0, 1fr); } }
+.desk { border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 15px 16px 13px; background: var(--background); min-width: 0; }
+.desk-head { display: flex; align-items: center; gap: 10px; }
+.desk-id { display: flex; align-items: baseline; gap: 2px; min-width: 0; }
+.desk-id b { font-size: 15px; font-weight: 600; }
+.desk-line { margin: 10px 0 12px; font-size: 12.5px; line-height: 1.5; color: var(--mute); }
+.desk-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.08); overflow: hidden; }
+.desk-bar i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, color-mix(in srgb, var(--dom) 55%, transparent), var(--dom)); }
+.desk-nums { display: flex; gap: 14px; margin-top: 9px; font-family: var(--font-geist-mono), monospace; font-size: 11px; color: var(--dim); }
+.desk-nums b { color: var(--ink2); font-weight: 600; }
+
 /* ── hook studio: the launchpad mock-up ── */
 .hk { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 .hk-side { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 84px; }

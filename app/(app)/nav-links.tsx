@@ -18,8 +18,9 @@ export function NavLinks({ signedIn, admin }: { signedIn: boolean; admin: boolea
     strip.scrollLeft = Math.max(0, el.offsetLeft - (strip.clientWidth - el.offsetWidth) / 2);
   }, [path]);
 
-  // Named so the pair cannot be confused: one lists a product, the other will mint a token.
-  const links: [string, string][] = [["/", "Market"], ["/stats", "Live stats"], ["/launch/product", "Launch product"], ["/launchpad", "Launch token"]];
+  // Listing is the desks' job now, so "Launch product" is off the menu. The route still answers,
+  // for the dashboard's edit links and for anyone who kept a bookmark.
+  const links: [string, string][] = [["/", "Market"], ["/stats", "Live stats"], ["/launchpad", "Launch token"]];
   if (signedIn) links.push(["/purchases", "Purchases"], ["/dashboard", "Dashboard"]);
   if (admin) links.push(["/admin", "Admin"]);
 

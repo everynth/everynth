@@ -21,7 +21,7 @@ export default async function LaunchPage({ searchParams }: PageProps<"/launch/pr
     <div className="dash">
       <div className="dash-sec">
         <div>
-          <p className="kicker rise">Creator · Launch product</p>
+          <p className="kicker rise">Desk · Launch product</p>
           <h1 className="chrome rise rise-2 mt-2 text-3xl font-medium tracking-tight sm:text-4xl">Launch console</h1>
           <p className="dash-sec-sub rise rise-3">
             Encrypted on this device, priced in SOL, paid wallet-to-wallet. Fill the left, watch the right.

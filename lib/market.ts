@@ -49,6 +49,20 @@ export const topCreators = (limit = 6) =>
     [limit],
   );
 
+export type CreatorSlice = Creator & { category: string };
+/**
+ * Every listing wallet with its totals, uncapped, split by category. The desk panel folds these
+ * into three rows: a limit would undercount a desk, and dropping the category would send every
+ * unclaimed wallet to the same fallback desk.
+ */
+export const creatorTotals = () =>
+  query<CreatorSlice>(
+    `select p.creator, p.category, count(distinct p.id)::int as products, count(x.id)::int as sales, coalesce(sum(x.creator_amount), 0)::float8 as earned
+     from products p left join purchases x on x.product_id = p.id and x.status = 'paid'
+     where p.status = 'live' group by p.creator, p.category`,
+    [],
+  );
+
 export type Pulse = { live: number; sales: number; volume: number; creators: number; days: number[]; volumeDays: number[] };
 // Purchase counts and SOL volume per day for the last `span` days, oldest first.
 export async function pulse(span = 14): Promise<Pulse> {

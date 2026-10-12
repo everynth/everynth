@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Avatar, short } from "@/components/avatar";
+import { AgentMark } from "@/components/agent";
 import { Spark } from "@/components/spark";
+import { agentFor } from "@/lib/agents";
 import { byCategory, pulse, topCreators, trending } from "@/lib/market";
 import { formatSol } from "@/lib/money";
 
@@ -19,7 +20,7 @@ export default async function StatsPage() {
         <div>
           <p className="kicker">Live · Solana mainnet</p>
           <h1 className="dash-sec-title" style={{ fontSize: "1.8rem" }}>Live stats</h1>
-          <p className="dash-sec-sub">Read from the database on every visit. Volume is what buyers paid; 95% of it went straight to creators.</p>
+          <p className="dash-sec-sub">Read from the database on every visit. Volume is what buyers paid; 95% of it went straight to the sellers.</p>
         </div>
       </div>
 
@@ -30,9 +31,9 @@ export default async function StatsPage() {
             <div><dt>Live products</dt><dd className="chrome">{p.live}</dd></div>
             <div><dt>Purchases settled</dt><dd className="chrome">{p.sales}</dd></div>
             <div><dt>Volume</dt><dd className="v-info">{formatSol(p.volume)}<small> SOL</small></dd></div>
-            <div><dt>Creators</dt><dd className="chrome">{p.creators}</dd></div>
+            <div><dt>Desks</dt><dd className="chrome">{p.creators}</dd></div>
             <div><dt>Last 7 days</dt><dd className={last7 >= prev7 ? "v-good" : "v-fee"}>{last7}<small> {prev7 ? `${last7 >= prev7 ? "+" : ""}${last7 - prev7} vs prior 7` : "purchases"}</small></dd></div>
-            <div><dt>To creators</dt><dd className="v-good">{formatSol(Math.round(p.volume * 0.95))}<small> SOL</small></dd></div>
+            <div><dt>To sellers</dt><dd className="v-good">{formatSol(Math.round(p.volume * 0.95))}<small> SOL</small></dd></div>
           </dl>
         </div>
         <div className="feature-art">
@@ -52,7 +53,7 @@ export default async function StatsPage() {
               <li key={x.id}>
                 <Link href={`/p/${x.id}`} className="prow">
                   <span className="rank mono">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="prow-name">{x.title}<small>{x.category} · {short(x.creator)}</small></span>
+                  <span className="prow-name">{x.title}<small>{x.category} · {agentFor(x.creator, x.category).name}</small></span>
                   <span className="prow-val"><b className="chrome">{x.sales}</b><small>{formatSol(x.price)} SOL</small></span>
                 </Link>
               </li>
@@ -61,14 +62,14 @@ export default async function StatsPage() {
         </section>
 
         <section className="panel rise rise-3" aria-labelledby="creators-h">
-          <header className="panel-head"><h2 id="creators-h">Top creators</h2><span>earned · products</span></header>
+          <header className="panel-head"><h2 id="creators-h">Top desks</h2><span>earned · products</span></header>
           <ol className="plist">
-            {creators.length === 0 && <li className="pempty">No creators yet</li>}
+            {creators.length === 0 && <li className="pempty">No desks yet</li>}
             {creators.map((c) => (
               <li key={c.creator}>
                 <Link href={`/u/${c.creator}`} className="prow">
-                  <Avatar seed={c.creator} />
-                  <span className="prow-name mono">{short(c.creator)}<small>{c.sales} sold</small></span>
+                  <AgentMark agent={agentFor(c.creator)} />
+                  <span className="prow-name">{agentFor(c.creator).name}<small>{c.sales} sold</small></span>
                   <span className="prow-val"><b className="chrome">{formatSol(c.earned)}</b><small>{c.products} live</small></span>
                 </Link>
               </li>

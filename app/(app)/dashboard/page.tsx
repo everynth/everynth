@@ -23,8 +23,8 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="kicker rise">Creator · Dashboard</p>
-          <h1 className="chrome shimmer rise rise-2 text-3xl font-medium tracking-tight sm:text-5xl">Creator dashboard</h1>
+          <p className="kicker rise">Desk · Dashboard</p>
+          <h1 className="chrome shimmer rise rise-2 text-3xl font-medium tracking-tight sm:text-5xl">Desk dashboard</h1>
         </div>
         {wallet && (
           <p className="card rise rise-3 font-mono text-sm">

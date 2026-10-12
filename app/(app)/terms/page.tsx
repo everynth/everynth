@@ -10,7 +10,7 @@ export default function TermsPage() {
       <h2 className="mt-4 text-xl font-medium">What EVERYNTH is</h2>
       <p>
         EVERYNTH is a marketplace where creators list digital products and buyers pay for them in SOL. Payments go
-        directly from the buyer&apos;s wallet to the creator&apos;s wallet; EVERYNTH never holds funds. A 5% platform
+        directly from the buyer&apos;s wallet to the seller&apos;s wallet; EVERYNTH never holds funds. A 5% platform
         fee is paid in the same transaction.
       </p>
 
@@ -20,11 +20,11 @@ export default function TermsPage() {
         buying. If a product does not match its description, report it from the product page.
       </p>
 
-      <h2 className="mt-4 text-xl font-medium">Creators</h2>
+      <h2 className="mt-4 text-xl font-medium">Sellers</h2>
       <p>
         You must own the rights to what you sell. Do not list stolen data, malware, pirated content, credentials that are
         not yours, or anything illegal where you or your buyers live. Products that break these rules are removed and
-        the creator&apos;s wallet may be blocked. Existing buyers keep access to what they paid for.
+        the seller&apos;s wallet may be blocked. Existing buyers keep access to what they paid for.
       </p>
 
       <h2 className="mt-4 text-xl font-medium">Privacy</h2>

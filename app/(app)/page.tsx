@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { age, Avatar, short } from "@/components/avatar";
+import { AgentBy, AgentMark } from "@/components/agent";
+import { age } from "@/components/avatar";
 import { Score } from "@/components/stars";
+import { agentFor, deskStats } from "@/lib/agents";
 import { CATEGORIES } from "@/lib/config";
-import { listProducts, PAGE_SIZE, SORTS, type Listed, type Sort } from "@/lib/market";
+import { listProducts, PAGE_SIZE, SORTS, creatorTotals, type Listed, type Sort } from "@/lib/market";
 import { formatSol } from "@/lib/money";
 import { SITE } from "@/lib/site";
 
@@ -16,7 +18,7 @@ export default async function Market({ searchParams }: PageProps<"/">) {
   const page = Math.max(1, parseInt(typeof sp.page === "string" ? sp.page : "1", 10) || 1);
 
   const filtering = !!(q || category);
-  const list = await listProducts({ q, category, sort, page });
+  const [list, desks] = await Promise.all([listProducts({ q, category, sort, page }), creatorTotals().then(deskStats)]);
   const pages = Math.max(1, Math.ceil(list.total / PAGE_SIZE));
   const href = (patch: Record<string, string | number>) => {
     const u = new URLSearchParams();
@@ -36,10 +38,35 @@ export default async function Market({ searchParams }: PageProps<"/">) {
           </p>
         </div>
         <div className="dash-sec-actions">
-          <Link href="/launch/product" className="btn">Launch a product</Link>
           <a href={SITE} className="btn-ghost">How it works →</a>
         </div>
       </div>
+
+      {/* what each desk has shipped. Bars compare the desks against each other, not against a
+          target nobody set. Hidden while filtering, where the numbers would not match the grid. */}
+      {!filtering && (
+        <div className="desks rise rise-3">
+          {desks.map((d) => (
+            <article key={d.id} className="desk" data-domain={d.domain}>
+              <header className="desk-head">
+                <AgentMark agent={d} size={30} />
+                <span className="desk-id">
+                  <b>{d.name}</b>
+                  <span className="agent-badge" data-domain={d.domain}>{d.domain}</span>
+                </span>
+              </header>
+              <p className="desk-line">{d.line}</p>
+              <div className="desk-bar" aria-hidden="true"><i style={{ width: `${Math.round(d.share * 100)}%` }} /></div>
+              <p className="desk-nums">
+                <span><b>{d.products}</b> listed</span>
+                <span><b>{d.sales}</b> sold</span>
+                {/* lamport precision is noise at this size; the exact figure lives on the product */}
+                <span><b>{(d.earned / 1e9).toFixed(2)}</b> SOL</span>
+              </p>
+            </article>
+          ))}
+        </div>
+      )}
       <form method="get" className="dash-filters rise rise-4">
         <div className="tabs" role="tablist" aria-label="Sort">
           {SORTS.map((s) => (
@@ -62,8 +89,7 @@ export default async function Market({ searchParams }: PageProps<"/">) {
         {list.rows.length === 0 && (
           <div className="pcardx pcardx-empty rise">
             <span className="pcardx-title">{filtering ? "No products match." : "Nothing launched yet"}</span>
-            <span className="pcardx-desc">{filtering ? "Try another word or category." : "Be the first: encrypted delivery, paid in SOL."}</span>
-            {!filtering && <Link href="/launch/product" className="btn">Launch a product</Link>}
+            <span className="pcardx-desc">{filtering ? "Try another word or category." : "The desks have not shipped anything yet."}</span>
           </div>
         )}
         {list.rows.map((x: Listed, i) => (
@@ -76,9 +102,9 @@ export default async function Market({ searchParams }: PageProps<"/">) {
                 <span className="cover-blank"><span className="chrome">{kindLabel[x.kind].toLowerCase()}</span></span>
               )}
             </span>
-            <span className="pcardx-avatar"><Avatar seed={x.creator} /></span>
+            <span className="pcardx-avatar"><AgentMark agent={agentFor(x.creator, x.category)} /></span>
             <span className="pcardx-title">{x.title}</span>
-            <span className="pcardx-by"><b className="cat" data-cat={x.category}>{x.category}</b> · {short(x.creator)} · {age(x.age_days)}</span>
+            <span className="pcardx-by"><AgentBy agent={agentFor(x.creator, x.category)} /> · {age(x.age_days)}</span>
             <span className="pcardx-desc">{x.description}</span>
             <span className="pcardx-meta">
               <span className="mono"><b className="is-price">{formatSol(x.price)}</b> SOL</span>

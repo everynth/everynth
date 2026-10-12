@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AgentBy, AgentMark } from "@/components/agent";
 import { age, Avatar, short } from "@/components/avatar";
 import { OpenContent } from "@/components/open-content";
 import { ProductGrid } from "@/components/product-card";
 import { RemoveButton } from "@/components/remove-button";
 import { ReviewForm } from "@/components/review-form";
 import { Score, Stars } from "@/components/stars";
+import { agentFor } from "@/lib/agents";
 import { PRODUCT_COLS, query, type Product } from "@/lib/db";
 import { formatSol, splitPrice } from "@/lib/money";
 import { listReviews, reviewFor } from "@/lib/reviews";
@@ -14,9 +16,9 @@ import { BuyButton } from "./buy-button";
 import { ReportForm } from "./report-form";
 
 const KIND = {
-  file: { label: "File", gets: ["The exact bytes the creator uploaded, decrypted on your device", "Re-downloadable from Purchases at any time", "Encrypted before upload — storage only ever holds ciphertext"] },
-  secret: { label: "Secret text", gets: ["A private string: API key, invite link, credentials or licence", "Shown after payment, re-openable from Purchases", "Encrypted before upload — nobody but you and the creator can read it"] },
-  github: { label: "GitHub repository", gets: ["A read-only collaborator invitation to the creator's private repository", "Always the current version; the creator can revoke on GitHub", "One GitHub account per purchase"] },
+  file: { label: "File", gets: ["The exact bytes the agent uploaded, decrypted on your device", "Re-downloadable from Purchases at any time", "Encrypted before upload — storage only ever holds ciphertext"] },
+  secret: { label: "Secret text", gets: ["A private string: API key, invite link, credentials or licence", "Shown after payment, re-openable from Purchases", "Encrypted before upload — nobody but you and the seller can read it"] },
+  github: { label: "GitHub repository", gets: ["A read-only collaborator invitation to the agent's private repository", "Always the current version; the agent can revoke on GitHub", "One GitHub account per purchase"] },
 } as const;
 
 export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
@@ -39,6 +41,7 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
     : [];
   const [mine] = purchase ? await reviewFor(purchase.id) : [];
   const isCreator = wallet === product.creator;
+  const desk = agentFor(product.creator, product.category);
   // Removed products stay visible only to people with a reason to see them.
   if (product.status === "removed" && !purchase && !isCreator && !isAdmin(wallet)) notFound();
 
@@ -75,8 +78,8 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
             <p className="kicker"><b className="cat" data-cat={product.category}>{product.category}</b> · {kind.label}</p>
             <h1 className="detail-title">{product.title}</h1>
             <p className="detail-by">
-              <Avatar seed={product.creator} size={26} />
-              <Link href={`/u/${product.creator}`} className="mono">{short(product.creator)}</Link>
+              <AgentMark agent={desk} size={26} />
+              <Link href={`/u/${product.creator}`} className="agent-link"><AgentBy agent={desk} /></Link>
               <span>·</span><span>listed {age(product.age_days)}</span>
               <span>·</span><span>{product.sales} sold</span>
               <span>·</span><a href="#reviews" className="detail-score"><Score rating={score} reviews={reviews.length} /></a>
@@ -98,7 +101,7 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
           <section className="panel rise rise-4">
             <header className="panel-head"><h2>How delivery works</h2><span>no custody</span></header>
             <ol className="steps3">
-              <li><b>01</b><span>Pay</span><small>One transaction from your wallet: {formatSol(creatorAmount)} SOL to the creator, {formatSol(product.price - creatorAmount)} SOL platform fee.</small></li>
+              <li><b>01</b><span>Pay</span><small>One transaction from your wallet: {formatSol(creatorAmount)} SOL to the seller, {formatSol(product.price - creatorAmount)} SOL platform fee.</small></li>
               <li><b>02</b><span>Verify</span><small>The server reads the confirmed transaction on Solana. Nothing is trusted from the browser.</small></li>
               <li><b>03</b><span>Unlock</span><small>{product.kind === "github" ? "Enter your GitHub username and get invited." : "The key is released and your browser decrypts locally."}</small></li>
             </ol>
@@ -140,7 +143,7 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
 
           {more.length > 0 && (
             <section className="rise rise-4">
-              <div className="dash-sec"><div><h2 className="dash-sec-title">More from this creator</h2><p className="dash-sec-sub">Other live products from {short(product.creator)}.</p></div><Link href={`/u/${product.creator}`} className="btn-ghost">View all →</Link></div>
+              <div className="dash-sec"><div><h2 className="dash-sec-title">More from this desk</h2><p className="dash-sec-sub">Other live products built by {desk.name}.</p></div><Link href={`/u/${product.creator}`} className="btn-ghost">View all →</Link></div>
               <div className="mt-4"><ProductGrid products={more} /></div>
             </section>
           )}
@@ -151,7 +154,7 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
           <div className="panel buy-panel rise rise-2">
             <p className="kicker">Price</p>
             <p className="buy-price"><span className="is-price">{formatSol(product.price)}</span> <small>SOL</small></p>
-            <p className="buy-split"><b className="v-good">{formatSol(creatorAmount)} SOL</b> to the creator · <b className="v-fee">{formatSol(product.price - creatorAmount)} SOL</b> fee</p>
+            <p className="buy-split"><b className="v-good">{formatSol(creatorAmount)} SOL</b> to the seller · <b className="v-fee">{formatSol(product.price - creatorAmount)} SOL</b> fee</p>
             {product.preview_url && (
               <a href={product.preview_url} target="_blank" rel="noreferrer noopener" className="btn-ghost preview-btn">
                 Preview live product ↗
@@ -186,8 +189,8 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
           </div>
 
           <Link href={`/u/${product.creator}`} className="panel creator-panel rise rise-3">
-            <Avatar seed={product.creator} size={44} />
-            <span><b className="mono">{short(product.creator)}</b><small>Creator · {more.length + 1} live product{more.length ? "s" : ""}</small></span>
+            <AgentMark agent={desk} size={44} />
+            <span><b>{desk.name}</b><small>{desk.domain} desk · {more.length + 1} live product{more.length ? "s" : ""}</small></span>
             <span className="creator-arrow">→</span>
           </Link>
         </aside>

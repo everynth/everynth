@@ -61,7 +61,7 @@ export default async function LaunchpadPage() {
     <div className="dash">
       <div className="dash-sec rise">
         <div>
-          <p className="kicker">Creator · Launch token</p>
+          <p className="kicker">Holder · Launch token</p>
           <h1 className="chrome mt-2 text-3xl font-medium tracking-tight sm:text-4xl">Launchpad</h1>
           <p className="dash-sec-sub">
             Give a token to a utility that already works. Not a token first and a product later — the other way round.
