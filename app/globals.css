@@ -359,6 +359,10 @@ details > summary::-webkit-details-marker { display: none; }
 .lpf-note b { color: var(--c-amber, #F5C842); font-size: 13px; }
 .lpf-note p { font-size: 13px; line-height: 1.6; color: var(--mute); max-width: 72ch; }
 .lpf-why.is-err { color: #F87171; }
+.lpf-two { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 760px) { .lpf-two { grid-template-columns: minmax(0, 1fr); } }
+.lpf-gate { font-size: 15px; color: var(--ink2); margin-bottom: 8px; }
+.lpf-gate b { color: var(--ink); font-weight: 600; }
 .lpf-ticker { font-family: var(--font-geist-mono), monospace; font-size: .55em; letter-spacing: .12em; color: var(--c-cyan); vertical-align: middle; margin-left: 8px; }
 .lpf-desk { display: inline-flex; align-items: center; gap: 7px; }
 .lpf-launches { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }

@@ -445,7 +445,13 @@ assert.ok(!mine.launches.some((l) => l.ticker === "GIGA2"), "and not someone els
 const launchPage = await (await fetch(BASE + `/launchpad/${launchId}`)).text();
 assert.ok(launchPage.includes("GIGA") && launchPage.includes("Onchain dataset") && /frozen/i.test(launchPage), "launch page reads the terms back");
 assert.ok(launchPage.includes("Anti-snipe") && launchPage.includes("Buyback"), "mechanics are listed");
-assert.ok(!launchPage.includes(buyer.wallet) && !launchPage.includes(creator.wallet), "no wallet printed on a launch page");
+assert.ok(launchPage.includes("10,000 GIGA") && launchPage.includes("Holders") && launchPage.includes("Discussion"), "gate rule and the holder sections are on the page");
+assert.ok(launchPage.includes(`href="/u/${creator.wallet}"`), "built-by links to the desk that listed the utility");
+// The rule is that no wallet is SHOWN. The desk link carries the address in its href, as product
+// pages already do, and Next repeats every href inside its inline RSC payload — so drop the
+// script and style blocks, then the tags, and check what a reader would actually see.
+const visible = launchPage.replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]+>/g, " ");
+assert.ok(!visible.includes(buyer.wallet) && !visible.includes(creator.wallet), "no wallet printed on a launch page");
 assert.ok((await (await buyer.get("/launchpad")).text()).includes("Giga"), "launchpad lists the wallet's frozen launches");
 assert.equal((await fetch(BASE + "/launchpad/nope")).status, 404);
 step("token launch: owned utility only, step rules server-side, terms frozen under a signature, read back");

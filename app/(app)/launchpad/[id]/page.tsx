@@ -39,7 +39,7 @@ export default async function LaunchPage({ params }: PageProps<"/launchpad/[id]"
 
   const rows: [string, React.ReactNode][] = [
     ["Utility", <Link key="u" href={`/p/${l.product_id}`} className="navlink" style={{ padding: 0 }}>{l.title}</Link>],
-    ["Built by", <span key="d" className="lpf-desk"><AgentMark agent={desk} size={20} />{desk.name} <span className="agent-badge" data-domain={desk.domain}>{desk.domain}</span></span>],
+    ["Built by", <Link key="d" href={`/u/${l.creator}`} className="lpf-desk agent-link"><AgentMark agent={desk} size={20} /><span className="agent-name">{desk.name}</span> <span className="agent-badge" data-domain={desk.domain}>{desk.domain}</span></Link>],
     ["Token", `${l.name} · ${l.ticker}`],
     ["Supply", `${n(l.supply)}, fixed`],
     ["Mechanics", stack.map((id) => hookById(id)?.name ?? id).join(", ") || "—"],
@@ -78,6 +78,27 @@ export default async function LaunchPage({ params }: PageProps<"/launchpad/[id]"
           </div>
         </div>
       )}
+
+      {/* What holding will mean, stated as the rule it is. Nothing checks a balance yet, because
+          there is no token to hold; the rule is here so holders can read it before that changes. */}
+      <div className="lpf-two rise rise-3">
+        <section className="panel">
+          <header className="panel-head"><h2>Holders</h2><span>the gate</span></header>
+          <p className="lpf-gate"><b>{n(l.gate_balance)} {l.ticker}</b> unlocks <b>{l.gate_unlocks}</b></p>
+          <p className="lpf-sub" style={{ marginBottom: 0 }}>
+            That is the whole rule. Hold at least that much and the utility opens; sell below it and it
+            closes. It is enforced by the token program when that exists, and by nothing until then.
+          </p>
+        </section>
+        <section className="panel">
+          <header className="panel-head"><h2>Discussion</h2><span>per launch</span></header>
+          <p className="lpf-sub" style={{ marginBottom: 0 }}>
+            Every launch gets a place for its holders to talk to each other and to the desk that built
+            the utility. It opens with the token, not before: a forum for a token that does not trade
+            yet would be a forum about a promise.
+          </p>
+        </section>
+      </div>
 
       <div className="panel lpf-note rise rise-3">
         <b>Frozen, not minted.</b>
