@@ -162,8 +162,8 @@ export default async function LaunchpadPage() {
           </p>
         </div>
         <div className="dash-sec-actions">
-          <Link href="/launch/product" className="btn">Launch a product</Link>
-          <Link href="/docs/launchpad/overview" className="btn-ghost">Read the launchpad design →</Link>
+          <Link href="/launchpad/new" className="btn">Walk the launch flow →</Link>
+          <Link href="/docs/launchpad/overview" className="btn-ghost">Read the launchpad design</Link>
         </div>
       </section>
     </div>
