@@ -94,13 +94,13 @@ export default async function LaunchpadPage({ searchParams }: PageProps<"/launch
   const newest = all[0];
   const fees = all.map((l) => taken(hooksOf(l.stack)));
   const stats: { label: string; value: string; sub: string; icon: keyof typeof ICONS; anim: string; tint: string }[] = [
-    { label: "Tokens launched", value: String(all.length), sub: "terms frozen on this launchpad", icon: "coin", anim: "flip", tint: "var(--c-amber)" },
-    { label: "Launch volume", value: "◎ 0", sub: "trading opens with the program", icon: "wave", anim: "dash", tint: "var(--c-green)" },
-    { label: "Supply committed", value: compact.format(all.reduce((n, l) => n + Number(l.supply), 0)), sub: "across every token", icon: "bars", anim: "rise", tint: "var(--c-cyan)" },
-    { label: "Utilities backed", value: String(new Set(all.map((l) => l.product_id)).size), sub: "products with a token on them", icon: "box", anim: "bob", tint: "var(--c-violet)" },
-    { label: "Mechanics stacked", value: String(all.reduce((n, l) => n + hooksOf(l.stack).length, 0)), sub: "hooks across all stacks", icon: "bolt", anim: "pulse", tint: "var(--c-amber)" },
-    { label: "Launchers", value: String(new Set(all.map((l) => l.wallet)).size), sub: "wallets that signed terms", icon: "users", anim: "blink", tint: "var(--c-blue)" },
-    { label: "Avg fee spoken for", value: fees.length ? `${Math.round(fees.reduce((a, b) => a + b, 0) / fees.length)}%` : "—", sub: `of a ${FEE_CEILING}% ceiling`, icon: "ring", anim: "spin", tint: "var(--c-green)" },
+    { label: "Tokens", value: String(all.length), sub: "terms frozen here", icon: "coin", anim: "flip", tint: "var(--c-amber)" },
+    { label: "Volume", value: "◎ 0", sub: "not live yet", icon: "wave", anim: "dash", tint: "var(--c-green)" },
+    { label: "Supply", value: compact.format(all.reduce((n, l) => n + Number(l.supply), 0)), sub: "committed in total", icon: "bars", anim: "rise", tint: "var(--c-cyan)" },
+    { label: "Utilities", value: String(new Set(all.map((l) => l.product_id)).size), sub: "with a token", icon: "box", anim: "bob", tint: "var(--c-violet)" },
+    { label: "Mechanics", value: String(all.reduce((n, l) => n + hooksOf(l.stack).length, 0)), sub: "hooks stacked", icon: "bolt", anim: "pulse", tint: "var(--c-amber)" },
+    { label: "Launchers", value: String(new Set(all.map((l) => l.wallet)).size), sub: "wallets that signed", icon: "users", anim: "blink", tint: "var(--c-blue)" },
+    { label: "Avg fee", value: fees.length ? `${Math.round(fees.reduce((a, b) => a + b, 0) / fees.length)}%` : "—", sub: `spoken for, of ${FEE_CEILING}%`, icon: "ring", anim: "spin", tint: "var(--c-green)" },
     { label: "Newest", value: newest ? newest.ticker : "—", sub: newest ? `${newest.name} · ${age(days(newest.created_at))}` : "nothing frozen yet", icon: "lock", anim: "shackle", tint: "var(--c-rose)" },
   ];
 
@@ -119,8 +119,8 @@ export default async function LaunchpadPage({ searchParams }: PageProps<"/launch
       </div>
 
       <ul className="lp-stats rise rise-2">
-        {stats.map((s, i) => (
-          <li key={s.label} className="lp-stat" style={{ "--tint": s.tint, animationDelay: `${80 + i * 40}ms` } as React.CSSProperties}>
+        {stats.map((s) => (
+          <li key={s.label} className="lp-stat" style={{ "--tint": s.tint } as React.CSSProperties}>
             <span className="lp-ico" data-anim={s.anim} aria-hidden="true">{ICONS[s.icon]}</span>
             <span className="lp-stat-label">{s.label}</span>
             <b className="lp-stat-value">{s.value}</b>
