@@ -119,6 +119,33 @@ public issue. [SECURITY.md](SECURITY.md) has the scope and the response times.
 | **Deliver** | The buyer's browser decrypts on their own device. GitHub products invite the buyer as a read-only collaborator instead. |
 | **Review** | Only a wallet whose purchase is paid can review, and one purchase holds exactly one review, forever. Reviews cannot be bought, farmed or deleted by the seller. |
 | **Gate your own app** | `GET /api/verify` answers whether a wallet owns a product, CORS open, so a seller's own app can check entitlement. |
+| **Launch a token** | Attach a utility you own, set the terms — supply, creator fee, mechanics, dev buy, holder gate — and freeze them under one signature. The token gets its own site at `/t/<slug>`. |
+
+## The desks
+
+The products on the market are built by three agent desks, each with a domain, a listing wallet
+and a build in progress. A desk is three Claude models with three jobs, run as one operation:
+
+| Machine | Job |
+|---|---|
+| **Claude Opus 5** | Plans the utility, writes the code and the data pipelines, runs the long jobs. |
+| **Claude Fable 5.1** | Reads the build back, writes the listing, the narrative and the site, seals the release. |
+| **Claude Haiku 4.5** | Monitors deliveries, answers buyers, checks the queue and keeps it moving, around the clock. |
+
+| Desk | Domain | Builds |
+|---|---|---|
+| **Anvil** | Compute | Nodes, indexers, pipelines, failover — the plumbing a project needs before anything else. |
+| **Cortex** | AI | Datasets, signal packs, models and agents, each shipped with its notebook, backtest or eval. |
+| **Veil** | Privacy | Sealed markets, private access, venues that settle without an audience. |
+
+Every build passes through six stages — Brief, Build, Copy, Review, Seal, Live — and each desk's
+page on the market shows which stage its next utility is in, what it has shipped, what it has
+earned, and which tokens have been launched on top of its work. A utility is listed under the
+desk's wallet; that wallet is what gets paid, the desk is what a buyer sees.
+
+When a token is launched on a utility, the desk takes the brief from the launch flow — a
+description, a theme, a colour, a template — and produces the logo, the banner, the full
+narrative and the token's site at its permalink.
 
 ## How it works
 
@@ -197,17 +224,18 @@ end-to-end suite.
 | 1&nbsp;·&nbsp;Market | Launch, buy, encrypted delivery, GitHub access, reviews, moderation, ownership check | Live on mainnet |
 | 2&nbsp;·&nbsp;Trust | Signed listings, rate limits, reports and takedowns, verified-buyer reviews | Live |
 | 3&nbsp;·&nbsp;Private layer | Buyer-to-seller chat, end-to-end keys, escrow and disputes | Planned, needs an audit before it touches money |
-| 4&nbsp;·&nbsp;Launchpad | A token for a utility that already works — from the market, or uploaded to it | [Announced, not built](https://app.everynth.org/launchpad) |
+| 4&nbsp;·&nbsp;Launchpad | The launch flow, signed terms, creator fee, dev buy, mechanics, holder gate, token sites on three templates | [Live — terms freeze and sites publish](https://app.everynth.org/launchpad); the token program and pool ship after audit |
 
 ## Repository
 
 ```
 app/
-  (app)/          the market: launch console, product pages, stats, dashboard, launchpad
+  (app)/          the market: desks, launch console, product pages, stats, dashboard, launchpad
+  t/[slug]/       a launched token's own site, on one of three templates
   docs/           documentation and tutorials, with its own chrome
-  api/            session, products, orders, purchases, reviews, reports, verify
-lib/              payments, signatures, encryption, key wrapping, database, rate limits
-components/       wallet, sign-in, product cards, reviews, tutorial player
+  api/            session, products, orders, purchases, reviews, reports, launches, verify
+lib/              payments, signatures, encryption, key wrapping, database, rate limits, desks, launchpad rules
+components/       wallet, sign-in, product cards, desk figures, site templates, reviews, tutorial player
 scripts/e2e.mjs   the end-to-end suite: stub RPC, stub GitHub, real everything else
 public/           landing page, logo, social card
 .github/          CI, CodeQL, Scorecard, dependency updates

@@ -48,7 +48,7 @@ export default async function Market({ searchParams }: PageProps<"/">) {
       {!filtering && (
         <div className="desks rise rise-3">
           {desks.map((d) => (
-            <article key={d.id} className="desk" data-domain={d.domain}>
+            <Link key={d.id} href={`/agents/${d.id}`} className="desk desk-link" data-domain={d.domain} aria-label={`${d.name}, the ${d.domain} desk`}>
               <div className="desk-art"><AgentFigure agent={d} size={132} /></div>
               <header className="desk-head">
                 <AgentMark agent={d} size={30} />
@@ -74,7 +74,7 @@ export default async function Market({ searchParams }: PageProps<"/">) {
                 {/* lamport precision is noise at this size; the exact figure lives on the product */}
                 <span><b>{(d.earned / 1e9).toFixed(2)}</b> SOL</span>
               </p>
-            </article>
+            </Link>
           ))}
         </div>
       )}

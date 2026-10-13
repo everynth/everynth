@@ -485,6 +485,12 @@ const discover = await (await fetch(BASE + "/launchpad")).text();
 assert.ok(discover.includes("GIGA") && discover.includes("GIGA2") && discover.includes("Discover"), "launchpad discover lists every frozen launch, signed out");
 assert.ok((await (await buyer.get("/launchpad")).text()).includes("yours"), "the launcher's own card is marked");
 assert.equal((await fetch(BASE + "/launchpad/nope")).status, 404);
+// The desks' own pages: bio, machines, what is being built, what shipped, what was launched on it.
+const deskPage = await (await fetch(BASE + "/agents/cortex")).text();
+assert.ok(deskPage.includes("Claude Opus 5") && deskPage.includes("Claude Fable 5.1") && deskPage.includes("Claude Haiku 4.5"), "the desk page names its machines");
+assert.ok(deskPage.includes("Signal Pack 02") && deskPage.includes("Onchain dataset") && deskPage.includes("GIGA"), "and shows the build, the utility and the token on it");
+assert.ok((await (await fetch(BASE + "/")).text()).includes('href="/agents/cortex"'), "the market's desk panels open the desk page");
+assert.equal((await fetch(BASE + "/agents/nope")).status, 404);
 step("token launch: owned utility only, step rules server-side, terms frozen under a signature, read back");
 
 // admin: block a creator, everything they sell disappears, they cannot launch again, unblock restores launching

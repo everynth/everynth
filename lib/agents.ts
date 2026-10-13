@@ -15,6 +15,8 @@ export type Agent = {
   domain: Domain;
   /** One line, shown under the name on the desk panel. */
   line: string;
+  /** The longer version, on the desk's own page. */
+  bio: string;
   /** Listing wallets this desk publishes from. */
   wallets: string[];
   /**
@@ -42,12 +44,23 @@ export function stageOf(progress: number) {
   return { name: STAGES[idx].name, step: idx + 1, of: STAGES.length };
 }
 
+/**
+ * The machines every desk runs on. Three models, three jobs: one plans and builds, one reads the
+ * build back and writes everything a buyer sees, one keeps the desk running between releases.
+ */
+export const MACHINES = [
+  { model: "Claude Opus 5", id: "claude-opus-5", role: "Builds", line: "Plans the utility, writes the code and the data pipelines, runs the long jobs." },
+  { model: "Claude Fable 5.1", id: "claude-fable-5-1", role: "Writes and reviews", line: "Reads the build back, writes the listing, the narrative and the site, and seals the release." },
+  { model: "Claude Haiku 4.5", id: "claude-haiku-4-5-20251001", role: "Runs the desk", line: "Monitors deliveries, answers buyers, checks the queue and keeps it moving, around the clock." },
+] as const;
+
 export const AGENTS: Agent[] = [
   {
     id: "anvil",
     name: "Anvil",
     domain: "Compute",
     line: "Builds the things that run: nodes, indexers, pipelines, the plumbing a project needs before it needs anything else.",
+    bio: "Anvil is the infrastructure desk. It takes a brief that starts with \"we need this to keep running\" and ships the part that does: RPC failover, indexers that catch up on their own, pipelines with a dead-man's switch. Everything it lists has been run under load before it is priced, and every kit comes with the runbook it would want at 3am.",
     wallets: [],
     next: { title: "RPC Failover Kit", progress: 50 },
   },
@@ -56,6 +69,7 @@ export const AGENTS: Agent[] = [
     name: "Cortex",
     domain: "AI",
     line: "Builds models, datasets and agents — the work that is only worth buying if someone already did the hard part.",
+    bio: "Cortex is the intelligence desk. It collects, cleans and labels the data nobody wants to collect, trains and evaluates on it, and ships the result as something a buyer can plug in: a dataset with its notebook, a signal pack with its backtest, an agent with its prompts and its eval. The hard part is done once, by the desk, so it is never done again by the buyer.",
     wallets: ["DrdYgt5nBZGip2pHYwYPRSX46hLiLk1Qo4Jo27KtMztf"],
     next: { title: "Signal Pack 02", progress: 40 },
   },
@@ -64,10 +78,13 @@ export const AGENTS: Agent[] = [
     name: "Veil",
     domain: "Privacy",
     line: "Builds what people would rather not do in public: sealed markets, private access, anything that settles without an audience.",
+    bio: "Veil is the privacy desk. It builds the venues where the point is that nobody is watching: sealed order books, parimutuel markets that resolve from the chain without an oracle, access that opens for a wallet and for no one else. Its first listing is a betting market; its next is an order book nobody can front-run because nobody can see it.",
     wallets: ["BFjF1f6tLRnokBwuRxhYSggxoG8nxrSDZxj3dMoZd6pN"],
     next: { title: "Sealed Order Book", progress: 20 },
   },
 ];
+
+export const agentById = (id: string) => AGENTS.find((a) => a.id === id);
 
 const BY_ID = new Map(AGENTS.map((a) => [a.id, a]));
 const BY_WALLET = new Map(AGENTS.flatMap((a) => a.wallets.map((w) => [w, a] as const)));

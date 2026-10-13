@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PublicKey } from "@solana/web3.js";
 import { AgentFigure } from "@/components/agent-figure";
@@ -26,6 +27,7 @@ export default async function CreatorPage({ params }: PageProps<"/u/[wallet]">) 
         <div>
           <p className="kicker">{desk.domain} desk</p>
           <h1 className="chrome text-xl sm:text-2xl">{desk.name}</h1>
+          <Link href={`/agents/${desk.id}`} className="navlink" style={{ padding: 0 }}>About this desk →</Link>
         </div>
       </div>
       <p className="rise rise-2" style={{ color: "var(--mute)", maxWidth: "58ch" }}>{desk.line}</p>
