@@ -1,77 +1,71 @@
 import Link from "next/link";
-import { AgentBy, AgentMark } from "@/components/agent";
+import { AgentMark } from "@/components/agent";
 import { agentFor } from "@/lib/agents";
-import { query } from "@/lib/db";
-import { hookCount, listLaunches } from "@/lib/launches";
+import { COLUMNS, hooksOf, listLaunches, type LaunchCard } from "@/lib/launches";
+import { FEE_CEILING, taken } from "@/lib/launchpad";
 import { sessionWallet } from "@/lib/session";
-import { HookStudio } from "./hook-studio";
 
 export const metadata = {
   title: "Launchpad · EVERYNTH",
-  description: "Coming soon: give a token to a utility that already works — one you sell here, one you bought here, or one you bring yourself.",
+  description: "Every token launched on EVERYNTH, with the utility behind it and the terms its launcher signed.",
 };
 
-type Counts = { launched: number; bought: number };
+const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
 
-// Two ways a token will get its utility: a product already on this market, or one uploaded straight here.
-const PATHS = [
-  {
-    flag: "--from-market",
-    title: "From the market",
-    body: "Pick something you already own on EVERYNTH: a product you launched, or one you bought. Ownership is proven the way it is today — the wallet that paid, checked against the chain.",
-    points: ["Works for files, secrets and GitHub access", "Nothing to re-upload or re-encrypt", "Buyers of the product keep what they bought"],
-  },
-  {
-    flag: "--bring-your-own",
-    title: "Bring your own utility",
-    body: "Your utility does not have to be sold here first. Upload it straight to the launchpad — an agent, a tool, a dataset, an API key, a private repo — and attach it to the token in the same step.",
-    points: ["Same browser-side encryption as a launch", "Stays private until a holder unlocks it", "Listing it on the market stays optional"],
-  },
-];
-
-const STEPS = [
-  { n: "01", h: "Attach the utility", s: "From the market or uploaded here. This is what the token is for; a token with nothing behind it is not a launch." },
-  { n: "02", h: "Set the terms", s: "Supply, what a holder unlocks, how much of the sale goes to the pool. Written in plain numbers before anything is signed." },
-  { n: "03", h: "Confirm in your wallet", s: "One signature over those exact terms, the same way a launch is confirmed today. No custody, nothing held by the platform." },
-  { n: "04", h: "Live", s: "The token trades, holders unlock the utility, platform fees flow back through buyback and burn." },
-];
-
-const READY = [
-  "Encrypted delivery, browser to browser",
-  "SOL payments straight to your wallet",
-  "Ownership check any app can call (/api/verify)",
-  "Wallet-signed launches",
-];
-const BUILDING = [
-  "Token program and the pool it launches into",
-  "Holder gating: balance in, content out",
-  "Fee → buyback → holder rewards + burn",
-  "Audit before a single line touches mainnet",
-];
+function Card({ l, mine }: { l: LaunchCard; mine: boolean }) {
+  const desk = agentFor(l.creator, l.category);
+  const stack = hooksOf(l.stack);
+  const fee = taken(stack);
+  return (
+    <li>
+      <Link href={`/launchpad/${l.id}`} className="disc-card">
+        <span className="disc-cover">
+          {l.has_cover ? (
+            // eslint-disable-next-line @next/next/no-img-element -- our own API route
+            <img src={`/api/products/${l.product_id}/cover`} alt="" />
+          ) : (
+            <span className="cover-blank"><span className="chrome">{l.ticker}</span></span>
+          )}
+          <span className="pill pill-sm disc-badge">{stack.length}× ⚡</span>
+          <span className="pill pill-sm disc-cat" data-cat={l.category}>{l.category}</span>
+        </span>
+        <small className="disc-created">
+          <span>created: <AgentMark agent={desk} size={14} /> {desk.name}</span>
+          {mine && <span className="pill pill-sm pill-live">yours</span>}
+        </small>
+        <span className="disc-name">{l.name} <small>({l.ticker})</small></span>
+        <span className="disc-desc">{l.description}</span>
+        <span className="disc-row">
+          <span>Supply: <b>{compact.format(Number(l.supply))}</b></span>
+          <span>Unlocks at <b>{compact.format(l.gate_balance)}</b></span>
+        </span>
+        <span className="disc-cap">
+          <span>fee spoken for <b>{fee}%</b></span>
+          <i className="desk-bar"><i style={{ width: `${(fee / FEE_CEILING) * 100}%` }} /></i>
+        </span>
+      </Link>
+    </li>
+  );
+}
 
 export default async function LaunchpadPage() {
   const wallet = await sessionWallet();
-  const [counts] = wallet
-    ? await query<Counts>(
-        `select (select count(*) from products where creator = $1 and status = 'live')::int as launched,
-                (select count(*) from purchases where buyer = $1 and status = 'paid')::int as bought`,
-        [wallet],
-      )
-    : [{ launched: 0, bought: 0 } as Counts];
-  const eligible = counts.launched + counts.bought;
   // Everything frozen on this launchpad, newest first. Public: the terms are the point.
   const launches = await listLaunches();
+  const stats: [string, string][] = [
+    ["Tokens", String(launches.length)],
+    ["Utilities backed", String(new Set(launches.map((l) => l.product_id)).size)],
+    ["Mechanics stacked", String(launches.reduce((n, l) => n + hooksOf(l.stack).length, 0))],
+    ["Launchers", String(new Set(launches.map((l) => l.wallet)).size)],
+  ];
 
   return (
     <div className="dash">
       <div className="dash-sec rise">
         <div>
-          <p className="kicker">Holder · Launch token</p>
+          <p className="kicker">Launchpad · Discover</p>
           <h1 className="chrome mt-2 text-3xl font-medium tracking-tight sm:text-4xl">Launchpad</h1>
-          <p className="dash-sec-sub">
-            Give a token to a utility that already works. Not a token first and a product later — the other way round.
-            To put something on sale instead, that is <Link href="/launch/product" className="navlink" style={{ padding: 0 }}>Launch product</Link>.
-          </p>
+          <p className="dash-sec-sub">Tokens with a utility behind them. Terms frozen under the launcher&apos;s signature; nothing minted until the program is live.</p>
         </div>
         <div className="dash-sec-actions">
           <Link href="/launchpad/new" className="btn">+ Launch token</Link>
@@ -79,141 +73,33 @@ export default async function LaunchpadPage() {
         </div>
       </div>
 
-      {/* Discover: every token frozen here, newest first. Public, because a frozen launch is a
-          statement of terms and the point of freezing them is that anyone can read them. */}
-      <div className="dash-sec rise rise-2">
-        <div>
-          <h2 className="dash-sec-title">Discover</h2>
-          <p className="dash-sec-sub">
-            {launches.length
-              ? `${launches.length} token${launches.length === 1 ? "" : "s"} launched on this launchpad. Terms frozen under the launcher's signature; none minted yet.`
-              : "No token has been launched here yet. The first one will show up here with its terms."}
-          </p>
-        </div>
-      </div>
-      {launches.length === 0 ? (
-        <div className="panel lpf-empty rise rise-2">
-          <p>Nothing to discover yet.</p>
-          <Link href="/launchpad/new" className="btn">+ Launch the first token</Link>
-        </div>
-      ) : (
-        <ul className="disc rise rise-2">
-          {launches.map((l) => {
-            const desk = agentFor(l.creator, l.category);
-            const hooks = hookCount(l.stack);
-            return (
-              <li key={l.id}>
-                <Link href={`/launchpad/${l.id}`} className="disc-card">
-                  <span className="disc-top">
-                    <b className="disc-ticker">{l.ticker}</b>
-                    <span className={`pill pill-sm${l.wallet === wallet ? " pill-live" : ""}`}>{l.wallet === wallet ? "yours" : l.status}</span>
-                  </span>
-                  <span className="disc-name">{l.name}</span>
-                  <span className="disc-util">backed by <b>{l.title}</b></span>
-                  <span className="disc-by"><AgentMark agent={desk} size={18} /><AgentBy agent={desk} /></span>
-                  <small className="disc-meta">{hooks} mechanic{hooks === 1 ? "" : "s"} · frozen {new Date(l.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</small>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      <dl className="disc-stats rise rise-2">
+        {stats.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+      </dl>
 
-      <div className="term rise rise-2">
-        <div className="term-bar">
-          <span className="term-dots"><i /><i /><i /></span>
-          ~/everynth/launchpad
-          <span className="lx-bar-right is-run">not shipped yet</span>
-        </div>
-        <div className="term-body">
-          <p className="lx-cmd"><span>$</span> everynth launchpad --status</p>
-          <dl className="lp-status">
-            <div><dt>state</dt><dd className="v-fee">in design</dd></div>
-            <div><dt>token</dt><dd>does not exist</dd></div>
-            <div><dt>presale</dt><dd>none, ever</dd></div>
-            <div><dt>date</dt><dd>not promised</dd></div>
-            <div><dt>your eligible products</dt><dd className={eligible ? "v-good" : ""}>{wallet ? eligible : "sign in to check"}</dd></div>
-          </dl>
-          <p className="lx-hint">
-            Nothing here can be bought today and there is no waitlist to pay for. When it opens it will open to
-            whatever is already on this market. The honest reason for the order: a token before real usage is a
-            promise, and this project decided not to sell promises. The full design — hooks, the hook marketplace,
-            the economics and the Solana architecture it needs — is published at{" "}
-            <Link href="/docs/launchpad/overview" className="navlink" style={{ padding: 0 }}>docs/launchpad</Link>,
-            so it can be argued with before it is built.
-          </p>
-        </div>
+      <div className="disc-board rise rise-2">
+        {COLUMNS.map((c) => {
+          const rows = launches.filter((l) => l.status === c.status);
+          return (
+            <section key={c.status} className="disc-col">
+              <header className="disc-col-head">
+                <div><h2>{c.title}</h2><small>{c.sub}</small></div>
+                <span className="pill pill-sm">{rows.length}</span>
+              </header>
+              {rows.length ? (
+                <ul className="disc">{rows.map((l) => <Card key={l.id} l={l} mine={l.wallet === wallet} />)}</ul>
+              ) : c.status === "frozen" ? (
+                <div className="disc-none">
+                  <p>Nothing to discover yet.</p>
+                  <Link href="/launchpad/new" className="btn">+ Launch the first token</Link>
+                </div>
+              ) : (
+                <div className="disc-none"><p>Fills once the token program is live.</p></div>
+              )}
+            </section>
+          );
+        })}
       </div>
-
-      <div className="dash-sec rise rise-3">
-        <div>
-          <h2 className="dash-sec-title">Preview: pick what the token does</h2>
-          <p className="dash-sec-sub">
-            A working mock-up of the launch screen. Tick the mechanics, reorder them, and watch where the fees go —
-            the arithmetic is real, the deployment is not. The full design is in{" "}
-            <Link href="/docs/launchpad/hooks" className="navlink" style={{ padding: 0 }}>the docs</Link>.
-          </p>
-        </div>
-        <span className="pill pill-soon">◷ Mock-up</span>
-      </div>
-      <div className="rise rise-3"><HookStudio /></div>
-
-      <div className="dash-sec rise rise-3">
-        <div>
-          <h2 className="dash-sec-title">Two ways in</h2>
-          <p className="dash-sec-sub">Your utility can already live on this market, or arrive with the token.</p>
-        </div>
-      </div>
-      <div className="lp-paths rise rise-3">
-        {PATHS.map((p) => (
-          <section key={p.flag} className="panel lp-path">
-            <header className="panel-head"><h3>{p.title}</h3><span className="mono">{p.flag}</span></header>
-            <p className="lp-body">{p.body}</p>
-            <ul className="checks">{p.points.map((x) => <li key={x}>{x}</li>)}</ul>
-          </section>
-        ))}
-      </div>
-
-      <div className="dash-sec rise rise-4">
-        <div>
-          <h2 className="dash-sec-title">How a launch will run</h2>
-          <p className="dash-sec-sub">Same shape as launching a product today: terms first, signature second, custody never.</p>
-        </div>
-      </div>
-      <ol className="lp-steps rise rise-4">
-        {STEPS.map((s) => (
-          <li key={s.n} className="panel">
-            <b>{s.n}</b>
-            <span>{s.h}</span>
-            <small>{s.s}</small>
-          </li>
-        ))}
-      </ol>
-
-      <div className="lp-split rise rise-4">
-        <section className="panel">
-          <header className="panel-head"><h3>Already live</h3><span>in production today</span></header>
-          <ul className="checks">{READY.map((x) => <li key={x}>{x}</li>)}</ul>
-        </section>
-        <section className="panel">
-          <header className="panel-head"><h3>Still being built</h3><span>before the launchpad opens</span></header>
-          <ul className="checks checks-todo">{BUILDING.map((x) => <li key={x}>{x}</li>)}</ul>
-        </section>
-      </div>
-
-      <section className="panel lp-cta rise rise-4">
-        <div>
-          <h3>The useful thing to do now</h3>
-          <p className="dash-sec-sub">
-            Launch the utility, sell it, let it earn. Every product on this market is a candidate the day the
-            launchpad opens — and so is anything you upload to it then.
-          </p>
-        </div>
-        <div className="dash-sec-actions">
-          <Link href="/launchpad/new" className="btn">Walk the launch flow →</Link>
-          <Link href="/docs/launchpad/overview" className="btn-ghost">Read the launchpad design</Link>
-        </div>
-      </section>
     </div>
   );
 }
