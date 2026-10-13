@@ -69,6 +69,24 @@ create table if not exists reviews (
   created_at timestamptz not null default now()
 );
 create index if not exists reviews_product on reviews (product_id, created_at desc);
+-- A token launch with its terms frozen under the launcher's signature. Nothing on-chain yet: the
+-- program and the pool do not exist, so a row here is a signed intent, and status says only that.
+create table if not exists launches (
+  id text primary key,
+  wallet text not null,
+  product_id text not null references products(id),
+  name text not null,
+  ticker text not null,
+  supply bigint not null,
+  stack text not null,                -- JSON array of hook ids, in run order
+  gate_balance bigint not null,
+  gate_unlocks text not null,
+  status text not null default 'frozen', -- 'frozen': terms signed, awaiting the program
+  signature text not null,
+  issued_at bigint not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists launches_wallet on launches (wallet, created_at desc);
 `;
 
 type Client = { query<T>(sql: string, params?: unknown[]): Promise<{ rows: T[] }> };

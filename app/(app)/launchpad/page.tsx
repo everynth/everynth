@@ -9,6 +9,7 @@ export const metadata = {
 };
 
 type Counts = { launched: number; bought: number };
+type LaunchRow = { id: string; name: string; ticker: string; status: string; stack: string; title: string };
 
 // Two ways a token will get its utility: a product already on this market, or one uploaded straight here.
 const PATHS = [
@@ -56,6 +57,15 @@ export default async function LaunchpadPage() {
       )
     : [{ launched: 0, bought: 0 } as Counts];
   const eligible = counts.launched + counts.bought;
+  // What this wallet has already frozen. Public pages exist for each; this is just the way back.
+  const launches = wallet
+    ? await query<LaunchRow>(
+        `select l.id, l.name, l.ticker, l.status, l.stack, p.title
+         from launches l join products p on p.id = l.product_id
+         where l.wallet = $1 order by l.created_at desc limit 20`,
+        [wallet],
+      )
+    : [];
 
   return (
     <div className="dash">
@@ -96,6 +106,31 @@ export default async function LaunchpadPage() {
           </p>
         </div>
       </div>
+
+      {launches.length > 0 && (
+        <>
+          <div className="dash-sec rise rise-3">
+            <div>
+              <h2 className="dash-sec-title">Your frozen launches</h2>
+              <p className="dash-sec-sub">Terms signed under your wallet, waiting for the program.</p>
+            </div>
+          </div>
+          <ul className="lpf-launches rise rise-3">
+            {launches.map((l) => {
+              const hooks = (() => { try { return (JSON.parse(l.stack) as string[]).length; } catch { return 0; } })();
+              return (
+                <li key={l.id}>
+                  <Link href={`/launchpad/${l.id}`} className="lpf-launch">
+                    <b>{l.name} · {l.ticker}</b>
+                    <span>{l.title}</span>
+                    <small>{l.status} · {hooks} mechanic{hooks === 1 ? "" : "s"}</small>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
 
       <div className="dash-sec rise rise-3">
         <div>

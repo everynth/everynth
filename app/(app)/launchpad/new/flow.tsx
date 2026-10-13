@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useWalletCtx } from "@/components/wallet";
+import { actionMessage, tokenFields } from "@/lib/launch-message";
 import {
   blockedBy, EMPTY, FAMILIES, FEE_CEILING, HOOKS, hookById, MAX_SUPPLY, MIN_SUPPLY,
   problemWith, ready, STEPS, taken, waterfall,
@@ -26,18 +29,82 @@ const pretty = (s: string) => {
  * Nothing here writes anywhere. The token program does not exist yet, so the last step shows the
  * exact terms that would be frozen and stops there, rather than pretending to mint.
  */
+/** Where an unfinished draft waits out a refresh. Per tab, gone when the tab closes. */
+const KEY = "everynth.launch.draft";
+
 export function Flow({ owned }: { owned: Owned[] }) {
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [at, setAt] = useState<StepId>("utility");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const restored = useRef(false);
+  const router = useRouter();
+  const { address, signMessage } = useWalletCtx();
+
+  // A refresh should not throw five steps away. sessionStorage is not there during server render,
+  // so the restore runs after mount, deferred a frame; nothing is saved until it has run, or the
+  // first render's empty draft would overwrite the one being restored.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      try {
+        const raw = sessionStorage.getItem(KEY);
+        if (raw) setDraft({ ...EMPTY, ...JSON.parse(raw) });
+      } catch {
+        // private mode, or junk in storage: start clean
+      }
+      restored.current = true;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  useEffect(() => {
+    if (!restored.current) return;
+    try { sessionStorage.setItem(KEY, JSON.stringify(draft)); } catch { /* storage may be refused */ }
+  }, [draft]);
 
   const patch = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
   const i = STEPS.findIndex((s) => s.id === at);
   const problem = problemWith(at, draft);
+  const sample = draft.utility?.id === "sample";
+  const canSign = ready(draft) && !sample && !!address && !busy;
 
   const go = (id: StepId) => {
     const gap = blockedBy(id, draft);
     setAt(gap ?? id);
   };
+
+  // The one signature. The wallet shows exactly the lines in tokenFields; the server rebuilds the
+  // same lines from the submitted terms and refuses anything that does not match.
+  const submit = async () => {
+    if (!draft.utility || !address) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const terms = {
+        productId: draft.utility.id, name: draft.name.trim(), ticker: draft.ticker,
+        supply: draft.supply, stack: draft.stack, gateBalance: draft.gate.balance, gateUnlocks: draft.gate.unlocks.trim(),
+      };
+      const issuedAt = Date.now();
+      const lines = tokenFields({ ...terms, supply: Number(terms.supply), gateBalance: Number(terms.gateBalance) });
+      const sig = await signMessage(new TextEncoder().encode(actionMessage(location.host, address, "launch token", lines, issuedAt)));
+      const res = await fetch("/api/launches", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...terms, issuedAt, signature: btoa(String.fromCharCode(...sig)) }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? "could not freeze the terms");
+      try { sessionStorage.removeItem(KEY); } catch { /* fine */ }
+      router.push(`/launchpad/${body.id}`);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "could not freeze the terms");
+      setBusy(false);
+    }
+  };
+
+  const whyNot = err ?? problem ?? (at !== "review" ? "Ready."
+    : sample ? "A sample cannot be signed — buy a utility and it will appear in step one."
+    : !address ? "Connect your wallet to sign."
+    : "Ready to sign.");
 
   return (
     <div className="lpf">
@@ -72,10 +139,10 @@ export function Flow({ owned }: { owned: Owned[] }) {
           <button type="button" className="btn-ghost" onClick={() => setAt(STEPS[Math.max(0, i - 1)].id)} disabled={i === 0}>
             ← Back
           </button>
-          <span className="lpf-why">{problem ?? (at === "review" ? "" : "Ready.")}</span>
+          <span className={`lpf-why${err ? " is-err" : ""}`}>{whyNot}</span>
           {at === "review" ? (
-            <button type="button" className="btn" disabled title="The token program is not built yet">
-              Freeze and sign
+            <button type="button" className="btn" onClick={submit} disabled={!canSign}>
+              {busy ? "Check your wallet…" : "Freeze and sign"}
             </button>
           ) : (
             <button type="button" className="btn" onClick={() => setAt(STEPS[i + 1].id)} disabled={problem !== null}>
@@ -326,11 +393,13 @@ function StepReview({ draft }: { draft: Draft }) {
       )}
 
       <div className="panel lpf-note">
-        <b>Not live yet.</b>
+        <b>What signing does, and does not do.</b>
         <p>
-          {ready(draft)
-            ? "These terms are complete. Nothing is minted: the token program and the pool it launches into are still being built, and this screen will sign and submit once they exist."
-            : "Finish the earlier steps and the full terms will appear here."}
+          {draft.utility?.id === "sample"
+            ? "This is the sample. It shows the shape of the terms; it cannot be signed, because there is no real holding behind it."
+            : ready(draft)
+              ? "Your signature freezes these terms under your wallet and stores them. Nothing is minted: the token program and the pool it launches into are still being built, and a frozen launch waits for them."
+              : "Finish the earlier steps and the full terms will appear here."}
         </p>
       </div>
     </section>

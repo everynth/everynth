@@ -358,6 +358,16 @@ details > summary::-webkit-details-marker { display: none; }
 .lpf-note { margin-top: 14px; display: grid; gap: 5px; }
 .lpf-note b { color: var(--c-amber, #F5C842); font-size: 13px; }
 .lpf-note p { font-size: 13px; line-height: 1.6; color: var(--mute); max-width: 72ch; }
+.lpf-why.is-err { color: #F87171; }
+.lpf-ticker { font-family: var(--font-geist-mono), monospace; font-size: .55em; letter-spacing: .12em; color: var(--c-cyan); vertical-align: middle; margin-left: 8px; }
+.lpf-desk { display: inline-flex; align-items: center; gap: 7px; }
+.lpf-launches { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.lpf-launch { display: grid; gap: 3px; padding: 13px 14px; border-radius: 14px; text-decoration: none;
+  border: 1px solid rgba(255,255,255,.14); background: var(--background); color: var(--ink2); transition: border-color .2s, transform .2s; }
+.lpf-launch:hover { border-color: rgba(255,255,255,.4); transform: translateY(-2px); }
+.lpf-launch b { font-size: 14px; font-weight: 600; color: var(--ink); }
+.lpf-launch span { font-size: 12.5px; color: var(--mute); }
+.lpf-launch small { font-family: var(--font-geist-mono), monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
 
 /* ---- the builder desks -------------------------------------------------------------------- */
 /* One hue per domain, used by the mark, the badge and the progress bar alike. */

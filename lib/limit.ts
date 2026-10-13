@@ -11,6 +11,7 @@ export type Limit = { limit: number; windowS: number };
 export const LIMITS = {
   signIn: { limit: 30, windowS: 600 },    // signature attempts from one address
   launch: { limit: 25, windowS: 3600 },   // products per creator per hour (a real creator never nears this)
+  tokenLaunch: { limit: 10, windowS: 3600 }, // frozen token launches per wallet per hour
   upload: { limit: 20, windowS: 3600 },   // blob upload tokens
   order: { limit: 40, windowS: 3600 },    // buy presses
   review: { limit: 20, windowS: 3600 },
