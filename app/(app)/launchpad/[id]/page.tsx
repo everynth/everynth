@@ -3,25 +3,12 @@ import { notFound } from "next/navigation";
 import { AgentMark } from "@/components/agent";
 import { SitePreview } from "@/components/site-preview";
 import { agentFor } from "@/lib/agents";
-import { query } from "@/lib/db";
+import { getLaunch } from "@/lib/launches";
 import { DELIVERABLES, FEE_CEILING, hookById, taken, TEMPLATES, waterfall, type TemplateId } from "@/lib/launchpad";
 import { sessionWallet } from "@/lib/session";
 
-type Row = {
-  id: string; slug: string | null; wallet: string; name: string; ticker: string; supply: number; stack: string;
-  gate_balance: number; gate_unlocks: string; status: string; issued_at: number; created_at: Date;
-  creator_fee: number; dev_buy: string; description: string; theme: string; color: string; template: TemplateId;
-  website: string; x: string; telegram: string; github: string; utility_url: string;
-  product_id: string; title: string; category: string; creator: string;
-};
-
 // The permalink is the slug; the id still answers, for links made before slugs existed.
-const load = (key: string) =>
-  query<Row>(
-    `select l.*, l.dev_buy::text as dev_buy, p.title, p.category, p.creator from launches l join products p on p.id = l.product_id
-     where l.slug = $1 or l.id = $1`,
-    [key],
-  ).then((r) => r[0]);
+const load = getLaunch;
 
 export async function generateMetadata({ params }: PageProps<"/launchpad/[id]">) {
   const l = await load((await params).id);
@@ -42,7 +29,9 @@ export default async function LaunchPage({ params }: PageProps<"/launchpad/[id]"
   const desk = agentFor(l.creator, l.category);
   const mine = wallet === l.wallet;
   const n = (v: number | string) => Number(v).toLocaleString("en-US");
-  const tpl = TEMPLATES.find((t) => t.id === l.template)?.name ?? l.template;
+  const template = (TEMPLATES.some((t) => t.id === l.template) ? l.template : "basic") as TemplateId;
+  const tpl = TEMPLATES.find((t) => t.id === template)?.name ?? template;
+  const site = `/t/${l.slug ?? l.id}`;
   const ext = (href: string, label: string) => <a key={href} href={href} className="lpf-link" target="_blank" rel="noopener noreferrer">{label}</a>;
   const links = [
     l.website && ext(l.website, "App ↗"),
@@ -63,7 +52,7 @@ export default async function LaunchPage({ params }: PageProps<"/launchpad/[id]"
     ["Dev buy", `${Number(l.dev_buy)} SOL in the opening block`],
     ["Holders unlock", l.gate_unlocks],
     ["Balance needed", `${n(l.gate_balance)} ${l.ticker}`],
-    ["Permalink", `/launchpad/${l.slug ?? l.id} · ${tpl} template`],
+    ["Site", <span key="s"><Link href={site} className="lpf-link">{site}</Link> · {tpl} template</span>],
     ["Links", links.length ? <span key="l" style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>{links}</span> : "none yet"],
     ["Signed", new Date(Number(l.issued_at)).toUTCString()],
   ];
@@ -76,7 +65,10 @@ export default async function LaunchPage({ params }: PageProps<"/launchpad/[id]"
           <h1 className="chrome mt-2 text-3xl font-medium tracking-tight sm:text-4xl">{l.name} <span className="lpf-ticker">{l.ticker}</span></h1>
           <p className="dash-sec-sub">{l.description || "Terms frozen under the launcher's signature."}</p>
         </div>
-        <span className="pill pill-soon">◷ Awaiting program</span>
+        <div className="dash-sec-actions">
+          <Link href={site} className="btn">Open the site →</Link>
+          <span className="pill pill-soon">◷ Awaiting program</span>
+        </div>
       </div>
 
       <dl className="lpf-review rise rise-2">
@@ -93,8 +85,11 @@ export default async function LaunchPage({ params }: PageProps<"/launchpad/[id]"
       </div>
       <div className="lpf-agents rise rise-3">
         <div>
-          <SitePreview size="lg" name={l.name} ticker={l.ticker} description={l.description} color={l.color} template={l.template}
-            website={l.website} x={l.x} telegram={l.telegram} github={l.github} utility={l.title} />
+          <Link href={site} style={{ display: "block", textDecoration: "none" }}>
+            <SitePreview size="lg" name={l.name} ticker={l.ticker} description={l.description} color={l.color} template={template}
+              website={l.website} x={l.x} telegram={l.telegram} github={l.github} utility={l.title} />
+          </Link>
+          <p className="lx-meta" style={{ marginTop: 8 }}>The site is live at <Link href={site} className="lpf-link">{site}</Link>, on the {tpl} template, with placeholders where the desk&apos;s work lands.</p>
         </div>
         <div style={{ display: "grid", gap: 10 }}>
           <ol className="lpf-jobs">

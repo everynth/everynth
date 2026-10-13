@@ -276,7 +276,7 @@ function StepProject({ draft, patch }: { draft: Draft; patch: Patch }) {
             value={p.slug}
             onChange={(v) => pp({ slug: slugify(v) })}
             aria="Permalink"
-            meta={`everynth.org/launchpad/${p.slug || "…"} — the site lives here`}
+            meta={`everynth.org/t/${p.slug || "…"} — the site lives here; the signed terms at /launchpad/${p.slug || "…"}`}
           />
 
           <p className="lpf-sec">the brief</p>
@@ -467,7 +467,7 @@ function StepAgents({ draft }: { draft: Draft }) {
             <dt>Brief</dt><dd>{p.description.trim() || "—"}</dd>
             <dt>Theme</dt><dd>{p.theme.trim() || "desk's call"}</dd>
             <dt>Colour</dt><dd><i className="dot" style={{ background: p.color }} />{p.color}</dd>
-            <dt>Permalink</dt><dd>/launchpad/{p.slug || "…"}</dd>
+            <dt>Permalink</dt><dd>/t/{p.slug || "…"}</dd>
           </dl>
         </div>
       </div>
@@ -491,7 +491,7 @@ function StepLaunch({ draft }: { draft: Draft }) {
     ["Dev buy", `${Number(draft.devBuy) || 0} SOL in the opening block`],
     ["Holders unlock", draft.gate.unlocks || "—"],
     ["Balance needed", `${pretty(draft.gate.balance)} ${draft.ticker || "tokens"}`],
-    ["Site", `/launchpad/${p.slug || "…"} · ${TEMPLATES.find((t) => t.id === p.template)?.name ?? ""} template · ${p.color}`],
+    ["Site", `/t/${p.slug || "…"} · ${TEMPLATES.find((t) => t.id === p.template)?.name ?? ""} template · ${p.color}`],
     ["Links", links || "none yet"],
   ];
 

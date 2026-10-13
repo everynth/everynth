@@ -413,7 +413,7 @@ step("github product: token validated, buyer invited read-only, one account per 
 // product by purchase, the creator by listing; the stranger owns nothing.
 const proj = (over = {}) => ({
   fee: 2, slug: "giga", description: "Three hundred kilobytes of market data, for agents that trade on it.", theme: "night market",
-  color: "#79d2f2", template: "story", website: "https://giga.example", x: "gigatoken", telegram: "", github: "", utilityUrl: "", ...over,
+  color: "#79d2f2", template: "basic", website: "https://giga.example", x: "gigatoken", telegram: "", github: "", utilityUrl: "", ...over,
 });
 const terms = (productId, over = {}) => ({
   productId, name: "Giga", ticker: "GIGA", supply: "1000000000", project: proj(),
@@ -452,7 +452,19 @@ const { id: launchId, slug: launchSlug, status: launchStatus } = await res.json(
 assert.equal(launchStatus, "frozen");
 assert.equal(launchSlug, "giga");
 assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { name: "Giga Two", ticker: "GIGA2" })))).status, 409); // permalink taken
-assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { name: "Giga Two", ticker: "GIGA2", project: proj({ slug: "giga2" }) })))).status, 200);
+assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { name: "Giga Two", ticker: "GIGA2", project: proj({ slug: "giga2", template: "terminal", color: "#7be0a8" }) })))).status, 200);
+assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { name: "Giga Three", ticker: "GIGA3", project: proj({ slug: "giga3", template: "brutal", color: "#e9c46a", theme: "cartoon arcade" }) })))).status, 200);
+assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { ticker: "GIGA4", project: proj({ slug: "giga4", template: "wordpress" }) })))).status, 400); // unknown template
+// The token's own site, one per template, at the permalink. Public, no app chrome, every number honest.
+for (const [slug, mark] of [["giga", "t1-hero"], ["giga2", "t2-hero"], ["giga3", "t3-hero"]]) {
+  const site = await fetch(BASE + `/t/${slug}`);
+  assert.equal(site.status, 200, `/t/${slug}`);
+  const html = await site.text();
+  assert.ok(html.includes(mark) && html.includes("Get a wallet") && html.includes("after launch") && html.includes(`/launchpad/${slug}`), `/t/${slug} renders its template with the terms link`);
+  assert.ok(!html.includes('class="tabs"'), "the token site has no app chrome");
+}
+assert.ok((await (await fetch(BASE + "/t/giga")).text()).includes("https://x.com/gigatoken"), "socials are linked in the footer");
+assert.equal((await fetch(BASE + "/t/nope")).status, 404);
 const mine = await (await buyer.get("/api/launches")).json();
 assert.ok(mine.launches.some((l) => l.id === launchId && l.ticker === "GIGA" && l.status === "frozen"), "GET lists the caller's launch");
 assert.ok(!mine.launches.some((l) => l.ticker === "GIGA2"), "and not someone else's");

@@ -37,7 +37,7 @@ function Card({ l, mine, i }: { l: LaunchCard; mine: boolean; i: number }) {
   const fee = taken(stack);
   return (
     <li>
-      <Link href={`/launchpad/${l.slug ?? l.id}`} className="pcardx rise" data-domain={desk.domain} style={{ "--dom": l.color, animationDelay: `${120 + Math.min(i, 10) * 50}ms` } as React.CSSProperties}>
+      <Link href={`/t/${l.slug ?? l.id}`} className="pcardx rise" data-domain={desk.domain} style={{ "--dom": l.color, animationDelay: `${120 + Math.min(i, 10) * 50}ms` } as React.CSSProperties}>
         <span className="pcardx-cover">
           {l.has_cover ? (
             // eslint-disable-next-line @next/next/no-img-element -- our own API route

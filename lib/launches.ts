@@ -27,6 +27,21 @@ export const COLUMNS = [
   { status: "live", title: "Graduated", sub: "trading, holders unlocking" },
 ] as const;
 
+/** One launch, by permalink or id, with the product behind it. */
+export type LaunchRow = {
+  id: string; slug: string | null; wallet: string; name: string; ticker: string; supply: number; stack: string;
+  gate_balance: number; gate_unlocks: string; status: string; issued_at: number; created_at: Date;
+  creator_fee: number; dev_buy: string; description: string; theme: string; color: string; template: string;
+  website: string; x: string; telegram: string; github: string; utility_url: string;
+  product_id: string; title: string; category: string; creator: string; has_cover: boolean;
+};
+export const getLaunch = (key: string) =>
+  query<LaunchRow>(
+    `select l.*, l.dev_buy::text as dev_buy, p.title, p.category, p.creator, (p.cover is not null) as has_cover
+     from launches l join products p on p.id = l.product_id where l.slug = $1 or l.id = $1`,
+    [key],
+  ).then((r) => r[0]);
+
 /** How many mechanics a launch stacked. The column is a JSON array of hook ids. */
 export const hooksOf = (stack: string): string[] => {
   try { return JSON.parse(stack) as string[]; } catch { return []; }

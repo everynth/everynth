@@ -46,9 +46,9 @@ export const hookById = (id: string) => HOOKS.find((h) => h.id === id);
 
 /** The three site templates the desk fills in. Shape only; the desk writes the content. */
 export const TEMPLATES = [
-  { id: "story", name: "Story", line: "Hero, the story in three cards, milestones, updates." },
-  { id: "terminal", name: "Terminal", line: "One dark console: terms, chart, changelog. For tools." },
-  { id: "gallery", name: "Gallery", line: "Banner first, a grid of what the token unlocks." },
+  { id: "basic", name: "Basic", line: "Clean and light: photo, pitch, numbers, how to buy." },
+  { id: "terminal", name: "Terminal", line: "One dark console, monospace. For tools and data." },
+  { id: "brutal", name: "Brutal", line: "Thick lines, flat colour, hard shadows. Loud." },
 ] as const;
 export type TemplateId = (typeof TEMPLATES)[number]["id"];
 
@@ -88,7 +88,7 @@ export const EMPTY: Draft = {
   name: "",
   ticker: "",
   supply: "1000000000",
-  project: { fee: 1, slug: "", description: "", theme: "", color: "#79d2f2", template: "story", website: "", x: "", telegram: "", github: "", utilityUrl: "" },
+  project: { fee: 1, slug: "", description: "", theme: "", color: "#79d2f2", template: "basic", website: "", x: "", telegram: "", github: "", utilityUrl: "" },
   stack: ["antisnipe", "buyback", "burn"],
   devBuy: "0",
   gate: { balance: "10000", unlocks: "" },

@@ -20,7 +20,7 @@ export const tokenFields = (t: {
   `Mechanics: ${t.stack.join(",")}`,
   `Dev buy: ${t.devBuy} SOL`,
   `Gate: ${t.gateBalance} unlocks ${t.gateUnlocks}`,
-  `Site: /launchpad/${t.slug} on ${t.template}`,
+  `Site: /t/${t.slug} on ${t.template}`,
 ];
 
 // Everything else a creator signs: editing a listing, taking one down. Same shape, free, no funds.

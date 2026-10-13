@@ -95,7 +95,7 @@ alter table launches
   add column if not exists description text not null default '',
   add column if not exists theme text not null default '',
   add column if not exists color text not null default '#79d2f2',
-  add column if not exists template text not null default 'story',
+  add column if not exists template text not null default 'basic',
   add column if not exists website text not null default '',
   add column if not exists x text not null default '',
   add column if not exists telegram text not null default '',
