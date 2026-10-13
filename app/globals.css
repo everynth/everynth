@@ -373,6 +373,19 @@ details > summary::-webkit-details-marker { display: none; }
 .lpf-launch span { font-size: 12.5px; color: var(--mute); }
 .lpf-launch small { font-family: var(--font-geist-mono), monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
 
+/* Discover: the launches, as cards */
+.disc { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+.disc-card { display: grid; gap: 6px; padding: 15px 16px 13px; border-radius: 16px; text-decoration: none; min-width: 0;
+  border: 1px solid rgba(255,255,255,.14); background: var(--background); color: var(--ink2); transition: border-color .2s, transform .2s; }
+.disc-card:hover { border-color: rgba(255,255,255,.4); transform: translateY(-2px); }
+.disc-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.disc-ticker { font-family: var(--font-geist-mono), monospace; font-size: 15px; letter-spacing: .12em; color: var(--c-cyan); font-weight: 600; }
+.disc-name { font-size: 16px; font-weight: 600; color: var(--ink); letter-spacing: -.01em; }
+.disc-util { font-size: 12.5px; color: var(--mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.disc-util b { color: var(--ink2); font-weight: 500; }
+.disc-by { display: flex; align-items: center; gap: 7px; font-size: 12.5px; margin-top: 2px; }
+.disc-meta { font-family: var(--font-geist-mono), monospace; font-size: 10.5px; letter-spacing: .08em; color: var(--dim); margin-top: 4px; }
+
 /* ---- the builder desks -------------------------------------------------------------------- */
 /* One hue per domain, used by the mark, the badge and the progress bar alike. */
 [data-domain="Compute"] { --dom: #46c8e0; }

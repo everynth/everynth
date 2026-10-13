@@ -452,7 +452,9 @@ assert.ok(launchPage.includes(`href="/u/${creator.wallet}"`), "built-by links to
 // script and style blocks, then the tags, and check what a reader would actually see.
 const visible = launchPage.replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]+>/g, " ");
 assert.ok(!visible.includes(buyer.wallet) && !visible.includes(creator.wallet), "no wallet printed on a launch page");
-assert.ok((await (await buyer.get("/launchpad")).text()).includes("Giga"), "launchpad lists the wallet's frozen launches");
+const discover = await (await fetch(BASE + "/launchpad")).text();
+assert.ok(discover.includes("GIGA") && discover.includes("GIGA2") && discover.includes("Discover"), "launchpad discover lists every frozen launch, signed out");
+assert.ok((await (await buyer.get("/launchpad")).text()).includes("yours"), "the launcher's own card is marked");
 assert.equal((await fetch(BASE + "/launchpad/nope")).status, 404);
 step("token launch: owned utility only, step rules server-side, terms frozen under a signature, read back");
 

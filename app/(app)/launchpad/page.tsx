@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { AgentBy, AgentMark } from "@/components/agent";
+import { agentFor } from "@/lib/agents";
 import { query } from "@/lib/db";
+import { hookCount, listLaunches } from "@/lib/launches";
 import { sessionWallet } from "@/lib/session";
 import { HookStudio } from "./hook-studio";
 
@@ -9,7 +12,6 @@ export const metadata = {
 };
 
 type Counts = { launched: number; bought: number };
-type LaunchRow = { id: string; name: string; ticker: string; status: string; stack: string; title: string };
 
 // Two ways a token will get its utility: a product already on this market, or one uploaded straight here.
 const PATHS = [
@@ -57,15 +59,8 @@ export default async function LaunchpadPage() {
       )
     : [{ launched: 0, bought: 0 } as Counts];
   const eligible = counts.launched + counts.bought;
-  // What this wallet has already frozen. Public pages exist for each; this is just the way back.
-  const launches = wallet
-    ? await query<LaunchRow>(
-        `select l.id, l.name, l.ticker, l.status, l.stack, p.title
-         from launches l join products p on p.id = l.product_id
-         where l.wallet = $1 order by l.created_at desc limit 20`,
-        [wallet],
-      )
-    : [];
+  // Everything frozen on this launchpad, newest first. Public: the terms are the point.
+  const launches = await listLaunches();
 
   return (
     <div className="dash">
@@ -78,8 +73,51 @@ export default async function LaunchpadPage() {
             To put something on sale instead, that is <Link href="/launch/product" className="navlink" style={{ padding: 0 }}>Launch product</Link>.
           </p>
         </div>
-        <span className="pill pill-soon">◷ Coming soon</span>
+        <div className="dash-sec-actions">
+          <Link href="/launchpad/new" className="btn">+ Launch token</Link>
+          <span className="pill pill-soon">◷ Program not live</span>
+        </div>
       </div>
+
+      {/* Discover: every token frozen here, newest first. Public, because a frozen launch is a
+          statement of terms and the point of freezing them is that anyone can read them. */}
+      <div className="dash-sec rise rise-2">
+        <div>
+          <h2 className="dash-sec-title">Discover</h2>
+          <p className="dash-sec-sub">
+            {launches.length
+              ? `${launches.length} token${launches.length === 1 ? "" : "s"} launched on this launchpad. Terms frozen under the launcher's signature; none minted yet.`
+              : "No token has been launched here yet. The first one will show up here with its terms."}
+          </p>
+        </div>
+      </div>
+      {launches.length === 0 ? (
+        <div className="panel lpf-empty rise rise-2">
+          <p>Nothing to discover yet.</p>
+          <Link href="/launchpad/new" className="btn">+ Launch the first token</Link>
+        </div>
+      ) : (
+        <ul className="disc rise rise-2">
+          {launches.map((l) => {
+            const desk = agentFor(l.creator, l.category);
+            const hooks = hookCount(l.stack);
+            return (
+              <li key={l.id}>
+                <Link href={`/launchpad/${l.id}`} className="disc-card">
+                  <span className="disc-top">
+                    <b className="disc-ticker">{l.ticker}</b>
+                    <span className={`pill pill-sm${l.wallet === wallet ? " pill-live" : ""}`}>{l.wallet === wallet ? "yours" : l.status}</span>
+                  </span>
+                  <span className="disc-name">{l.name}</span>
+                  <span className="disc-util">backed by <b>{l.title}</b></span>
+                  <span className="disc-by"><AgentMark agent={desk} size={18} /><AgentBy agent={desk} /></span>
+                  <small className="disc-meta">{hooks} mechanic{hooks === 1 ? "" : "s"} · frozen {new Date(l.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</small>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       <div className="term rise rise-2">
         <div className="term-bar">
@@ -106,31 +144,6 @@ export default async function LaunchpadPage() {
           </p>
         </div>
       </div>
-
-      {launches.length > 0 && (
-        <>
-          <div className="dash-sec rise rise-3">
-            <div>
-              <h2 className="dash-sec-title">Your frozen launches</h2>
-              <p className="dash-sec-sub">Terms signed under your wallet, waiting for the program.</p>
-            </div>
-          </div>
-          <ul className="lpf-launches rise rise-3">
-            {launches.map((l) => {
-              const hooks = (() => { try { return (JSON.parse(l.stack) as string[]).length; } catch { return 0; } })();
-              return (
-                <li key={l.id}>
-                  <Link href={`/launchpad/${l.id}`} className="lpf-launch">
-                    <b>{l.name} · {l.ticker}</b>
-                    <span>{l.title}</span>
-                    <small>{l.status} · {hooks} mechanic{hooks === 1 ? "" : "s"}</small>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </>
-      )}
 
       <div className="dash-sec rise rise-3">
         <div>
