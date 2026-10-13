@@ -37,7 +37,7 @@ function Card({ l, mine, i }: { l: LaunchCard; mine: boolean; i: number }) {
   const fee = taken(stack);
   return (
     <li>
-      <Link href={`/launchpad/${l.id}`} className="pcardx rise" data-domain={desk.domain} style={{ animationDelay: `${120 + Math.min(i, 10) * 50}ms` }}>
+      <Link href={`/launchpad/${l.slug ?? l.id}`} className="pcardx rise" data-domain={desk.domain} style={{ "--dom": l.color, animationDelay: `${120 + Math.min(i, 10) * 50}ms` } as React.CSSProperties}>
         <span className="pcardx-cover">
           {l.has_cover ? (
             // eslint-disable-next-line @next/next/no-img-element -- our own API route
@@ -50,10 +50,10 @@ function Card({ l, mine, i }: { l: LaunchCard; mine: boolean; i: number }) {
         <span className="pcardx-avatar"><AgentMark agent={desk} /></span>
         <span className="pcardx-title">{l.name} <small>({l.ticker})</small></span>
         <span className="pcardx-by"><AgentBy agent={desk} /> · {age(days(l.created_at))}</span>
-        <span className="pcardx-desc">Backed by <b>{l.title}</b> — {l.description}</span>
+        <span className="pcardx-desc">{l.description || <>Backed by <b>{l.title}</b></>}</span>
         <dl className="disc-facts">
           <div><dt>Supply</dt><dd>{compact.format(Number(l.supply))}</dd></div>
-          <div><dt>Unlocks at</dt><dd>{compact.format(l.gate_balance)} {l.ticker}</dd></div>
+          <div><dt>Creator fee</dt><dd>{l.creator_fee}%</dd></div>
           <div><dt>Holders get</dt><dd>{l.gate_unlocks}</dd></div>
           <div><dt>Fee spoken for</dt><dd className="is-fee">{fee}%</dd></div>
         </dl>

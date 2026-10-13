@@ -87,6 +87,21 @@ create table if not exists launches (
   created_at timestamptz not null default now()
 );
 create index if not exists launches_wallet on launches (wallet, created_at desc);
+-- The project around the token: fee, permalink, the brief for the desk, the site, the links.
+alter table launches
+  add column if not exists creator_fee int not null default 1,
+  add column if not exists dev_buy numeric(7,3) not null default 0,   -- SOL spent in the opening block
+  add column if not exists slug text,
+  add column if not exists description text not null default '',
+  add column if not exists theme text not null default '',
+  add column if not exists color text not null default '#79d2f2',
+  add column if not exists template text not null default 'story',
+  add column if not exists website text not null default '',
+  add column if not exists x text not null default '',
+  add column if not exists telegram text not null default '',
+  add column if not exists github text not null default '',
+  add column if not exists utility_url text not null default '';
+create unique index if not exists launches_slug on launches (slug);
 `;
 
 type Client = { query<T>(sql: string, params?: unknown[]): Promise<{ rows: T[] }> };

@@ -44,17 +44,42 @@ export const MIN_SUPPLY = 1_000_000;
 
 export const hookById = (id: string) => HOOKS.find((h) => h.id === id);
 
+/** The three site templates the desk fills in. Shape only; the desk writes the content. */
+export const TEMPLATES = [
+  { id: "story", name: "Story", line: "Hero, the story in three cards, milestones, updates." },
+  { id: "terminal", name: "Terminal", line: "One dark console: terms, chart, changelog. For tools." },
+  { id: "gallery", name: "Gallery", line: "Banner first, a grid of what the token unlocks." },
+] as const;
+export type TemplateId = (typeof TEMPLATES)[number]["id"];
+
+export const FEE_MIN = 1;
+export const FEE_MAX = 3;
+/** The most SOL a dev may spend in the opening block. A bigger first buy is a rug with extra steps. */
+export const DEV_BUY_MAX = 50;
+
 /** What the launcher has assembled so far. Everything optional: the flow fills it in order. */
 export type Draft = {
   /** Step 1 — the product this token is for. */
   utility: { id: string; title: string; kind: string; source: "launched" | "bought" } | null;
-  /** Step 2 */
+  /** Step 2 — the project. */
   name: string;
   ticker: string;
   supply: string;
-  /** Step 3 — hook ids, in the order they run. */
+  project: {
+    fee: number;            // creator fee, whole percent, FEE_MIN..FEE_MAX
+    slug: string;           // permalink: /launchpad/<slug>
+    description: string;    // the pitch and the narrative, short
+    theme: string;          // the brief for the desk: tone, imagery
+    color: string;          // #rrggbb
+    template: TemplateId;
+    website: string;        // the app, optional
+    x: string; telegram: string; github: string; // optional
+    utilityUrl: string;     // the utility if it is already reachable, optional
+  };
+  /** Step 3 — hook ids, in the order they run, and what the dev buys at the open. */
   stack: string[];
-  /** Step 4 */
+  devBuy: string;           // SOL, up to 3 decimals, "0" = none
+  /** What holders unlock. Set from the utility; shown on the launch page. */
   gate: { balance: string; unlocks: string };
 };
 
@@ -63,21 +88,36 @@ export const EMPTY: Draft = {
   name: "",
   ticker: "",
   supply: "1000000000",
+  project: { fee: 1, slug: "", description: "", theme: "", color: "#79d2f2", template: "story", website: "", x: "", telegram: "", github: "", utilityUrl: "" },
   stack: ["antisnipe", "buyback", "burn"],
+  devBuy: "0",
   gate: { balance: "10000", unlocks: "" },
 };
 
 export const STEPS = [
-  { id: "utility", title: "Utility", blurb: "What the token is for" },
-  { id: "token", title: "Token", blurb: "Name, ticker, supply" },
-  { id: "mechanics", title: "Mechanics", blurb: "What the token does" },
-  { id: "access", title: "Access", blurb: "What holders unlock" },
-  { id: "review", title: "Review", blurb: "Freeze and sign" },
+  { id: "utility", title: "Utility", blurb: "Buy one, or bring yours" },
+  { id: "project", title: "Project", blurb: "Name, ticker, site, story" },
+  { id: "mechanics", title: "Mechanics", blurb: "What it does, dev buy" },
+  { id: "agents", title: "Agents", blurb: "Logo, banner, site, copy" },
+  { id: "launch", title: "Launch", blurb: "Freeze and sign" },
 ] as const;
 
 export type StepId = (typeof STEPS)[number]["id"];
 
+/** What the desk produces for every launch, in the order it works. */
+export const DELIVERABLES = [
+  { id: "logo", title: "Logo", line: "Mark and wordmark in the project colour." },
+  { id: "banner", title: "Banner", line: "Hero and social banner, on theme." },
+  { id: "narrative", title: "Narrative", line: "The full story from your pitch: site copy, X thread, launch post." },
+  { id: "site", title: "Website", line: "The template filled in and published at the permalink." },
+] as const;
+
 const digits = (s: string) => Number(s.replace(/\D/g, "")) || 0;
+const sol = (s: string) => (/^\d{1,3}(\.\d{1,3})?$/.test(s) ? Number(s) : NaN);
+const url = (s: string) => !s || /^https:\/\/[^\s/$.?#].[^\s]*$/i.test(s);
+const handle = (s: string) => !s || /^[A-Za-z0-9_.-]{1,40}$/.test(s);
+export const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,22}[a-z0-9])?$/;
+export const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9-]/g, "").replace(/^-+|-+$/g, "").slice(0, 24);
 
 /**
  * The fee waterfall. 100 units enter the stack; each hook takes its share of whatever is still
@@ -101,26 +141,38 @@ export function problemWith(step: StepId, d: Draft): string | null {
   switch (step) {
     case "utility":
       return d.utility ? null : "Pick the product this token is for.";
-    case "token": {
-      if (d.name.trim().length < 2) return "The token needs a name.";
+    case "project": {
+      const p = d.project;
+      if (d.name.trim().length < 2) return "The project needs a name.";
       if (!/^[A-Z0-9]{2,10}$/.test(d.ticker)) return "A ticker is 2–10 letters or digits.";
       const n = digits(d.supply);
       if (n < MIN_SUPPLY) return `Supply starts at ${MIN_SUPPLY.toLocaleString("en-US")}.`;
       if (n > MAX_SUPPLY) return `Supply tops out at ${MAX_SUPPLY.toLocaleString("en-US")}.`;
+      if (!Number.isInteger(p.fee) || p.fee < FEE_MIN || p.fee > FEE_MAX) return `The creator fee is a whole ${FEE_MIN}–${FEE_MAX}%.`;
+      if (!SLUG.test(p.slug)) return "The permalink is 1–24 lowercase letters, digits or dashes.";
+      if (p.description.trim().length < 10) return "Say what the project is, in a sentence or two.";
+      if (p.description.length > 280) return "Keep the description under 280 characters; the desk writes the long version.";
+      if (p.theme.length > 60) return "Keep the theme to a few words.";
+      if (!/^#[0-9a-f]{6}$/i.test(p.color)) return "Pick a colour.";
+      if (!TEMPLATES.some((t) => t.id === p.template)) return "Pick a site template.";
+      if (!url(p.website)) return "The app link must be an https:// address.";
+      if (!url(p.utilityUrl)) return "The utility link must be an https:// address.";
+      if (!handle(p.x) || !handle(p.telegram) || !handle(p.github)) return "Socials are handles, not links.";
+      if (digits(d.gate.balance) <= 0 || digits(d.gate.balance) > digits(d.supply)) return "The holder gate must be between 1 and the supply.";
       return null;
     }
     case "mechanics": {
       if (d.stack.length === 0) return "Pick at least one mechanic, or the token does nothing.";
       if (taken(d.stack) > FEE_CEILING) return `This stack takes ${taken(d.stack)}% of the fee. The ceiling is ${FEE_CEILING}%.`;
+      const buy = sol(d.devBuy);
+      if (Number.isNaN(buy)) return "Dev buy is an amount in SOL, up to 3 decimals.";
+      if (buy > DEV_BUY_MAX) return `Dev buy tops out at ${DEV_BUY_MAX} SOL.`;
       return null;
     }
-    case "access": {
-      if (digits(d.gate.balance) <= 0) return "Set the balance a holder needs.";
-      if (digits(d.gate.balance) > digits(d.supply)) return "The gate asks for more tokens than exist.";
-      if (!d.gate.unlocks.trim()) return "Say what a holder gets when they hold enough.";
-      return null;
-    }
-    case "review":
+    case "agents":
+      // Nothing to decide here: the desk works from what the earlier steps said.
+      return d.gate.unlocks.trim() ? null : "Pick a utility in step 1 first.";
+    case "launch":
       return null;
   }
 }

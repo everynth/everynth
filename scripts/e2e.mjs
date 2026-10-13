@@ -411,13 +411,19 @@ step("github product: token validated, buyer invited read-only, one account per 
 // ---- token launch: terms frozen under a signature, utility must be owned, nothing minted ----
 // Runs before the admin block, which unlists everything the creator sells. The buyer owns the file
 // product by purchase, the creator by listing; the stranger owns nothing.
+const proj = (over = {}) => ({
+  fee: 2, slug: "giga", description: "Three hundred kilobytes of market data, for agents that trade on it.", theme: "night market",
+  color: "#79d2f2", template: "story", website: "https://giga.example", x: "gigatoken", telegram: "", github: "", utilityUrl: "", ...over,
+});
 const terms = (productId, over = {}) => ({
-  productId, name: "Giga", ticker: "GIGA", supply: "1000000000",
-  stack: ["antisnipe", "buyback", "burn"], gateBalance: "10000", gateUnlocks: "Onchain dataset", ...over,
+  productId, name: "Giga", ticker: "GIGA", supply: "1000000000", project: proj(),
+  stack: ["antisnipe", "buyback", "burn"], devBuy: "1.5", gateBalance: "10000", gateUnlocks: "Onchain dataset", ...over,
 });
 const signTerms = (user, t, issuedAt = Date.now()) => ({
   ...t, issuedAt,
-  signature: signAction(user, "launch token", tokenFields({ ...t, supply: Number(t.supply), gateBalance: Number(t.gateBalance) }), issuedAt),
+  signature: signAction(user, "launch token", tokenFields({
+    ...t, supply: Number(t.supply), gateBalance: Number(t.gateBalance), creatorFee: t.project.fee, slug: t.project.slug, template: t.project.template,
+  }), issuedAt),
 });
 const freeze = (user, body) => user.json("/api/launches", body);
 
@@ -431,14 +437,22 @@ assert.match((await res.json()).error, /ticker/i);                              
 res = await freeze(buyer, signTerms(buyer, terms(fileProduct, { stack: ["stock", "buyback", "holder", "lp", "revshare"] })));
 assert.equal(res.status, 400);
 assert.match((await res.json()).error, /ceiling/i);                                                      // 82.9% of the fee: over the 80% cap
+res = await freeze(buyer, signTerms(buyer, terms(fileProduct, { project: proj({ fee: 5 }) })));
+assert.equal(res.status, 400); assert.match((await res.json()).error, /creator fee/i);                   // 1–3% only
+res = await freeze(buyer, signTerms(buyer, terms(fileProduct, { devBuy: "80" })));
+assert.equal(res.status, 400); assert.match((await res.json()).error, /dev buy/i);                       // capped
+res = await freeze(buyer, signTerms(buyer, terms(fileProduct, { project: proj({ website: "ftp://x" }) })));
+assert.equal(res.status, 400); assert.match((await res.json()).error, /https/i);
 const signed = signTerms(buyer, terms(fileProduct));
 assert.equal((await freeze(buyer, { ...signed, ticker: "GIGB" })).status, 401);                          // signed one ticker, sent another
 assert.equal((await freeze(buyer, signTerms(buyer, terms(fileProduct), Date.now() - 10 * 60 * 1000))).status, 401); // stale
 res = await freeze(buyer, signTerms(buyer, terms(fileProduct)));
 assert.equal(res.status, 200, await res.clone().text());
-const { id: launchId, status: launchStatus } = await res.json();
+const { id: launchId, slug: launchSlug, status: launchStatus } = await res.json();
 assert.equal(launchStatus, "frozen");
-assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { name: "Giga Two", ticker: "GIGA2" })))).status, 200);
+assert.equal(launchSlug, "giga");
+assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { name: "Giga Two", ticker: "GIGA2" })))).status, 409); // permalink taken
+assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { name: "Giga Two", ticker: "GIGA2", project: proj({ slug: "giga2" }) })))).status, 200);
 const mine = await (await buyer.get("/api/launches")).json();
 assert.ok(mine.launches.some((l) => l.id === launchId && l.ticker === "GIGA" && l.status === "frozen"), "GET lists the caller's launch");
 assert.ok(!mine.launches.some((l) => l.ticker === "GIGA2"), "and not someone else's");
@@ -447,6 +461,9 @@ assert.ok(launchPage.includes("GIGA") && launchPage.includes("Onchain dataset") 
 assert.ok(launchPage.includes("Anti-snipe") && launchPage.includes("Buyback"), "mechanics are listed");
 assert.ok(launchPage.includes("10,000 GIGA") && launchPage.includes("Holders") && launchPage.includes("Discussion"), "gate rule and the holder sections are on the page");
 assert.ok(launchPage.includes(`href="/u/${creator.wallet}"`), "built-by links to the desk that listed the utility");
+assert.ok(launchPage.includes("2% of every trade") && launchPage.includes("1.5 SOL") && launchPage.includes("night market") && launchPage.includes("queued"), "fee, dev buy, brief and the desk's queue are on the page");
+const bySlug = await (await fetch(BASE + "/launchpad/giga")).text();
+assert.ok(bySlug.includes("GIGA") && bySlug.includes("Onchain dataset"), "the permalink resolves to the same launch");
 // The rule is that no wallet is SHOWN. The desk link carries the address in its href, as product
 // pages already do, and Next repeats every href inside its inline RSC payload — so drop the
 // script and style blocks, then the tags, and check what a reader would actually see.
