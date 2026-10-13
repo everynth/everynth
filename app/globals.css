@@ -385,13 +385,60 @@ details > summary::-webkit-details-marker { display: none; }
 .disc-col-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 4px 0; }
 .disc-col-head h2 { font-size: 1rem; font-weight: 600; letter-spacing: -.02em; }
 .disc-col-head small { display: block; font-size: 11px; color: var(--dim); }
-/* The cards are the market's .pcardx with the launch terms added underneath. */
+/* Stat tiles: each a solid slab lit by its own tint, with a looping icon. */
+.lp-stats { list-style: none; margin: 0 0 4px; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.lp-stat { position: relative; overflow: hidden; display: grid; gap: 1px; padding: 14px 16px 13px; border-radius: 18px; min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--tint) 35%, transparent);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--tint) 30%, #15161a) 0%, #17181c 55%, #101114 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 10px 26px rgba(0,0,0,.35); animation: docs-rise .8s cubic-bezier(.16,1,.3,1) both; }
+.lp-stat::after { content: ""; position: absolute; right: -22%; bottom: -55%; width: 75%; aspect-ratio: 1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--tint) 32%, transparent), transparent 68%); }
+.lp-ico { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; margin-bottom: 8px; color: var(--tint);
+  background: color-mix(in srgb, var(--tint) 20%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tint) 35%, transparent); }
+.lp-ico svg { width: 20px; height: 20px; overflow: visible; transform-origin: 50% 50%; }
+.lp-stat-label { font-family: var(--font-geist-mono), monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.lp-stat-value { font-size: 22px; font-weight: 600; letter-spacing: -.02em; color: var(--ink); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lp-stat small { font-size: 11.5px; color: var(--mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lp-ico[data-anim="flip"] svg { animation: ico-flip 2.6s ease-in-out infinite; }
+.lp-ico[data-anim="dash"] .ico-path { stroke-dasharray: 6 4; animation: ico-dash 1.2s linear infinite; }
+.lp-ico[data-anim="rise"] .ico-bar { transform-box: fill-box; transform-origin: 50% 100%; animation: ico-rise 1.8s ease-in-out infinite; }
+.lp-ico[data-anim="rise"] .ico-bar:nth-child(2) { animation-delay: .3s; } .lp-ico[data-anim="rise"] .ico-bar:nth-child(3) { animation-delay: .6s; }
+.lp-ico[data-anim="bob"] svg { animation: ico-bob 2.2s ease-in-out infinite; }
+.lp-ico[data-anim="pulse"] svg { animation: ico-pulse 1.6s ease-in-out infinite; }
+.lp-ico[data-anim="blink"] .ico-dot { animation: ico-blink 2.4s ease-in-out infinite; } .lp-ico[data-anim="blink"] .ico-dot + .ico-dot { animation-delay: .5s; }
+.lp-ico[data-anim="spin"] svg { animation: ico-spin 1.4s linear infinite; }
+.lp-ico[data-anim="shackle"] .ico-shackle { transform-box: fill-box; transform-origin: 50% 100%; animation: ico-shackle 2.8s ease-in-out infinite; }
+@keyframes ico-flip { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(.12); } }
+@keyframes ico-dash { to { stroke-dashoffset: -20; } }
+@keyframes ico-rise { 0%, 100% { transform: scaleY(.45); } 50% { transform: scaleY(1); } }
+@keyframes ico-bob { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-3px) rotate(-6deg); } }
+@keyframes ico-pulse { 0%, 100% { transform: scale(1); opacity: .8; } 50% { transform: scale(1.22); opacity: 1; } }
+@keyframes ico-blink { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+@keyframes ico-spin { to { transform: rotate(360deg); } }
+@keyframes ico-shackle { 0%, 70%, 100% { transform: translateY(0); } 85% { transform: translateY(-2.5px); } }
+@media (max-width: 1100px) { .lp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .lp-stat, .lp-ico svg, .lp-ico .ico-path, .lp-ico .ico-bar, .lp-ico .ico-dot, .lp-ico .ico-shackle { animation: none; } }
+
+/* The cards are the market's .pcardx with the launch terms added underneath — on a solid, lit
+   slab: the cover runs edge to edge and fades into the card, the badge is gold, the category
+   pill is filled with its colour. */
 .disc { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
 .disc li { display: grid; }
-.disc .pcardx-cover { position: relative; }
+.disc .pcardx { padding: 0 0 12px; gap: 5px; border-color: rgba(255,255,255,.08);
+  background: linear-gradient(180deg, #23242a 0%, #17181c 55%, #121317 100%); box-shadow: 0 14px 34px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.07); }
+.disc .pcardx:hover { border-color: rgba(255,215,102,.6); box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(255,215,102,.15); }
+.disc .pcardx > :not(.pcardx-cover) { margin-left: 12px; margin-right: 12px; }
+.disc .pcardx-cover { position: relative; aspect-ratio: 4/3; border: 0; border-radius: 19px 19px 0 0; }
+.disc .pcardx-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(23,24,28,.92) 100%); }
+.disc .pcardx-cover .cover-blank { background: linear-gradient(135deg, color-mix(in srgb, var(--dom, #888) 42%, #1c1d22) 0%, #121317 100%); }
+.disc .pcardx-avatar { margin-top: -22px; z-index: 1; }
 .disc .pcardx-title small { font-size: 12px; font-weight: 500; color: var(--mute); letter-spacing: .04em; }
 .disc .pcardx-desc b { color: var(--ink2); font-weight: 500; }
-.disc-badge { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.6); color: var(--c-amber); border-color: rgba(255,255,255,.25); font-weight: 600; }
+.disc-badge { position: absolute; top: 10px; right: 10px; z-index: 1; border: 0; font-weight: 700; color: #1d1400;
+  background: linear-gradient(135deg, #ffe08a 0%, #f3b93c 55%, #d9941a 100%); box-shadow: 0 4px 14px rgba(243,185,60,.35); }
+.disc .pcardx-foot .pill[data-cat] { border: 0; color: #fff;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--cat, #888) 60%, #15161a), color-mix(in srgb, var(--cat, #888) 25%, #15161a)); }
+.disc .pcardx-foot .pill-live { background: linear-gradient(135deg, color-mix(in srgb, var(--c-green) 45%, #15161a), color-mix(in srgb, var(--c-green) 15%, #15161a)); border: 0; }
 .disc-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin: 4px 0 2px; font-family: var(--font-geist-mono), monospace; }
 .disc-facts dt { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
 .disc-facts dd { font-size: 12.5px; font-weight: 600; color: var(--ink2); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

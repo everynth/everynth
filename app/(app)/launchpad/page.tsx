@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { AgentBy, AgentMark } from "@/components/agent";
-import { AgentFigure } from "@/components/agent-figure";
 import { age } from "@/components/avatar";
-import { AGENTS, agentFor } from "@/lib/agents";
+import { agentFor } from "@/lib/agents";
 import { CATEGORIES } from "@/lib/config";
 import { COLUMNS, hooksOf, listLaunches, type LaunchCard } from "@/lib/launches";
 import { FEE_CEILING, hookById, taken } from "@/lib/launchpad";
@@ -18,6 +17,18 @@ type Sort = (typeof SORTS)[number];
 const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
 const days = (d: Date) => (Date.now() - new Date(d).getTime()) / 864e5;
 
+// Looping icons for the stat tiles: one or two strokes each, animated in CSS by data-anim.
+const ICONS = {
+  coin: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4" /></svg>,
+  wave: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path className="ico-path" d="M2 12c2.5 0 2.5-6 5-6s2.5 12 5 12 2.5-12 5-12 2.5 6 5 6" /></svg>,
+  bars: <svg viewBox="0 0 24 24" fill="currentColor"><rect className="ico-bar" x="4" y="10" width="4" height="10" rx="1" /><rect className="ico-bar" x="10" y="5" width="4" height="15" rx="1" /><rect className="ico-bar" x="16" y="13" width="4" height="7" rx="1" /></svg>,
+  box: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" /><path d="M4 7.5l8 4.5 8-4.5M12 12v9" /></svg>,
+  bolt: <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" /></svg>,
+  users: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle className="ico-dot" cx="9" cy="8" r="3.5" /><circle className="ico-dot" cx="17" cy="10" r="2.5" /><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 20c0-2.5 1-4.5 2-4.5s4 1.5 4 4.5" /></svg>,
+  ring: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><circle cx="12" cy="12" r="8" opacity=".25" /><path d="M12 4a8 8 0 0 1 8 8" /></svg>,
+  lock: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="5" y="11" width="14" height="10" rx="2" /><path className="ico-shackle" d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>,
+} as const;
+
 // Same card as the market, plus the terms a launch carries: supply, the gate, the mechanics by
 // name and how much of the fee they have spoken for.
 function Card({ l, mine, i }: { l: LaunchCard; mine: boolean; i: number }) {
@@ -26,7 +37,7 @@ function Card({ l, mine, i }: { l: LaunchCard; mine: boolean; i: number }) {
   const fee = taken(stack);
   return (
     <li>
-      <Link href={`/launchpad/${l.id}`} className="pcardx rise" style={{ animationDelay: `${120 + Math.min(i, 10) * 50}ms` }}>
+      <Link href={`/launchpad/${l.id}`} className="pcardx rise" data-domain={desk.domain} style={{ animationDelay: `${120 + Math.min(i, 10) * 50}ms` }}>
         <span className="pcardx-cover">
           {l.has_cover ? (
             // eslint-disable-next-line @next/next/no-img-element -- our own API route
@@ -78,17 +89,20 @@ export default async function LaunchpadPage({ searchParams }: PageProps<"/launch
     .filter((l) => (!category || l.category === category) && (!q || `${l.name} ${l.ticker} ${l.title}`.toLowerCase().includes(q)))
     .sort((a, b) => sort === "mechanics" ? hooksOf(b.stack).length - hooksOf(a.stack).length : sort === "supply" ? Number(b.supply) - Number(a.supply) : 0);
 
-  // What each desk's utilities have backed so far, for the strip at the top.
-  const desks = AGENTS.map((d) => {
-    const mine = all.filter((l) => agentFor(l.creator, l.category).id === d.id);
-    return {
-      ...d,
-      tokens: mine.length,
-      utilities: new Set(mine.map((l) => l.product_id)).size,
-      mechanics: mine.reduce((n, l) => n + hooksOf(l.stack).length, 0),
-      share: all.length ? Math.round((mine.length / all.length) * 100) : 0,
-    };
-  });
+  // The numbers across the top. Volume is zero and says why: nothing trades until the program
+  // is live, and this page does not pretend otherwise.
+  const newest = all[0];
+  const fees = all.map((l) => taken(hooksOf(l.stack)));
+  const stats: { label: string; value: string; sub: string; icon: keyof typeof ICONS; anim: string; tint: string }[] = [
+    { label: "Tokens launched", value: String(all.length), sub: "terms frozen on this launchpad", icon: "coin", anim: "flip", tint: "var(--c-amber)" },
+    { label: "Launch volume", value: "◎ 0", sub: "trading opens with the program", icon: "wave", anim: "dash", tint: "var(--c-green)" },
+    { label: "Supply committed", value: compact.format(all.reduce((n, l) => n + Number(l.supply), 0)), sub: "across every token", icon: "bars", anim: "rise", tint: "var(--c-cyan)" },
+    { label: "Utilities backed", value: String(new Set(all.map((l) => l.product_id)).size), sub: "products with a token on them", icon: "box", anim: "bob", tint: "var(--c-violet)" },
+    { label: "Mechanics stacked", value: String(all.reduce((n, l) => n + hooksOf(l.stack).length, 0)), sub: "hooks across all stacks", icon: "bolt", anim: "pulse", tint: "var(--c-amber)" },
+    { label: "Launchers", value: String(new Set(all.map((l) => l.wallet)).size), sub: "wallets that signed terms", icon: "users", anim: "blink", tint: "var(--c-blue)" },
+    { label: "Avg fee spoken for", value: fees.length ? `${Math.round(fees.reduce((a, b) => a + b, 0) / fees.length)}%` : "—", sub: `of a ${FEE_CEILING}% ceiling`, icon: "ring", anim: "spin", tint: "var(--c-green)" },
+    { label: "Newest", value: newest ? newest.ticker : "—", sub: newest ? `${newest.name} · ${age(days(newest.created_at))}` : "nothing frozen yet", icon: "lock", anim: "shackle", tint: "var(--c-rose)" },
+  ];
 
   return (
     <div className="dash">
@@ -104,30 +118,16 @@ export default async function LaunchpadPage({ searchParams }: PageProps<"/launch
         </div>
       </div>
 
-      {/* The three desks, as on the market: which of their utilities have a token on them. */}
-      <div className="desks rise rise-2">
-        {desks.map((d) => (
-          <article key={d.id} className="desk" data-domain={d.domain}>
-            <div className="desk-art"><AgentFigure agent={d} size={132} /></div>
-            <header className="desk-head">
-              <AgentMark agent={d} size={30} />
-              <span className="desk-id">
-                <b>{d.name}</b>
-                <span className="agent-badge" data-domain={d.domain}>{d.domain}</span>
-              </span>
-            </header>
-            <p className="desk-line">{d.line}</p>
-            <p className="desk-next"><span>Tokens on its utilities</span><b>{d.tokens} launched</b></p>
-            <div className="desk-bar" aria-hidden="true"><i style={{ width: `${d.share}%` }} /></div>
-            <p className="desk-stage"><span>share of all tokens</span><b>{d.share}%</b></p>
-            <p className="desk-nums">
-              <span><b>{d.tokens}</b> tokens</span>
-              <span><b>{d.utilities}</b> utilities</span>
-              <span><b>{d.mechanics}</b> mechanics</span>
-            </p>
-          </article>
+      <ul className="lp-stats rise rise-2">
+        {stats.map((s, i) => (
+          <li key={s.label} className="lp-stat" style={{ "--tint": s.tint, animationDelay: `${80 + i * 40}ms` } as React.CSSProperties}>
+            <span className="lp-ico" data-anim={s.anim} aria-hidden="true">{ICONS[s.icon]}</span>
+            <span className="lp-stat-label">{s.label}</span>
+            <b className="lp-stat-value">{s.value}</b>
+            <small>{s.sub}</small>
+          </li>
         ))}
-      </div>
+      </ul>
 
       <form method="get" className="dash-filters rise rise-3">
         <div className="tabs" role="tablist" aria-label="Sort">
