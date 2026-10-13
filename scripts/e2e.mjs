@@ -19,7 +19,7 @@ const bs58 = require("bs58").default ?? require("bs58");
 const { upload } = require("@vercel/blob/client");
 const { del } = require("@vercel/blob");
 const { loginMessage } = await import(pathToFileURL(project + "lib/login-message.ts").href);
-const { launchMessage, actionMessage, editFields, removeFields } = await import(pathToFileURL(project + "lib/launch-message.ts").href);
+const { launchMessage, actionMessage, editFields, removeFields, tokenFields } = await import(pathToFileURL(project + "lib/launch-message.ts").href);
 const { parseSol } = await import(pathToFileURL(project + "lib/money.ts").href);
 const { encryptContent, decryptContent } = await import(pathToFileURL(project + "lib/content-crypto.ts").href);
 
@@ -407,6 +407,48 @@ assert.equal((await buyer.json(`/api/purchases/${go.purchaseId}/github`, { usern
 assert.equal((await buyer.json(`/api/purchases/${go.purchaseId}/github`, { username: "OctoCat" })).status, 200); // resend ok
 assert.equal((await (await buyer.get(`/api/purchases/${go.purchaseId}/content`)).json()).githubUser, "OctoCat");
 step("github product: token validated, buyer invited read-only, one account per purchase");
+
+// ---- token launch: terms frozen under a signature, utility must be owned, nothing minted ----
+// Runs before the admin block, which unlists everything the creator sells. The buyer owns the file
+// product by purchase, the creator by listing; the stranger owns nothing.
+const terms = (productId, over = {}) => ({
+  productId, name: "Giga", ticker: "GIGA", supply: "1000000000",
+  stack: ["antisnipe", "buyback", "burn"], gateBalance: "10000", gateUnlocks: "Onchain dataset", ...over,
+});
+const signTerms = (user, t, issuedAt = Date.now()) => ({
+  ...t, issuedAt,
+  signature: signAction(user, "launch token", tokenFields({ ...t, supply: Number(t.supply), gateBalance: Number(t.gateBalance) }), issuedAt),
+});
+const freeze = (user, body) => user.json("/api/launches", body);
+
+assert.equal((await fetch(BASE + "/api/launches", { method: "POST", body: "{}" })).status, 401);        // no session
+assert.equal((await freeze(buyer, terms(fileProduct))).status, 401);                                     // unsigned
+assert.equal((await freeze(stranger, signTerms(stranger, terms(fileProduct)))).status, 404);            // not theirs
+assert.equal((await freeze(buyer, signTerms(buyer, terms("no-such-product")))).status, 404);
+res = await freeze(buyer, signTerms(buyer, terms(fileProduct, { ticker: "x" })));
+assert.equal(res.status, 400);
+assert.match((await res.json()).error, /ticker/i);                                                       // the step rules run server-side too
+res = await freeze(buyer, signTerms(buyer, terms(fileProduct, { stack: ["stock", "buyback", "holder", "lp", "revshare"] })));
+assert.equal(res.status, 400);
+assert.match((await res.json()).error, /ceiling/i);                                                      // 82.9% of the fee: over the 80% cap
+const signed = signTerms(buyer, terms(fileProduct));
+assert.equal((await freeze(buyer, { ...signed, ticker: "GIGB" })).status, 401);                          // signed one ticker, sent another
+assert.equal((await freeze(buyer, signTerms(buyer, terms(fileProduct), Date.now() - 10 * 60 * 1000))).status, 401); // stale
+res = await freeze(buyer, signTerms(buyer, terms(fileProduct)));
+assert.equal(res.status, 200, await res.clone().text());
+const { id: launchId, status: launchStatus } = await res.json();
+assert.equal(launchStatus, "frozen");
+assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { name: "Giga Two", ticker: "GIGA2" })))).status, 200);
+const mine = await (await buyer.get("/api/launches")).json();
+assert.ok(mine.launches.some((l) => l.id === launchId && l.ticker === "GIGA" && l.status === "frozen"), "GET lists the caller's launch");
+assert.ok(!mine.launches.some((l) => l.ticker === "GIGA2"), "and not someone else's");
+const launchPage = await (await fetch(BASE + `/launchpad/${launchId}`)).text();
+assert.ok(launchPage.includes("GIGA") && launchPage.includes("Onchain dataset") && /frozen/i.test(launchPage), "launch page reads the terms back");
+assert.ok(launchPage.includes("Anti-snipe") && launchPage.includes("Buyback"), "mechanics are listed");
+assert.ok(!launchPage.includes(buyer.wallet) && !launchPage.includes(creator.wallet), "no wallet printed on a launch page");
+assert.ok((await (await buyer.get("/launchpad")).text()).includes("Giga"), "launchpad lists the wallet's frozen launches");
+assert.equal((await fetch(BASE + "/launchpad/nope")).status, 404);
+step("token launch: owned utility only, step rules server-side, terms frozen under a signature, read back");
 
 // admin: block a creator, everything they sell disappears, they cannot launch again, unblock restores launching
 if (process.env.SKIP_ADMIN !== "1") {
