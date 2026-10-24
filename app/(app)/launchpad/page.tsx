@@ -6,6 +6,7 @@ import { CATEGORIES } from "@/lib/config";
 import { COLUMNS, hooksOf, listLaunches, type LaunchCard } from "@/lib/launches";
 import { FEE_CEILING, hookById, taken } from "@/lib/launchpad";
 import { sessionWallet } from "@/lib/session";
+import { curve } from "@/lib/token";
 
 export const metadata = {
   title: "Launchpad · EVERYNTH",
@@ -31,7 +32,7 @@ const ICONS = {
 
 // Same card as the market, plus the terms a launch carries: supply, the gate, the mechanics by
 // name and how much of the fee they have spoken for.
-function Card({ l, mine, i }: { l: LaunchCard; mine: boolean; i: number }) {
+function Card({ l, mine, i, live }: { l: LaunchCard; mine: boolean; i: number; live?: { progress: number; complete: boolean } | null }) {
   const desk = agentFor(l.creator, l.category);
   const stack = hooksOf(l.stack);
   const fee = taken(stack);
@@ -55,6 +56,13 @@ function Card({ l, mine, i }: { l: LaunchCard; mine: boolean; i: number }) {
           <div><dt>Fee spoken for</dt><dd className="is-fee">{fee}%</dd></div>
         </dl>
         <span className="desk-bar" aria-hidden="true"><i style={{ width: `${(fee / FEE_CEILING) * 100}%` }} /></span>
+        {live && (
+          // Where the coin is on pump.fun's curve, read from the chain: 100% is graduation to a pool.
+          <span className="disc-curve">
+            <span><b>{live.complete ? "Graduated" : `${live.progress.toFixed(1)}%`}</b> of the bonding curve</span>
+            <span className="disc-curve-bar" aria-hidden="true"><i style={{ width: `${live.complete ? 100 : Math.max(1.5, live.progress)}%` }} /></span>
+          </span>
+        )}
         <span className="disc-hooks">
           {stack.map((id) => <span key={id} className="pill pill-sm">{hookById(id)?.name ?? id}</span>)}
         </span>
@@ -86,6 +94,12 @@ export default async function LaunchpadPage({ searchParams }: PageProps<"/launch
   const launches = all
     .filter((l) => (!category || l.category === category) && (!pair || l.pair === pair) && (!q || `${l.name} ${l.ticker} ${l.title}`.toLowerCase().includes(q)))
     .sort((a, b) => sort === "mechanics" ? hooksOf(b.stack).length - hooksOf(a.stack).length : sort === "supply" ? Number(b.supply) - Number(a.supply) : 0);
+
+  // Curve progress for every coin on a curve (cached briefly per mint, so a busy page costs little).
+  const curves = new Map(await Promise.all(launches.filter((l) => l.mint).map(async (l) => {
+    const c = await curve(l.mint!, l.pair === "evyn" ? "evyn" : "sol");
+    return [l.id, c ? { progress: c.progress, complete: c.complete } : null] as const;
+  })));
 
   // The numbers across the top, from the rows: how many were frozen, how many are trading, and the pair split.
   const newest = all[0];
@@ -161,7 +175,7 @@ export default async function LaunchpadPage({ searchParams }: PageProps<"/launch
                 <span className="pill pill-sm">{rows.length}</span>
               </header>
               {rows.length ? (
-                <ul className="disc">{rows.map((l, i) => <Card key={l.id} l={l} mine={l.wallet === wallet} i={i} />)}</ul>
+                <ul className="disc">{rows.map((l, i) => <Card key={l.id} l={l} mine={l.wallet === wallet} i={i} live={curves.get(l.id)} />)}</ul>
               ) : c.status === "frozen" ? (
                 <div className="disc-none">
                   <p>{q || category || pair ? "No token matches." : "Nothing to discover yet."}</p>
