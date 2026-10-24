@@ -10,13 +10,14 @@ export const removeFields = (id: string, block: boolean) => [`Item: ${id}`, `Sco
 // A token launch freezes these exact lines. Stack ids are joined in run order, because the order is
 // part of the terms: it decides who gets what.
 export const tokenFields = (t: {
-  productId: string; name: string; ticker: string; supply: number; creatorFee: number; stack: string[]; devBuy: string;
+  productId: string; name: string; ticker: string; supply: number; pair: string; stack: string[]; devBuy: string;
   gateBalance: number; gateUnlocks: string; slug: string; template: string;
 }) => [
   `Utility: ${t.productId}`,
   `Token: ${t.name} (${t.ticker})`,
   `Supply: ${t.supply}`,
-  `Creator fee: ${t.creatorFee}%`,
+  `Pair: ${t.pair.toUpperCase()}`,
+  `Creator fee: 100% to the EVERYNTH vault`,
   `Mechanics: ${t.stack.join(",")}`,
   `Dev buy: ${t.devBuy} SOL`,
   `Gate: ${t.gateBalance} unlocks ${t.gateUnlocks}`,

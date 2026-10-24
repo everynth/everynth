@@ -51,8 +51,9 @@ export async function POST(request: Request) {
     supply: str(b.supply, 15),
     project: {
       ...EMPTY.project,
-      fee: Number(p.fee), slug: str(p.slug, 24), description: str(p.description, 281), theme: str(p.theme, 61),
+      pair: str(p.pair, 8) as Draft["project"]["pair"], fee: Number(p.fee), slug: str(p.slug, 24), description: str(p.description, 281), theme: str(p.theme, 61),
       color: str(p.color, 7).toLowerCase(), template: str(p.template, 16) as TemplateId,
+      logo: "mark", // the logo choice is the browser's: the image arrives by its own route after the freeze
       website: str(p.website, 200), x: str(p.x, 40), telegram: str(p.telegram, 40), github: str(p.github, 40), utilityUrl: str(p.utilityUrl, 200),
     },
     stack,
@@ -68,7 +69,7 @@ export async function POST(request: Request) {
   const supply = Number(draft.supply);
   const gateBalance = Number(draft.gate.balance);
   const fields = tokenFields({
-    productId: product.id, name: draft.name, ticker: draft.ticker, supply, creatorFee: draft.project.fee, stack, devBuy: draft.devBuy,
+    productId: product.id, name: draft.name, ticker: draft.ticker, supply, pair: draft.project.pair, stack, devBuy: draft.devBuy,
     gateBalance, gateUnlocks: draft.gate.unlocks, slug: draft.project.slug, template: draft.project.template,
   });
   const issuedAt = Number(b.issuedAt);
@@ -80,10 +81,10 @@ export async function POST(request: Request) {
   const pr = draft.project;
   await query(
     `insert into launches (id, wallet, product_id, name, ticker, supply, stack, gate_balance, gate_unlocks, signature, issued_at,
-                           creator_fee, dev_buy, slug, description, theme, color, template, website, x, telegram, github, utility_url)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
+                           creator_fee, dev_buy, slug, description, theme, color, template, website, x, telegram, github, utility_url, pair)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)`,
     [id, wallet, product.id, draft.name, draft.ticker, supply, JSON.stringify(stack), gateBalance, draft.gate.unlocks, String(b.signature), issuedAt,
-     pr.fee, Number(draft.devBuy), pr.slug, pr.description.trim(), pr.theme.trim(), pr.color, pr.template, pr.website, pr.x, pr.telegram, pr.github, pr.utilityUrl],
+     pr.fee, Number(draft.devBuy), pr.slug, pr.description.trim(), pr.theme.trim(), pr.color, pr.template, pr.website, pr.x, pr.telegram, pr.github, pr.utilityUrl, pr.pair],
   );
   return Response.json({ id, slug: pr.slug, status: "frozen" });
 }

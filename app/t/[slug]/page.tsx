@@ -1,24 +1,20 @@
 import { notFound } from "next/navigation";
-import { Site, siteData } from "@/components/sites";
-import { getLaunch } from "@/lib/launches";
+import { Glow } from "@/components/sites/glow";
+import { loadSite, siteMetadata } from "./load";
 
 /**
- * The token's own site at its permalink: one of three templates, filled from the launch. It has
- * none of the app chrome on purpose — it is the project's page, not EVERYNTH's — and every link
- * out of it goes to the signed terms or the market, so nothing is claimed here that was not signed.
+ * The token's terminal at its permalink: chart, trades, swap, curve and holders, read from the
+ * chain. The website (the landing page) is one click away, at /t/<slug>/site. Neither carries the
+ * app chrome: they are the project's pages, not EVERYNTH's, and every link out goes to the signed
+ * terms, the market or pump.fun, so nothing is claimed that was not signed or read off the chain.
  */
 export async function generateMetadata({ params }: PageProps<"/t/[slug]">) {
-  const l = await getLaunch((await params).slug);
-  if (!l) return { title: "Not found" };
-  return {
-    title: `${l.name} ($${l.ticker})`,
-    description: l.description,
-    openGraph: { title: `${l.name} ($${l.ticker})`, description: l.description, images: l.has_cover ? [`/api/products/${l.product_id}/cover`] : undefined },
-  };
+  const s = await loadSite((await params).slug);
+  return s ? siteMetadata(s.l, "terminal") : { title: "Not found" };
 }
 
-export default async function TokenSite({ params }: PageProps<"/t/[slug]">) {
-  const l = await getLaunch((await params).slug);
-  if (!l) notFound();
-  return <Site d={siteData(l)} />;
+export default async function TokenTerminal({ params }: PageProps<"/t/[slug]">) {
+  const s = await loadSite((await params).slug);
+  if (!s) notFound();
+  return <Glow d={s.d} />;
 }

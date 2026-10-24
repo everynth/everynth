@@ -412,7 +412,7 @@ step("github product: token validated, buyer invited read-only, one account per 
 // Runs before the admin block, which unlists everything the creator sells. The buyer owns the file
 // product by purchase, the creator by listing; the stranger owns nothing.
 const proj = (over = {}) => ({
-  fee: 2, slug: "giga", description: "Three hundred kilobytes of market data, for agents that trade on it.", theme: "night market",
+  pair: "evyn", fee: 0, slug: "giga", description: "Three hundred kilobytes of market data, for agents that trade on it.", theme: "night market",
   color: "#79d2f2", template: "basic", website: "https://giga.example", x: "gigatoken", telegram: "", github: "", utilityUrl: "", ...over,
 });
 const terms = (productId, over = {}) => ({
@@ -422,7 +422,7 @@ const terms = (productId, over = {}) => ({
 const signTerms = (user, t, issuedAt = Date.now()) => ({
   ...t, issuedAt,
   signature: signAction(user, "launch token", tokenFields({
-    ...t, supply: Number(t.supply), gateBalance: Number(t.gateBalance), creatorFee: t.project.fee, slug: t.project.slug, template: t.project.template,
+    ...t, supply: Number(t.supply), gateBalance: Number(t.gateBalance), pair: t.project.pair, slug: t.project.slug, template: t.project.template,
   }), issuedAt),
 });
 const freeze = (user, body) => user.json("/api/launches", body);
@@ -452,18 +452,40 @@ const { id: launchId, slug: launchSlug, status: launchStatus } = await res.json(
 assert.equal(launchStatus, "frozen");
 assert.equal(launchSlug, "giga");
 assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { name: "Giga Two", ticker: "GIGA2" })))).status, 409); // permalink taken
-assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { name: "Giga Two", ticker: "GIGA2", project: proj({ slug: "giga2", template: "terminal", color: "#7be0a8" }) })))).status, 200);
+assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { name: "Giga Two", ticker: "GIGA2", project: proj({ slug: "giga2", template: "glow", color: "#7be0a8", pair: "sol" }) })))).status, 200);
 assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { name: "Giga Three", ticker: "GIGA3", project: proj({ slug: "giga3", template: "brutal", color: "#e9c46a", theme: "cartoon arcade" }) })))).status, 200);
 assert.equal((await freeze(creator, signTerms(creator, terms(fileProduct, { ticker: "GIGA4", project: proj({ slug: "giga4", template: "wordpress" }) })))).status, 400); // unknown template
-// The token's own site, one per template, at the permalink. Public, no app chrome, every number honest.
-for (const [slug, mark] of [["giga", "t1-hero"], ["giga2", "t2-hero"], ["giga3", "t3-hero"]]) {
-  const site = await fetch(BASE + `/t/${slug}`);
-  assert.equal(site.status, 200, `/t/${slug}`);
+// The token's own pages: the terminal at the permalink, the website (the landing page in the look picked) at /site. Public, no app chrome, every number honest.
+for (const [slug, mark] of [["giga", "l-basic"], ["giga2", "l-glow"], ["giga3", "l-brutal"]]) {
+  const term = await fetch(BASE + `/t/${slug}`);
+  assert.equal(term.status, 200, `/t/${slug}`);
+  const thtml = await term.text();
+  assert.ok(thtml.includes("g-shell") && thtml.includes("after launch") && thtml.includes(`/t/${slug}/site`) && thtml.includes(`/launchpad/${slug}`), `/t/${slug} is the terminal, linking the website and the terms`);
+  const site = await fetch(BASE + `/t/${slug}/site`);
+  assert.equal(site.status, 200, `/t/${slug}/site`);
   const html = await site.text();
-  assert.ok(html.includes(mark) && html.includes("Get a wallet") && html.includes("after launch") && html.includes(`/launchpad/${slug}`), `/t/${slug} renders its template with the terms link`);
-  assert.ok(!html.includes('class="tabs"'), "the token site has no app chrome");
+  assert.ok(html.includes(mark) && html.includes("after launch") && html.includes(`/launchpad/${slug}`), `/t/${slug}/site renders the landing page in its look with the terms link`);
+  assert.ok(!html.includes('class="tabs"') && !thtml.includes('class="tabs"'), "the token pages have no app chrome");
 }
-assert.ok((await (await fetch(BASE + "/t/giga")).text()).includes("https://x.com/gigatoken"), "socials are linked in the footer");
+assert.ok((await (await fetch(BASE + "/t/giga/site")).text()).includes("https://x.com/gigatoken"), "socials are linked in the footer");
+// Launching on pump.fun: the wallet creates the coin, the server reads the curve back. The stub chain
+// has no curve to read, so here only the gates around it are checked; the real path runs against devnet.
+assert.equal((await fetch(BASE + `/api/launches/${launchId}/launch`, { method: "POST", body: "{}" })).status, 401);
+assert.equal((await stranger.json(`/api/launches/${launchId}/launch`, { signature: "x", mint: "y" })).status, 404);     // not theirs
+assert.equal((await buyer.json(`/api/launches/${launchId}/launch`, { signature: "x", mint: "y" })).status, 400);        // junk
+assert.equal((await buyer.json(`/api/launches/${launchId}/launch`, { signature: newSig(), mint: creator.wallet })).status, 402); // not on chain
+const meta = await (await fetch(BASE + `/api/launches/${launchId}/metadata`)).json();
+assert.equal(meta.symbol, "GIGA"); assert.ok(meta.image.endsWith(`/api/launches/${launchId}/logo`), "metadata JSON points at the logo");
+const logo = await fetch(BASE + `/api/launches/${launchId}/logo`);
+assert.equal(logo.status, 200); assert.match(logo.headers.get("content-type"), /png/); // pump.fun shows PNG, never SVG
+assert.equal((await fetch(BASE + `/api/launches/${launchId}/gate?wallet=${buyer.wallet}`)).status, 409);               // not launched yet
+// the desk: the launcher only, and only once the coin is on the curve
+assert.equal((await fetch(BASE + `/api/launches/${launchId}/desk`, { method: "POST" })).status, 401);
+assert.equal((await stranger.json(`/api/launches/${launchId}/desk`)).status, 404);
+assert.equal((await buyer.json(`/api/launches/${launchId}/desk`)).status, 409);
+// The fee round runs only for the scheduler, and only with a vault that can sign.
+assert.equal((await fetch(BASE + "/api/cron/fees")).status, 401);
+assert.equal((await fetch(BASE + "/api/cron/fees?key=wrong")).status, 401);
 assert.equal((await fetch(BASE + "/t/nope")).status, 404);
 const mine = await (await buyer.get("/api/launches")).json();
 assert.ok(mine.launches.some((l) => l.id === launchId && l.ticker === "GIGA" && l.status === "frozen"), "GET lists the caller's launch");
@@ -471,11 +493,12 @@ assert.ok(!mine.launches.some((l) => l.ticker === "GIGA2"), "and not someone els
 const launchPage = await (await fetch(BASE + `/launchpad/${launchId}`)).text();
 assert.ok(launchPage.includes("GIGA") && launchPage.includes("Onchain dataset") && /frozen/i.test(launchPage), "launch page reads the terms back");
 assert.ok(launchPage.includes("Anti-snipe") && launchPage.includes("Buyback"), "mechanics are listed");
-assert.ok(launchPage.includes("10,000 GIGA") && launchPage.includes("Holders") && launchPage.includes("Discussion"), "gate rule and the holder sections are on the page");
+assert.ok(launchPage.includes("10,000 GIGA") && launchPage.includes("Holders") && launchPage.includes("Community"), "gate rule and the holder sections are on the page");
 assert.ok(launchPage.includes(`href="/u/${creator.wallet}"`), "built-by links to the desk that listed the utility");
-assert.ok(launchPage.includes("2% of every trade") && launchPage.includes("1.5 SOL") && launchPage.includes("night market") && launchPage.includes("queued"), "fee, dev buy, brief and the desk's queue are on the page");
+assert.ok(launchPage.includes("100% to the EVERYNTH vault") && launchPage.includes("1.5 SOL") && launchPage.includes("night market") && launchPage.includes("queued"), "fee, dev buy, brief and the desk's queue are on the page");
 const bySlug = await (await fetch(BASE + "/launchpad/giga")).text();
 assert.ok(bySlug.includes("GIGA") && bySlug.includes("Onchain dataset"), "the permalink resolves to the same launch");
+assert.ok((await (await fetch(BASE + "/launchpad/giga2")).text()).includes("No desk on a SOL pair"), "a SOL-paired launch gets no desk");
 // The rule is that no wallet is SHOWN. The desk link carries the address in its href, as product
 // pages already do, and Next repeats every href inside its inline RSC payload — so drop the
 // script and style blocks, then the tags, and check what a reader would actually see.
@@ -491,7 +514,29 @@ assert.ok(deskPage.includes("Claude Opus 5") && deskPage.includes("Claude Fable 
 assert.ok(deskPage.includes("Signal Pack 02") && deskPage.includes("Onchain dataset") && deskPage.includes("GIGA"), "and shows the build, the utility and the token on it");
 assert.ok((await (await fetch(BASE + "/")).text()).includes('href="/agents/cortex"'), "the market's desk panels open the desk page");
 assert.equal((await fetch(BASE + "/agents/nope")).status, 404);
+// Community: a room per coin. Reading is public; writing takes a session, and a coin that is on the curve.
+assert.ok((await (await fetch(BASE + "/")).text()).includes('href="/community"'), "Community is on the menu");
+assert.equal((await fetch(BASE + "/community")).status, 200);
+assert.deepEqual(await (await fetch(BASE + "/api/launches/giga/chat")).json(), { messages: [] }, "a room reads empty, signed out");
+assert.equal((await fetch(BASE + "/api/launches/giga/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ body: "gm" }) })).status, 401, "writing needs a session");
+assert.equal((await buyer.json("/api/launches/giga/chat", { body: "gm" })).status, 409, "and a coin on the curve");
+const roomPage = await (await fetch(BASE + "/community/giga")).text();
+assert.ok(roomPage.includes("GIGA") && roomPage.includes("opens the moment"), "a frozen coin's room says when it opens");
+assert.equal((await fetch(BASE + "/api/launches/nope/chat")).status, 404);
 step("token launch: owned utility only, step rules server-side, terms frozen under a signature, read back");
+
+// the studio: signed in, then enough EVYN, before any session opens (the stub chain holds none)
+assert.equal((await fetch(BASE + "/api/agents/sessions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ agent: "copywriter", message: "hello" }) })).status, 401);
+res = await creator.json("/api/agents/sessions", { agent: "copywriter", message: "A launch brief." });
+assert.equal(res.status, 402);
+assert.match((await res.json()).error, /hold at least/i);
+assert.equal((await creator.json("/api/agents/sessions/nope", { message: "hello" })).status, 402);
+const roster = await (await fetch(BASE + "/agents")).text();
+assert.ok(roster.includes('href="/agents/copywriter"') && roster.includes('href="/agents/analyst"') && roster.includes("0.5% of supply") && roster.includes('href="/agents/anvil"'), "the roster links every agent and names the gate");
+const room = await (await creator.get("/agents/copywriter")).text();
+assert.ok(room.includes("Hold at least") && room.includes("Quill") && room.includes("Monitor"), "an agent's room is locked for a wallet without EVYN");
+assert.ok((await (await fetch(BASE + "/agents/analyst")).text()).includes("Sign in with a wallet"), "and asks a visitor to sign in");
+step("studio: five rooms, gated to signed-in EVYN holders");
 
 // admin: block a creator, everything they sell disappears, they cannot launch again, unblock restores launching
 if (process.env.SKIP_ADMIN !== "1") {

@@ -102,6 +102,76 @@ alter table launches
   add column if not exists github text not null default '',
   add column if not exists utility_url text not null default '';
 create unique index if not exists launches_slug on launches (slug);
+-- The token, once it exists: a Token-2022 mint the launcher's wallet created. status 'minted'.
+alter table launches
+  add column if not exists mint text,
+  add column if not exists mint_signature text,
+  add column if not exists minted_at timestamptz;
+create unique index if not exists launches_mint on launches (mint);
+-- What the vault collected for a launch and where it went: one row per fee round per launch.
+-- Amounts in lamports (burned in token base units). carry = swept but too small to split yet.
+alter table launches add column if not exists carry bigint not null default 0;
+alter table launches add column if not exists pair text not null default 'sol'; -- 'evyn' | 'sol': what the curve is quoted in
+create table if not exists fee_rounds (
+  id text primary key,
+  launch_id text not null references launches(id),
+  swept bigint not null,
+  launcher bigint not null default 0,
+  buyback bigint not null default 0,
+  burned bigint not null default 0,
+  holders bigint not null default 0,
+  revshare bigint not null default 0,
+  lottery bigint not null default 0,
+  held bigint not null default 0,
+  txs text not null default '[]',
+  created_at timestamptz not null default now()
+);
+create index if not exists fee_rounds_launch on fee_rounds (launch_id, created_at desc);
+alter table fee_rounds
+  add column if not exists quote text not null default 'SOL',        -- what the round's amounts are in
+  add column if not exists burned_quote bigint not null default 0;    -- EVYN burned before the split
+-- A studio session: one holder, one agent, a short conversation. Three may be opened per day.
+drop table if exists agent_runs; -- the one-brief studio that preceded sessions; never had a row in production
+create table if not exists agent_sessions (
+  id text primary key,
+  wallet text not null,
+  agent text not null,
+  messages text not null default '[]', -- JSON [{role, content}], user and assistant alternating
+  turns int not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists agent_sessions_wallet on agent_sessions (wallet, created_at desc);
+-- What the desk produced for a launch: one row per job, overwritten when the desk runs again.
+create table if not exists launch_deliverables (
+  launch_id text not null references launches(id),
+  kind text not null,      -- 'identity' (logo + banner) | 'narrative' | 'site'
+  agent text not null,
+  model text not null,
+  output text not null,
+  created_at timestamptz not null default now(),
+  primary key (launch_id, kind)
+);
+-- Community: one room per launched coin. Anyone reads; only wallets holding the coin (and its launcher) write.
+create table if not exists launch_messages (
+  id bigserial primary key,
+  launch_id text not null references launches(id),
+  wallet text not null,
+  role text not null,      -- 'dev' (the launcher) | 'holder'
+  held text not null,      -- the coin's base units the wallet held when it wrote, read from the chain
+  body text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists launch_messages_room on launch_messages (launch_id, id desc);
+-- The launch's logo and banner as PNG: uploaded by the launcher, or drawn by Prism as SVG and rendered.
+create table if not exists launch_images (
+  launch_id text not null references launches(id),
+  kind text not null,      -- 'logo' (512×512) | 'banner' (1500×500)
+  source text not null,    -- 'upload' | 'prism'
+  data bytea not null,
+  created_at timestamptz not null default now(),
+  primary key (launch_id, kind)
+);
 `;
 
 type Client = { query<T>(sql: string, params?: unknown[]): Promise<{ rows: T[] }> };

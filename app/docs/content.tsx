@@ -1,8 +1,9 @@
 import type { ComponentType } from "react";
 import { Api, OwnershipCheck, SelfHosting } from "./content/dev";
 import { Architecture, Encryption, Payments } from "./content/how";
-import { HookMarketplace, LaunchpadArchitecture, LaunchpadEconomics, LaunchpadHooks, LaunchpadOverview } from "./content/launchpad";
+import { Desk, FeeRounds, HookMarketplace, Launching, LaunchpadArchitecture, LaunchpadEconomics, LaunchpadHooks, LaunchpadOverview, Pairs, TokenSites } from "./content/launchpad";
 import { Faq, GettingStarted, Overview } from "./content/start";
+import { Studio } from "./content/studio";
 import { tutorialPage } from "./content/tutorials";
 import { Buying, GithubAccess, Moderation, Selling } from "./content/using";
 import { TUTORIALS } from "@/lib/tutorials";
@@ -14,7 +15,13 @@ export const CONTENT: Record<string, ComponentType> = {
   faq: Faq,
   ...Object.fromEntries(TUTORIALS.map((t) => [t.slug, tutorialPage(t.slug)])),
   "launchpad/overview": LaunchpadOverview,
+  "launchpad/launching": Launching,
+  "launchpad/pairs": Pairs,
   "launchpad/hooks": LaunchpadHooks,
+  "launchpad/fee-rounds": FeeRounds,
+  "launchpad/token-sites": TokenSites,
+  "launchpad/desk": Desk,
+  studio: Studio,
   "launchpad/hook-marketplace": HookMarketplace,
   "launchpad/economics": LaunchpadEconomics,
   "launchpad/architecture": LaunchpadArchitecture,

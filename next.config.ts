@@ -1,8 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // PGlite ships WASM + data files it loads relative to itself; keep it out of the bundle.
+  // PGlite ships WASM + data files it loads relative to itself; keep it out of the bundle. The Pump
+  // SDK and Anchor must NOT be listed: their ESM builds carry no "type": "module", so Node on Vercel
+  // reads them as CommonJS and the whole page 500s ("Cannot use import statement outside a module").
+  // Bundled, Turbopack takes the ESM build on its own terms.
   serverExternalPackages: ["@electric-sql/pglite"],
+
+  // Page-data collection forks one worker per core (15 here) and each loads the server graph; on a
+  // laptop with a browser open that is more memory than the machine has. Three is plenty.
+  experimental: { cpus: 3 },
 
   // everynth.org is the pitch, app.everynth.org is the product. Both hosts serve the same
   // deployment; only the front door differs, so no link anywhere has to break.

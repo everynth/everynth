@@ -20,7 +20,7 @@ export function NavLinks({ signedIn, admin }: { signedIn: boolean; admin: boolea
 
   // Listing is the desks' job now, so "Launch product" is off the menu. The route still answers,
   // for the dashboard's edit links and for anyone who kept a bookmark.
-  const links: [string, string][] = [["/", "Market"], ["/stats", "Live stats"], ["/launchpad", "Launchpad"]];
+  const links: [string, string][] = [["/", "Market"], ["/stats", "Live stats"], ["/launchpad", "Launchpad"], ["/community", "Community"], ["/agents", "Agents"]];
   if (signedIn) links.push(["/purchases", "Purchases"], ["/dashboard", "Dashboard"]);
   if (admin) links.push(["/admin", "Admin"]);
 
@@ -28,7 +28,7 @@ export function NavLinks({ signedIn, admin }: { signedIn: boolean; admin: boolea
     // Never wraps: on a narrow screen the row scrolls sideways instead of folding the pill in half.
     <nav className="flex flex-nowrap items-center gap-1" aria-label="Primary">
       {links.map(([href, label]) => {
-        const is = path === href;
+        const is = path === href || (href === "/community" && path.startsWith("/community/"));
         return (
           <Link
             key={href}
@@ -38,7 +38,6 @@ export function NavLinks({ signedIn, admin }: { signedIn: boolean; admin: boolea
             aria-current={is ? "page" : undefined}
           >
             {label}
-            {href === "/launchpad" && <span className="tab-soon">soon</span>}
           </Link>
         );
       })}

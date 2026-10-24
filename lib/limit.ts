@@ -12,11 +12,14 @@ export const LIMITS = {
   signIn: { limit: 30, windowS: 600 },    // signature attempts from one address
   launch: { limit: 25, windowS: 3600 },   // products per creator per hour (a real creator never nears this)
   tokenLaunch: { limit: 10, windowS: 3600 }, // frozen token launches per wallet per hour
+  tokenMint: { limit: 30, windowS: 3600 },   // mint verifications per wallet per hour (a retry loop while the RPC catches up is normal)
+  agentRun: { limit: 40, windowS: 3600 },    // studio messages per holder per hour, over the daily session quota: each one costs real tokens
   upload: { limit: 20, windowS: 3600 },   // blob upload tokens
   order: { limit: 40, windowS: 3600 },    // buy presses
   review: { limit: 20, windowS: 3600 },
   report: { limit: 10, windowS: 3600 },
   verify: { limit: 300, windowS: 60 },    // public ownership check, called by other people's apps
+  chat: { limit: 20, windowS: 600 },      // community messages per wallet: a conversation, not a flood
 } as const satisfies Record<string, Limit>;
 
 // The caller: their wallet when we know it, otherwise the client IP as the proxy reports it.

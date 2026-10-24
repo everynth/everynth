@@ -39,21 +39,46 @@ export const HOOKS: Hook[] = [
 export const FAMILIES: Family[] = ["Rewards", "Trading", "Access"];
 /** The protocol's cap on what a whole stack may take out of the fee. */
 export const FEE_CEILING = 80;
-export const MAX_SUPPLY = 1_000_000_000_000;
-export const MIN_SUPPLY = 1_000_000;
+export const PUMP_SUPPLY = 1_000_000_000; // what pump.fun's curve mints, always
 
 export const hookById = (id: string) => HOOKS.find((h) => h.id === id);
 
-/** The three site templates the desk fills in. Shape only; the desk writes the content. */
+/** The token site is one landing page — banner, headline, live numbers, story, chart and swap, the desk's updates — in one of three looks. */
 export const TEMPLATES = [
-  { id: "basic", name: "Basic", line: "Clean and light: photo, pitch, numbers, how to buy." },
-  { id: "terminal", name: "Terminal", line: "One dark console, monospace. For tools and data." },
+  { id: "basic", name: "Basic", line: "Light and clean: white page, soft cards." },
+  { id: "glow", name: "Glow", line: "Dark, the launchpad's night look. The default." },
   { id: "brutal", name: "Brutal", line: "Thick lines, flat colour, hard shadows. Loud." },
 ] as const;
 export type TemplateId = (typeof TEMPLATES)[number]["id"];
 
-export const FEE_MIN = 1;
-export const FEE_MAX = 3;
+/** Where the logo comes from: Prism draws it (EVYN pair), the launcher uploads one, or the initial on the colour stands. */
+export const LOGOS = [
+  { id: "prism", name: "Prism draws it", line: "Logo and banner as vector art from your brief, before you launch. EVYN pair only." },
+  { id: "upload", name: "Upload mine", line: "PNG, JPEG or WebP, square, under 2 MB." },
+  { id: "mark", name: "Default mark", line: "Your initial on the project colour." },
+] as const;
+export type LogoChoice = (typeof LOGOS)[number]["id"];
+
+/**
+ * What the coin is paired with. EVYN is the platform's own pump.fun coin: a coin quoted in it is
+ * bought with SOL through EVYN in one transaction, pays its creator fees in EVYN (half of which
+ * the vault burns), and — the point — gets the desk: logo, banner, narrative, site, posts. A coin
+ * paired with SOL trades plainly and gets no desk.
+ */
+export const PAIRS = [
+  { id: "evyn", name: "EVYN", line: "Paired with EVYN. Fees in EVYN, half burned. The desk works for this launch." },
+  { id: "sol", name: "SOL", line: "Paired with SOL. Plain curve, no desk: terms, a template, a page." },
+] as const;
+export type PairId = (typeof PAIRS)[number]["id"];
+export const agentsOn = (pair: string) => pair === "evyn";
+
+/**
+ * The launcher's cut of creator fees: none, HIRE's rule. pump.fun pays the creator fee to the
+ * vault in full; the launcher's stake in their coin is the dev buy. The field stays in the terms
+ * (always 0) so older launches, frozen with a share, still read back.
+ */
+export const FEE_MIN = 0;
+export const FEE_MAX = 0;
 /** The most SOL a dev may spend in the opening block. A bigger first buy is a rug with extra steps. */
 export const DEV_BUY_MAX = 50;
 
@@ -66,12 +91,14 @@ export type Draft = {
   ticker: string;
   supply: string;
   project: {
+    pair: PairId;           // what the coin is quoted in on the curve
     fee: number;            // creator fee, whole percent, FEE_MIN..FEE_MAX
     slug: string;           // permalink: /launchpad/<slug>
     description: string;    // the pitch and the narrative, short
     theme: string;          // the brief for the desk: tone, imagery
     color: string;          // #rrggbb
     template: TemplateId;
+    logo: LogoChoice;       // not in the signed terms: the image is set right after the freeze
     website: string;        // the app, optional
     x: string; telegram: string; github: string; // optional
     utilityUrl: string;     // the utility if it is already reachable, optional
@@ -88,7 +115,7 @@ export const EMPTY: Draft = {
   name: "",
   ticker: "",
   supply: "1000000000",
-  project: { fee: 1, slug: "", description: "", theme: "", color: "#79d2f2", template: "basic", website: "", x: "", telegram: "", github: "", utilityUrl: "" },
+  project: { pair: "evyn", fee: 0, slug: "", description: "", theme: "", color: "#79d2f2", template: "glow", logo: "prism", website: "", x: "", telegram: "", github: "", utilityUrl: "" },
   stack: ["antisnipe", "buyback", "burn"],
   devBuy: "0",
   gate: { balance: "10000", unlocks: "" },
@@ -145,16 +172,17 @@ export function problemWith(step: StepId, d: Draft): string | null {
       const p = d.project;
       if (d.name.trim().length < 2) return "The project needs a name.";
       if (!/^[A-Z0-9]{2,10}$/.test(d.ticker)) return "A ticker is 2–10 letters or digits.";
-      const n = digits(d.supply);
-      if (n < MIN_SUPPLY) return `Supply starts at ${MIN_SUPPLY.toLocaleString("en-US")}.`;
-      if (n > MAX_SUPPLY) return `Supply tops out at ${MAX_SUPPLY.toLocaleString("en-US")}.`;
-      if (!Number.isInteger(p.fee) || p.fee < FEE_MIN || p.fee > FEE_MAX) return `The creator fee is a whole ${FEE_MIN}–${FEE_MAX}%.`;
+      // pump.fun's curve fixes every coin at one billion; the field stays so the terms spell it out.
+      if (digits(d.supply) !== PUMP_SUPPLY) return `Supply is ${PUMP_SUPPLY.toLocaleString("en-US")} on the curve.`;
+      if (!PAIRS.some((x) => x.id === p.pair)) return "Pick what the coin is paired with.";
+      if (!Number.isInteger(p.fee) || p.fee < FEE_MIN || p.fee > FEE_MAX) return "Creator fees go to the vault in full; there is no launcher share to set.";
       if (!SLUG.test(p.slug)) return "The permalink is 1–24 lowercase letters, digits or dashes.";
       if (p.description.trim().length < 10) return "Say what the project is, in a sentence or two.";
       if (p.description.length > 280) return "Keep the description under 280 characters; the desk writes the long version.";
       if (p.theme.length > 60) return "Keep the theme to a few words.";
       if (!/^#[0-9a-f]{6}$/i.test(p.color)) return "Pick a colour.";
       if (!TEMPLATES.some((t) => t.id === p.template)) return "Pick a site template.";
+      if (p.logo === "prism" && !agentsOn(p.pair)) return "Prism draws for EVYN pairs only — upload a logo or keep the default mark.";
       if (!url(p.website)) return "The app link must be an https:// address.";
       if (!url(p.utilityUrl)) return "The utility link must be an https:// address.";
       if (!handle(p.x) || !handle(p.telegram) || !handle(p.github)) return "Socials are handles, not links.";
@@ -170,7 +198,7 @@ export function problemWith(step: StepId, d: Draft): string | null {
       return null;
     }
     case "agents":
-      // Nothing to decide here: the desk works from what the earlier steps said.
+      // Nothing to decide here: the desk works from what the earlier steps said, or sits out a SOL pair.
       return d.gate.unlocks.trim() ? null : "Pick a utility in step 1 first.";
     case "launch":
       return null;

@@ -202,6 +202,16 @@ export function Architecture() {
             <td>Moves SOL between wallets, confirms in seconds</td>
             <td>Addresses, amounts, reference keys</td>
           </tr>
+          <tr>
+            <td>pump.fun</td>
+            <td>Runs every launched coin&apos;s curve, graduation and pool; pays creator fees to the vault</td>
+            <td>The coins, the trades, the vault as creator</td>
+          </tr>
+          <tr>
+            <td>The vault</td>
+            <td>One hot wallet EVERYNTH operates: sweeps and splits creator fees in <Link href="/docs/launchpad/fee-rounds">fee rounds</Link>. The studio and the desk are API calls to Claude, not chain actions</td>
+            <td>Creator fees in transit, and gas</td>
+          </tr>
         </tbody>
       </table>
 
@@ -213,6 +223,9 @@ export function Architecture() {
         <li><strong>Neon Postgres</strong> for products, purchases, reports and blocks (embedded PGlite locally, same SQL).</li>
         <li><strong>Vercel Blob</strong> for file ciphertext, uploaded directly from the browser.</li>
         <li><strong>GitHub REST</strong> for repository invitations.</li>
+        <li><strong>@pump-fun/pump-sdk</strong> for creating coins, trading the curve and sweeping creator fees; no program of our own.</li>
+        <li><strong>Claude</strong> (Opus 5, Fable 5.1, Haiku 4.5) through the Anthropic SDK for the studio and the desk.</li>
+        <li><strong>Jupiter and CoinGecko</strong> public price feeds for SOL/USD and the market snapshot the agents read.</li>
       </ul>
       <p>It is short on purpose. Every component that is not there is one that cannot be compromised.</p>
 
@@ -223,7 +236,15 @@ export function Architecture() {
 purchases  id, product_id, buyer, reference (unique), creator, creator_amount,
            treasury, fee, signature (unique), status pending|paid, github_user
 reports    product_id, reporter, reason            (unique per product+reporter)
-blocked_wallets  wallet, reason`}</Code>
+blocked_wallets  wallet, reason
+launches   id, slug (unique), wallet, product_id, name, ticker, supply, pair, creator_fee,
+           stack (hook ids in run order), dev_buy, gate_balance, gate_unlocks, description,
+           theme, color, template, website, x, telegram, github, utility_url,
+           status frozen|launched|graduated, mint (unique), mint_signature, carry, signature
+fee_rounds launch_id, quote SOL|EVYN, swept, burned_quote, launcher, buyback, burned,
+           holders, lottery, revshare, held, txs
+launch_deliverables  launch_id, kind identity|narrative|site, agent, model, output
+agent_sessions       id, wallet, agent, messages (JSON), turns`}</Code>
       <p>
         Payout terms are copied onto the purchase at order time, so later edits to the product cannot change what an
         open order settles at.

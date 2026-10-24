@@ -7,9 +7,9 @@ import { SitePreview } from "@/components/site-preview";
 import { useWalletCtx } from "@/components/wallet";
 import { actionMessage, tokenFields } from "@/lib/launch-message";
 import {
-  blockedBy, DELIVERABLES, DEV_BUY_MAX, EMPTY, FAMILIES, FEE_CEILING, FEE_MAX, FEE_MIN, HOOKS, hookById, MAX_SUPPLY, MIN_SUPPLY,
-  problemWith, ready, slugify, STEPS, taken, TEMPLATES, waterfall,
-  type Draft, type StepId, type TemplateId,
+  agentsOn, blockedBy, DELIVERABLES, DEV_BUY_MAX, EMPTY, FAMILIES, FEE_CEILING, HOOKS, hookById, LOGOS, PAIRS, PUMP_SUPPLY,
+  problemWith, ready, SLUG, slugify, STEPS, taken, TEMPLATES, waterfall,
+  type Draft, type LogoChoice, type PairId, type StepId, type TemplateId,
 } from "@/lib/launchpad";
 
 export type Owned = { id: string; title: string; kind: string; source: "launched" | "bought" };
@@ -40,8 +40,12 @@ type Patch = (p: Partial<Draft>) => void;
 export function Flow({ owned }: { owned: Owned[] }) {
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [at, setAt] = useState<StepId>("utility");
-  const [busy, setBusy] = useState(false);
+  const [stage, setStage] = useState<string | null>(null); // what the sign button is doing, or null
+  const busy = stage !== null;
   const [err, setErr] = useState<string | null>(null);
+  // The logo file is not part of the draft: it is not signed, and it does not fit in sessionStorage.
+  const logoFile = useRef<File | null>(null);
+  const [logoName, setLogoName] = useState("");
   const restored = useRef(false);
   const router = useRouter();
   const { address, signMessage } = useWalletCtx();
@@ -70,10 +74,27 @@ export function Flow({ owned }: { owned: Owned[] }) {
   }, [draft]);
 
   const patch: Patch = (p) => setDraft((d) => ({ ...d, ...p }));
+
+  // The permalink is checked as it is typed, so "taken" shows up here and not as a 409 after signing.
+  const [slugState, setSlugState] = useState<{ slug: string; taken: boolean } | null>(null);
+  const slug = draft.project.slug;
+  useEffect(() => {
+    if (!SLUG.test(slug)) return;
+    const t = setTimeout(() => {
+      fetch(`/api/launches/slug?slug=${encodeURIComponent(slug)}`)
+        .then((r) => r.json())
+        .then((j: { slug?: string; taken?: boolean }) => { if (j.slug === slug) setSlugState({ slug, taken: !!j.taken }); })
+        .catch(() => { /* the server checks again at the freeze */ });
+    }, 350);
+    return () => clearTimeout(t);
+  }, [slug]);
+  const slugTaken = slugState?.slug === slug && slugState.taken;
+
   const i = STEPS.findIndex((s) => s.id === at);
-  const problem = problemWith(at, draft);
+  const problem = problemWith(at, draft) ?? (slugTaken && (at === "project" || at === "launch") ? "That permalink is taken — pick another in step 2." : null);
   const sample = draft.utility?.id === "sample";
-  const canSign = ready(draft) && !sample && !!address && !busy;
+  const noFile = draft.project.logo === "upload" && !logoName;
+  const canSign = ready(draft) && !sample && !!address && !busy && !noFile && !slugTaken;
 
   const go = (id: StepId) => {
     const gap = blockedBy(id, draft);
@@ -84,7 +105,7 @@ export function Flow({ owned }: { owned: Owned[] }) {
   // same lines from the submitted terms and refuses anything that does not match.
   const submit = async () => {
     if (!draft.utility || !address) return;
-    setBusy(true);
+    setStage("Check your wallet…");
     setErr(null);
     try {
       const terms = {
@@ -94,7 +115,7 @@ export function Flow({ owned }: { owned: Owned[] }) {
       };
       const issuedAt = Date.now();
       const lines = tokenFields({
-        productId: terms.productId, name: terms.name, ticker: terms.ticker, supply: Number(terms.supply), creatorFee: terms.project.fee,
+        productId: terms.productId, name: terms.name, ticker: terms.ticker, supply: Number(terms.supply), pair: terms.project.pair,
         stack: terms.stack, devBuy: terms.devBuy, gateBalance: Number(terms.gateBalance), gateUnlocks: terms.gateUnlocks,
         slug: terms.project.slug, template: terms.project.template,
       });
@@ -107,16 +128,28 @@ export function Flow({ owned }: { owned: Owned[] }) {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "could not freeze the terms");
       try { sessionStorage.removeItem(KEY); } catch { /* fine */ }
+      // The pictures, right after the terms: pump.fun keeps the first logo it sees, so it has to be
+      // in place before the create. A failure here is not fatal — the launch page offers both again.
+      if (draft.project.logo === "upload" && logoFile.current) {
+        setStage("Uploading the logo…");
+        const fd = new FormData();
+        fd.set("file", logoFile.current);
+        await fetch(`/api/launches/${body.id}/logo`, { method: "PUT", body: fd }).catch(() => null);
+      } else if (draft.project.logo === "prism" && agentsOn(draft.project.pair)) {
+        setStage("Prism is drawing the logo and banner… (about a minute)");
+        await fetch(`/api/launches/${body.id}/identity`, { method: "POST" }).catch(() => null);
+      }
       router.push(`/launchpad/${body.slug ?? body.id}`);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "could not freeze the terms");
-      setBusy(false);
+      setStage(null);
     }
   };
 
   const whyNot = err ?? problem ?? (at !== "launch" ? "Ready."
     : sample ? "A sample cannot be signed — buy a utility and it will appear in step one."
     : !address ? "Connect your wallet to sign."
+    : noFile ? "Pick the logo file in step 2, or let Prism draw it."
     : "Ready to sign.");
 
   return (
@@ -143,7 +176,7 @@ export function Flow({ owned }: { owned: Owned[] }) {
 
       <div className="lpf-body">
         {at === "utility" && <StepUtility draft={draft} patch={patch} owned={owned} />}
-        {at === "project" && <StepProject draft={draft} patch={patch} />}
+        {at === "project" && <StepProject draft={draft} patch={patch} logoName={logoName} onFile={(f) => { logoFile.current = f; setLogoName(f?.name ?? ""); }} slugState={slugState} />}
         {at === "mechanics" && <StepMechanics draft={draft} patch={patch} />}
         {at === "agents" && <StepAgents draft={draft} />}
         {at === "launch" && <StepLaunch draft={draft} />}
@@ -155,7 +188,7 @@ export function Flow({ owned }: { owned: Owned[] }) {
           <span className={`lpf-why${err ? " is-err" : ""}`}>{whyNot}</span>
           {at === "launch" ? (
             <button type="button" className="btn" onClick={submit} disabled={!canSign}>
-              {busy ? "Check your wallet…" : "Freeze and launch"}
+              {stage ?? "Freeze and launch"}
             </button>
           ) : (
             <button type="button" className="btn" onClick={() => setAt(STEPS[i + 1].id)} disabled={problem !== null}>
@@ -226,9 +259,12 @@ function StepUtility({ draft, patch, owned }: { draft: Draft; patch: Patch; owne
 
 // ---------------------------------------------------------------- 2 project
 
-function StepProject({ draft, patch }: { draft: Draft; patch: Patch }) {
+function StepProject({ draft, patch, logoName, onFile, slugState }: { draft: Draft; patch: Patch; logoName: string; onFile: (f: File | null) => void; slugState: { slug: string; taken: boolean } | null }) {
   const p = draft.project;
+  const slugNote = !SLUG.test(p.slug) ? "" : slugState?.slug !== p.slug ? " · checking…" : slugState.taken ? " · ✗ taken" : " · ✓ available";
   const pp = (x: Partial<Draft["project"]>) => patch({ project: { ...p, ...x } });
+  // Prism draws for EVYN pairs only; a switch to SOL falls back to the default mark.
+  const setPair = (pair: PairId) => pp({ pair, ...(pair === "sol" && p.logo === "prism" ? { logo: "mark" as LogoChoice } : {}) });
   // The permalink follows the ticker until the launcher edits it by hand.
   const setTicker = (v: string) => {
     const ticker = v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
@@ -258,17 +294,27 @@ function StepProject({ draft, patch }: { draft: Draft; patch: Patch }) {
             value={draft.supply}
             onChange={(v) => patch({ supply: v.replace(/\D/g, "").slice(0, 15) })}
             aria="Supply"
-            meta={`${pretty(draft.supply)} tokens · between ${MIN_SUPPLY.toLocaleString("en-US")} and ${MAX_SUPPLY.toLocaleString("en-US")} · fixed at launch`}
+            meta={`${PUMP_SUPPLY.toLocaleString("en-US")} tokens, fixed by the bonding curve · 793.1M sold on the curve, the rest becomes pool liquidity at graduation`}
           />
           <div className="lx-row lx-row-plain">
             <span className="lx-caret">›</span>
-            <div>
-              <div className="lx-label">--creator-fee <em>of every trade, to your wallet</em></div>
-              <div className="lpf-fee" role="radiogroup" aria-label="Creator fee">
-                {Array.from({ length: FEE_MAX - FEE_MIN + 1 }, (_, k) => FEE_MIN + k).map((f) => (
-                  <button key={f} type="button" role="radio" aria-checked={p.fee === f} onClick={() => pp({ fee: f })}>{f}%</button>
+            <div style={{ width: "100%" }}>
+              <div className="lx-label">--pair <em>what the coin is quoted in on the curve</em></div>
+              <div className="lpf-tpl lpf-pair">
+                {PAIRS.map((x) => (
+                  <button key={x.id} type="button" aria-pressed={p.pair === x.id} onClick={() => setPair(x.id as PairId)}>
+                    <b>{x.name}{x.id === "evyn" && <span className="pill pill-sm pill-live" style={{ marginLeft: 8 }}>agents on</span>}</b>
+                    <small>{x.line}</small>
+                  </button>
                 ))}
               </div>
+            </div>
+          </div>
+          <div className="lx-row lx-row-plain">
+            <span className="lx-caret">›</span>
+            <div>
+              <div className="lx-label">--creator-fee <em>pump.fun&apos;s creator fee on every trade, paid to the EVERYNTH vault in full</em></div>
+              <p className="lx-meta">Like HIRE: nothing of it goes to the launcher. The vault runs your mechanics with it, and your stake in the coin is the dev buy.</p>
             </div>
           </div>
           <Field
@@ -276,7 +322,7 @@ function StepProject({ draft, patch }: { draft: Draft; patch: Patch }) {
             value={p.slug}
             onChange={(v) => pp({ slug: slugify(v) })}
             aria="Permalink"
-            meta={`everynth.org/t/${p.slug || "…"} — the site lives here; the signed terms at /launchpad/${p.slug || "…"}`}
+            meta={`everynth.org/t/${p.slug || "…"} — the site lives here; the signed terms at /launchpad/${p.slug || "…"}${slugNote}`}
           />
 
           <p className="lpf-sec">the brief</p>
@@ -302,7 +348,30 @@ function StepProject({ draft, patch }: { draft: Draft; patch: Patch }) {
             </div>
           </div>
 
-          <p className="lpf-sec">site template</p>
+          <p className="lpf-sec">logo · what pump.fun and wallets show</p>
+          <div className="lpf-tpl lpf-pair">
+            {LOGOS.map((o) => {
+              const off = o.id === "prism" && !agentsOn(p.pair);
+              return (
+                <button key={o.id} type="button" aria-pressed={p.logo === o.id} disabled={off} onClick={() => pp({ logo: o.id as LogoChoice })}>
+                  <b>{o.name}</b>
+                  <small>{off ? "EVYN pair only — switch the pair above" : o.line}</small>
+                </button>
+              );
+            })}
+          </div>
+          {p.logo === "upload" && (
+            <div className="lx-row lx-row-plain">
+              <span className="lx-caret">›</span>
+              <div>
+                <div className="lx-label">--logo-file <em>{logoName || "none picked yet"}</em></div>
+                <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label="Logo file" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
+                <p className="lx-meta">Square works best; it is cropped to 512×512 and uploaded right after you sign, before the coin is created.</p>
+              </div>
+            </div>
+          )}
+
+          <p className="lpf-sec">site look</p>
           <div className="lpf-tpl">
             {TEMPLATES.map((t) => (
               <button key={t.id} type="button" aria-pressed={p.template === t.id} onClick={() => pp({ template: t.id as TemplateId })}>
@@ -396,6 +465,7 @@ function StepMechanics({ draft, patch }: { draft: Draft; patch: Patch }) {
                 aria="Dev buy in SOL"
                 meta={`SOL you buy with in the opening block, before anyone else · 0 to ${DEV_BUY_MAX} · shown on the launch page and signed with the terms`}
               />
+              <DevBuyPreview sol={draft.devBuy} pair={draft.project.pair} ticker={draft.ticker} />
             </div>
           </div>
         </div>
@@ -421,11 +491,40 @@ function StepMechanics({ draft, patch }: { draft: Draft; patch: Patch }) {
             <p className={`lpf-ceiling${used > FEE_CEILING ? " is-over" : ""}`}>
               {used}% of the fee is spoken for · ceiling {FEE_CEILING}%
             </p>
-            <p className="lx-meta">Creator fee {draft.project.fee}% on top, straight to your wallet. Dev buy {Number(draft.devBuy) || 0} SOL.</p>
+            <p className="lx-meta">Creator fees go to the vault in full; the mechanics above are what they do. Dev buy {Number(draft.devBuy) || 0} SOL.</p>
           </div>
         </aside>
       </div>
     </section>
+  );
+}
+
+/** What the dev buy gets on a fresh curve of this pair, priced live by the server as the launcher types. */
+function DevBuyPreview({ sol, pair, ticker }: { sol: string; pair: PairId; ticker: string }) {
+  const [res, setRes] = useState<{ key: string; tokens?: number; pct?: number; quoteIn?: number; error?: string } | null>(null);
+  const amount = Number(sol);
+  const valid = /^\d{1,3}(\.\d{1,3})?$/.test(sol) && amount > 0 && amount <= DEV_BUY_MAX;
+  const key = `${pair}:${sol}`;
+  useEffect(() => {
+    if (!valid) return;
+    const t = setTimeout(() => {
+      fetch(`/api/launchpad/devbuy?pair=${pair}&sol=${encodeURIComponent(sol)}`)
+        .then((r) => r.json())
+        .then((j) => setRes({ key, ...j }))
+        .catch(() => setRes({ key, error: "no answer" }));
+    }, 400);
+    return () => clearTimeout(t);
+  }, [key, pair, sol, valid]);
+  if (!valid) return <p className="lx-meta lpf-devbuy">No dev buy: the curve opens to everyone at the same price.</p>;
+  if (res?.key !== key) return <p className="lx-meta lpf-devbuy">Pricing {sol} SOL on a fresh {pair === "evyn" ? "EVYN" : "SOL"} curve…</p>;
+  if (res.error || res.tokens === undefined) return <p className="lx-meta lpf-devbuy">Could not price it just now; the launch page quotes it again before you sign.</p>;
+  const big = (res.pct ?? 0) >= 10;
+  return (
+    <p className={`lx-meta lpf-devbuy${big ? " is-big" : ""}`}>
+      ≈ <b>{Math.round(res.tokens).toLocaleString("en-US")} {ticker || "tokens"}</b> · <b>{res.pct!.toFixed(2)}%</b> of supply
+      {pair === "evyn" && res.quoteIn ? <> · {Math.round(res.quoteIn).toLocaleString("en-US")} EVYN after the hop</> : null}
+      {big ? " · a large share for one wallet; buyers will see it on the holders list." : ""}
+    </p>
   );
 }
 
@@ -434,13 +533,21 @@ function StepMechanics({ draft, patch }: { draft: Draft; patch: Patch }) {
 function StepAgents({ draft }: { draft: Draft }) {
   const p = draft.project;
   const tpl = TEMPLATES.find((t) => t.id === p.template) ?? TEMPLATES[0];
+  const on = agentsOn(p.pair);
   return (
     <section className="lpf-pane">
-      <h2 className="lpf-h">The desk takes it from here</h2>
+      <h2 className="lpf-h">{on ? "The desk takes it from here" : "No desk on a SOL pair"}</h2>
       <p className="lpf-sub">
-        From your brief the desk draws the logo and banner, writes the full narrative, and fills the
-        <b> {tpl.name}</b> template at your permalink. Nothing for you to do on this step but read the
-        brief back; the work starts the moment you freeze.
+        {on ? <>
+          From your brief the desk draws the logo and banner as vector art, writes the full narrative,
+          and fills the landing page in the <b>{tpl.name}</b> look at your permalink. Nothing for you to
+          do on this step but read the brief back; the logo and banner are drawn the moment you sign, the
+          rest once the coin is on the curve.
+        </> : <>
+          The desk works for coins paired with <b>EVYN</b>. This one is paired with SOL, so it gets the
+          terms, the landing page in the <b>{tpl.name}</b> look with your text, colour and logo, and the
+          launch page — no drawing, narrative or posts. Switch the pair in step 2 to unlock the desk.
+        </>}
       </p>
 
       <div className="lpf-agents">
@@ -456,10 +563,10 @@ function StepAgents({ draft }: { draft: Draft }) {
         <div style={{ display: "grid", gap: 10 }}>
           <ol className="lpf-jobs">
             {DELIVERABLES.map((d, n) => (
-              <li key={d.id} className="lpf-job">
+              <li key={d.id} className="lpf-job" style={on ? undefined : { opacity: .45 }}>
                 <span className="lpf-job-n">{String(n + 1).padStart(2, "0")}</span>
                 <span><b>{d.title}</b><small>{d.line}</small></span>
-                <span className="pill pill-sm">queued</span>
+                <span className="pill pill-sm">{on ? "queued" : "locked"}</span>
               </li>
             ))}
           </ol>
@@ -485,13 +592,15 @@ function StepLaunch({ draft }: { draft: Draft }) {
     ["Utility", draft.utility ? (draft.utility.id === "sample" ? "Sample utility (not a real holding)" : draft.utility.title) : "—"],
     ["Token", `${draft.name} · ${draft.ticker}`],
     ["Supply", `${pretty(draft.supply)}, fixed`],
-    ["Creator fee", `${p.fee}% of every trade`],
+    ["Pair", p.pair === "evyn" ? "EVYN · fees in EVYN, half burned · the desk works this launch" : "SOL · plain curve · no desk"],
+    ["Creator fee", "100% to the EVERYNTH vault — nothing to the launcher"],
     ["Mechanics", draft.stack.map((id) => hookById(id)?.name ?? id).join(", ") || "—"],
     ["Fee spoken for", `${taken(draft.stack)}% of ${FEE_CEILING}% ceiling`],
     ["Dev buy", `${Number(draft.devBuy) || 0} SOL in the opening block`],
     ["Holders unlock", draft.gate.unlocks || "—"],
     ["Balance needed", `${pretty(draft.gate.balance)} ${draft.ticker || "tokens"}`],
-    ["Site", `/t/${p.slug || "…"} · ${TEMPLATES.find((t) => t.id === p.template)?.name ?? ""} template · ${p.color}`],
+    ["Site", `/t/${p.slug || "…"} · ${TEMPLATES.find((t) => t.id === p.template)?.name ?? ""} look · ${p.color}`],
+    ["Logo", LOGOS.find((o) => o.id === p.logo)?.name ?? "—"],
     ["Links", links || "none yet"],
   ];
 
@@ -526,7 +635,7 @@ function StepLaunch({ draft }: { draft: Draft }) {
           {draft.utility?.id === "sample"
             ? "This is the sample. It shows the shape of the terms; it cannot be signed, because there is no real holding behind it."
             : ready(draft)
-              ? "Your signature freezes these terms under your wallet, publishes the launch page at the permalink, and hands the brief to the desk. Nothing is minted: the token program and the pool it launches into are still being built, and a frozen launch waits for them."
+              ? "Your signature freezes these terms under your wallet and publishes the launch page at the permalink. Nothing is minted yet: on that page you create the coin on pump.fun from this wallet, and the dev buy follows. Signing is free."
               : "Finish the earlier steps and the full terms will appear here."}
         </p>
       </div>

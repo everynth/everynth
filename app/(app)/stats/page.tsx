@@ -2,14 +2,18 @@ import Link from "next/link";
 import { AgentMark } from "@/components/agent";
 import { Spark } from "@/components/spark";
 import { agentFor } from "@/lib/agents";
+import { launchpadStats } from "@/lib/launchpad-stats";
 import { byCategory, pulse, topCreators, trending } from "@/lib/market";
 import { formatSol } from "@/lib/money";
+import { usd } from "@/lib/sol-price";
 
 export const metadata = { title: "Live stats — EVERYNTH" };
 
-// Live numbers straight from products + purchases. Nothing cached, nothing estimated.
+// Live numbers straight from products + purchases, and from the launchpad's curves and fee rounds.
 export default async function StatsPage() {
-  const [p, hot, creators, cats] = await Promise.all([pulse(30), trending(10), topCreators(10), byCategory()]);
+  const [p, hot, creators, cats, lp] = await Promise.all([pulse(30), trending(10), topCreators(10), byCategory(), launchpadStats()]);
+  const money = (sol: number) => (lp.fx ? usd(sol * lp.fx) : `${sol.toFixed(2)} SOL`);
+  const solSub = (sol: number, p = 3) => `${sol.toFixed(p)} SOL`;
   const maxCat = Math.max(1, ...cats.map((c) => c.sales));
   const last7 = p.days.slice(-7).reduce((a, b) => a + b, 0);
   const prev7 = p.days.slice(-14, -7).reduce((a, b) => a + b, 0);
@@ -41,6 +45,39 @@ export default async function StatsPage() {
           <Spark days={p.days} height={150} tone="green" />
           <p className="kicker" style={{ marginTop: 8 }}>Volume · SOL per day</p>
           <Spark days={p.volumeDays} height={90} tone="cyan" />
+        </div>
+      </section>
+
+      {/* The launchpad: every launch by stage, what the curves are worth and hold, the recent volume,
+          and what the vault's fee rounds collected and where it went. */}
+      <section className="panel panel-feature rise rise-3" aria-label="Launchpad">
+        <div className="feature-left">
+          <header className="panel-head"><h2>Launchpad</h2><span>curves · fee rounds</span></header>
+          <dl className="pulse">
+            <div><dt>Launches</dt><dd className="chrome">{lp.counts.total}<small> {lp.counts.frozen} frozen · {lp.counts.launched} live · {lp.counts.graduated} graduated</small></dd></div>
+            <div><dt>Total market cap</dt><dd className="v-info">{money(lp.mcapSol)}<small> {lp.fx ? solSub(lp.mcapSol, 2) : "on the curves"}</small></dd></div>
+            <div><dt>Volume</dt><dd className="v-info">{money(lp.volumeSol)}<small> {lp.tradeCount} trades · last 60 per coin</small></dd></div>
+            <div><dt>In the curves</dt><dd className="chrome">{solSub(lp.raisedSol)}<small> {lp.fx ? usd(lp.raisedSol * lp.fx) : "SOL"}</small></dd></div>
+            <div><dt>Fee rounds</dt><dd className="chrome">{lp.rounds.n}<small> swept {solSub(lp.rounds.sweptSol, 4)}{lp.rounds.sweptEvyn ? ` + ${lp.rounds.sweptEvyn.toFixed(0)} EVYN` : ""}</small></dd></div>
+            <div><dt>Buyback &amp; burn</dt><dd className="v-good">{solSub(lp.rounds.buybackSol, 4)}<small> {lp.rounds.burnedTokens ? `${lp.rounds.burnedTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} coins burned` : "no burn yet"}{lp.rounds.burnedEvyn ? ` · ${lp.rounds.burnedEvyn.toFixed(0)} EVYN burned` : ""}</small></dd></div>
+            <div><dt>To holders</dt><dd className="v-good">{solSub(lp.rounds.holdersSol + lp.rounds.lotterySol + lp.rounds.revshareSol, 4)}<small> rewards · lottery · revshare</small></dd></div>
+            <div><dt>Held in the vault</dt><dd className="chrome">{solSub(lp.rounds.heldSol, 4)}<small> mechanics not yet on chain, and the remainder</small></dd></div>
+          </dl>
+        </div>
+        <div className="feature-art">
+          <p className="kicker">Coins on the curve · by market cap</p>
+          <ol className="plist" style={{ marginTop: 8 }}>
+            {lp.coins.length === 0 && <li className="pempty">No coin on a curve yet</li>}
+            {lp.coins.slice(0, 6).map((c, i) => (
+              <li key={c.launch.id}>
+                <Link href={`/t/${c.launch.slug ?? c.launch.id}`} className="prow">
+                  <span className="rank mono">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="prow-name">{c.launch.name} <small style={{ display: "inline" }}>${c.launch.ticker}</small><small>{c.complete ? "graduated" : `${c.progress.toFixed(1)}% of the curve`} · {c.tradeCount} trades · {c.launch.pair === "evyn" ? "EVYN" : "SOL"} pair</small></span>
+                  <span className="prow-val"><b className="chrome">{money(c.mcapSol)}</b><small>vol {money(c.volumeSol)}</small></span>
+                </Link>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 

@@ -25,14 +25,30 @@ export const DOC_GROUPS: DocGroup[] = [
     ],
   },
   {
-    // Designed in the open, not shipped. Every page in this group says so at the top.
-    group: "Launchpad (design)",
+    group: "Launchpad",
     docs: [
-      { slug: "launchpad/overview", title: "Launchpad overview", summary: "Two halves of one market: a utility proves itself, then a token is attached to it." },
-      { slug: "launchpad/hooks", title: "Hooks", summary: "What a hook is, the catalogue, and how several stack into one token's behaviour." },
-      { slug: "launchpad/hook-marketplace", title: "Hook marketplace", summary: "Anyone can write a module and be paid when other people's tokens use it." },
-      { slug: "launchpad/economics", title: "Economics", summary: "Protocol revenue, what the native token is for, fee discounts and hook mining." },
-      { slug: "launchpad/architecture", title: "Architecture", summary: "Token-2022 transfer hooks, what they cannot do, and the gap that has to be designed." },
+      { slug: "launchpad/overview", title: "Launchpad overview", summary: "A token attached to a utility that already works, on pump.fun's curve, with the vault running the mechanics." },
+      { slug: "launchpad/launching", title: "Launching a token", summary: "The five steps, what you sign, what it costs, what happens after the create." },
+      { slug: "launchpad/pairs", title: "EVYN or SOL", summary: "What the pair changes: the buy path, fees in EVYN and the burn, the desk." },
+      { slug: "launchpad/hooks", title: "Mechanics", summary: "The catalogue, the waterfall, the ceiling, and what runs on chain today." },
+      { slug: "launchpad/fee-rounds", title: "Fee rounds", summary: "The vault: sweep, collect, split, carry, every 15 minutes, published per launch." },
+      { slug: "launchpad/token-sites", title: "Token sites", summary: "Three templates; the chart, trades, holders, swap and fee schedule, all read from the chain." },
+      { slug: "launchpad/desk", title: "The desk", summary: "Identity, narrative and site copy from the agents, for every EVYN-paired launch." },
+    ],
+  },
+  {
+    group: "Studio",
+    docs: [
+      { slug: "studio", title: "The studio", summary: "Five agents, one skill each, open to EVYN holders: the gate, the rooms, the monitor." },
+    ],
+  },
+  {
+    // Designed in the open, not shipped. Every page in this group says so at the top.
+    group: "Roadmap (design)",
+    docs: [
+      { slug: "launchpad/hook-marketplace", title: "Hook marketplace", summary: "Anyone can write an on-chain module and be paid when other people's tokens use it." },
+      { slug: "launchpad/economics", title: "Economics", summary: "What runs around EVYN today, and the hook economy beyond it." },
+      { slug: "launchpad/architecture", title: "On-chain architecture", summary: "What runs where today, Token-2022 transfer hooks, and the gap to on-chain mechanics." },
     ],
   },
   {

@@ -6,23 +6,36 @@ import { agentById, agentFor, AGENTS, deskStats, MACHINES, STAGES, stageOf } fro
 import { PRODUCT_COLS, query, type Product } from "@/lib/db";
 import { listLaunches } from "@/lib/launches";
 import { creatorTotals } from "@/lib/market";
+import { studioAgent } from "@/lib/studio";
+import { Workspace } from "./workspace";
 
+// The three desks are prerendered; the studio's five render per request (they read the session).
 export function generateStaticParams() {
   return AGENTS.map((a) => ({ id: a.id }));
 }
 
 export async function generateMetadata({ params }: PageProps<"/agents/[id]">) {
-  const a = agentById((await params).id);
+  const { id } = await params;
+  const s = studioAgent(id);
+  if (s) return { title: `${s.name} · ${s.role}`, description: s.line };
+  const a = agentById(id);
   return { title: a ? `${a.name} · ${a.domain} desk` : "Desk", description: a?.line };
 }
 
 /**
- * A desk's own page: who it is, what it runs on, what it is building and how far, what it has
- * shipped and what has been launched on top of that. Shipped figures come from the database;
+ * One id, two kinds of agent. A studio agent gets its room: the prompt column and the monitor.
+ * A desk gets its own page: who it is, what it runs on, what it is building and how far, what it
+ * has shipped and what has been launched on top of that. Shipped figures come from the database;
  * the build-in-progress is the desk's own declaration in lib/agents.
  */
-export default async function AgentPage({ params }: PageProps<"/agents/[id]">) {
-  const a = agentById((await params).id);
+export default async function AgentPage({ params, searchParams }: PageProps<"/agents/[id]">) {
+  const { id } = await params;
+  const s = studioAgent(id);
+  if (s) {
+    const q = (await searchParams).q; // a question handed over from another agent's room
+    return <Workspace agent={s} draft={typeof q === "string" ? q.slice(0, 4000) : ""} />;
+  }
+  const a = agentById(id);
   if (!a) notFound();
 
   const [stat, products, launches] = await Promise.all([

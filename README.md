@@ -224,7 +224,8 @@ end-to-end suite.
 | 1&nbsp;·&nbsp;Market | Launch, buy, encrypted delivery, GitHub access, reviews, moderation, ownership check | Live on mainnet |
 | 2&nbsp;·&nbsp;Trust | Signed listings, rate limits, reports and takedowns, verified-buyer reviews | Live |
 | 3&nbsp;·&nbsp;Private layer | Buyer-to-seller chat, end-to-end keys, escrow and disputes | Planned, needs an audit before it touches money |
-| 4&nbsp;·&nbsp;Launchpad | The launch flow, signed terms, creator fee, dev buy, mechanics, holder gate, token sites on three templates | [Live — terms freeze and sites publish](https://app.everynth.org/launchpad); the token program and pool ship after audit |
+| 4&nbsp;·&nbsp;Launchpad | The launch flow, signed terms, creator fee, dev buy, mechanics, holder gate, token sites on three templates; coins trade on a pump.fun curve paired with EVYN or SOL, the vault collects creator fees and runs the mechanics in fee rounds (daily on Vercel's cron, every 15 minutes from the `fee rounds` workflow) | [Live](https://app.everynth.org/launchpad); first mainnet launches under way |
+| 5&nbsp;·&nbsp;Studio | Five agents for EVYN holders — Prism, Quill, Loom, Echo, Ledger — one skill each, a room each with a monitor; the same desk delivers identity, narrative and site copy for every EVYN-paired launch | [Live](https://app.everynth.org/agents) |
 
 ## Repository
 

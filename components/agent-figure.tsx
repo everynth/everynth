@@ -71,6 +71,67 @@ const BUILDS: Record<string, Build> = {
     kit: [38, 6, 34],
     bob: 5.8,
   },
+
+  // The studio's five. Same projection, different bodies, each with the tool of its trade.
+  // Creative: tall, a beret pushed to one side, a brush.
+  creative: {
+    parts: [
+      [[6, 8, 0], [7, 7, 16]], [[17, 8, 0], [7, 7, 16]],
+      [[3, 4, 16], [24, 18, 24]],
+      [[6, 5, 40], [18, 16, 16]],
+      [[-2, 1, 55], [22, 18, 4]],
+    ],
+    face: { at: [6, 21, 47], w: 18 },
+    kit: [40, 8, 34],
+    bob: 4.6,
+  },
+  // Copywriter: slim and straight, a pen.
+  copywriter: {
+    parts: [
+      [[8, 9, 0], [6, 6, 14]], [[16, 9, 0], [6, 6, 14]],
+      [[5, 6, 14], [20, 16, 30]],
+      [[6, 6, 44], [18, 16, 16]],
+    ],
+    face: { at: [6, 22, 51], w: 18 },
+    kit: [38, 8, 34],
+    bob: 5,
+  },
+  // Narrator: a wide cloak, a smaller hood, a book.
+  narrator: {
+    parts: [
+      [[0, 2, 0], [30, 22, 20]],
+      [[4, 5, 20], [22, 16, 24]],
+      [[7, 6, 44], [16, 14, 14]],
+      [[5, 4, 56], [20, 18, 4]],
+    ],
+    face: { at: [7, 20, 48], w: 16 },
+    kit: [40, 6, 30],
+    bob: 6,
+  },
+  // Social: short, big head, an antenna that blinks, a speech bubble.
+  social: {
+    parts: [
+      [[8, 8, 0], [6, 6, 10]], [[16, 8, 0], [6, 6, 10]],
+      [[5, 5, 10], [20, 16, 14]],
+      [[2, 2, 24], [26, 22, 24]],
+    ],
+    face: { at: [2, 24, 38], w: 26 },
+    kit: [42, 8, 40],
+    bob: 3.4,
+    mast: [15, 13, 48],
+  },
+  // Analyst: boxy, shoulder pads, a bar chart.
+  analyst: {
+    parts: [
+      [[5, 8, 0], [7, 7, 16]], [[18, 8, 0], [7, 7, 16]],
+      [[2, 4, 16], [26, 18, 26]],
+      [[-4, 6, 34], [6, 12, 6]], [[28, 6, 34], [6, 12, 6]],
+      [[5, 6, 42], [20, 16, 15]],
+    ],
+    face: { at: [5, 22, 49], w: 20 },
+    kit: [42, 8, 36],
+    bob: 5.4,
+  },
 };
 
 function Kit({ id, at }: { id: string; at: V }) {
@@ -91,6 +152,47 @@ function Kit({ id, at }: { id: string; at: V }) {
       </g>
     );
   }
+  if (id === "creative") {
+    return (
+      <g transform={`translate(${x} ${y})`}>
+        <path d="M-7 9 6-5" stroke="#e7ecf3" strokeWidth="2.4" strokeLinecap="round" />
+        <rect x="3" y="-12" width="7" height="8" rx="2" fill={`url(#${id}-t)`} transform="rotate(45 6.5 -8)" />
+      </g>
+    );
+  }
+  if (id === "copywriter") {
+    return (
+      <g transform={`translate(${x} ${y})`} strokeLinecap="round">
+        <path d="M-8 8 4-4" stroke="#e7ecf3" strokeWidth="3.2" />
+        <path d="M4-4l3.5-3.5" stroke="var(--f-top)" strokeWidth="3.2" />
+      </g>
+    );
+  }
+  if (id === "narrator") {
+    return (
+      <g transform={`translate(${x} ${y})`}>
+        <rect x="-9" y="-6" width="18" height="12" rx="2" fill="#e7ecf3" />
+        <path d="M0-6v12" stroke="var(--f-deep)" strokeWidth="1.4" />
+      </g>
+    );
+  }
+  if (id === "social") {
+    return (
+      <g transform={`translate(${x} ${y})`} fill="#e7ecf3">
+        <rect x="-10" y="-9" width="20" height="13" rx="4.5" />
+        <path d="M-5 4l-3 5 7-5z" />
+      </g>
+    );
+  }
+  if (id === "analyst") {
+    return (
+      <g transform={`translate(${x} ${y})`}>
+        <rect x="-10" y="0" width="5" height="8" rx="1" fill="#e7ecf3" />
+        <rect x="-3" y="-5" width="5" height="13" rx="1" fill="#e7ecf3" />
+        <rect x="4" y="-11" width="5" height="19" rx="1" fill={`url(#${id}-t)`} />
+      </g>
+    );
+  }
   return (
     <g transform={`translate(${x} ${y})`}>
       <rect x="-7" y="-2" width="14" height="11" rx="2.5" fill="#e7ecf3" />
@@ -99,7 +201,10 @@ function Kit({ id, at }: { id: string; at: V }) {
   );
 }
 
-export function AgentFigure({ agent, size = 120 }: { agent: Agent; size?: number }) {
+/** Any agent with an id, a name and a palette key: the desks, and the studio's five. */
+export type Figurable = Pick<Agent, "id" | "name"> & { domain: string };
+
+export function AgentFigure({ agent, size = 120, label }: { agent: Figurable; size?: number; label?: string }) {
   const b = BUILDS[agent.id] ?? BUILDS.anvil;
   const id = agent.id;
   const pad: V[] = [[-13, -13, 0], [43, -13, 0], [43, 43, 0], [-13, 43, 0]];
@@ -113,7 +218,7 @@ export function AgentFigure({ agent, size = 120 }: { agent: Agent; size?: number
       width={size}
       height={r2((size * 146) / 120)}
       role="img"
-      aria-label={`${agent.name}, the ${agent.domain.toLowerCase()} desk`}
+      aria-label={label ?? `${agent.name}, the ${agent.domain.toLowerCase()} desk`}
     >
       <defs>
         <linearGradient id={`${id}-t`} x1="0" y1="0" x2="1" y2="1">

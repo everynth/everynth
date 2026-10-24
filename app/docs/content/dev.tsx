@@ -96,7 +96,13 @@ POST /api/upload               20 / hour
 POST /api/orders               40 / hour
 POST /api/purchases/:id/review 20 / hour
 POST /api/reports              10 / hour
-GET  /api/verify              300 / minute   (per IP)`}</Code>
+GET  /api/verify              300 / minute   (per IP)
+GET  /api/launches/:id/gate   300 / minute   (per IP)
+POST /api/launches             10 / hour     (frozen launches per wallet)
+POST /api/launches/:id/launch  30 / hour     (verifications; retrying while the RPC catches up is normal)
+POST /api/agents/sessions*     40 / hour     (studio messages, on top of the daily session quota)
+POST /api/launches/:id/desk    40 / hour     (shares the studio bucket)
+POST /api/launches/:id/identity 40 / hour    (shares the studio bucket)`}</Code>
 
       <H2 id="products">Products</H2>
       <Route method="POST" path="/api/upload" auth="session">
@@ -179,6 +185,97 @@ github  { "kind": "github", "repo": "owner/name", "githubUser": "octocat" | null
         <p><code>→ 200 {`{ "owned": boolean, "since": ISO date | null }`}</code>. See <Link href="/docs/ownership-check">Ownership check</Link>.</p>
       </Route>
 
+      <H2 id="launchpad">Launchpad</H2>
+      <Route method="POST" path="/api/launches" auth="session + signature">
+        <p>Freeze a token launch. The caller must own the utility (built or bought). Body:</p>
+        <Code>{`{
+  "productId": "<uuid>", "name": "3–40 chars", "ticker": "2–10 A–Z0–9", "supply": "1000000000",
+  "project": { "pair": "evyn" | "sol", "fee": 0, "slug": "a-z0-9-", "description": "10–4000", "theme": "", "color": "#rrggbb",
+               "template": "basic" | "glow" | "brutal",   // the landing page's look
+               "website": "", "x": "", "telegram": "", "github": "", "utilityUrl": "" },
+  "stack": ["antisnipe", "buyback", "burn"],     // mechanic ids, in run order, ≤ 80% of a round in total
+  "devBuy": "0.05",                                // SOL, 0–50
+  "gateBalance": "10000", "gateUnlocks": "what opens",
+  "issuedAt": <ms>, "signature": "<base64 ed25519 over the 'launch token' action message>"
+}
+→ 200 { "id", "slug" } · 400 a step's rule · 401 bad confirmation · 403 blocked · 409 permalink taken`}</Code>
+        <p>The signed lines are listed on <Link href="/docs/launchpad/launching#signature">Launching a token</Link>.</p>
+      </Route>
+      <Route method="GET" path="/api/launches/:id/chat?after=" auth="public">
+        <p>The coin&apos;s community room, oldest first: the latest 80 messages, or only those newer than <code>after</code> (a message id). <code>→ 200 {`{ "messages": [ { id, wallet, role: "dev" | "holder", held, body, created_at } ] }`}</code> — <code>held</code> is the coin in base units at the moment of writing.</p>
+      </Route>
+      <Route method="POST" path="/api/launches/:id/chat" auth="session · holds the coin, or launched it">
+        <Code>{`{ "body": "1–500 chars" }
+→ 200 { "message" } · 401 sign in · 403 holds none of the coin · 409 not on the curve yet · 429 more than 20 per 10 minutes`}</Code>
+      </Route>
+      <Route method="GET" path="/api/launches/:id/rounds" auth="public · CORS *">
+        <p>Every fee round the vault ran for the coin, oldest first, as CSV (<code>text/csv</code>): time, quote, swept, EVYN burned, launcher, buyback, the coin burned, to holders, lottery, revshare, held — in whole SOL or EVYN.</p>
+      </Route>
+      <Route method="GET" path="/api/launchpad/devbuy?pair=&sol=" auth="public">
+        <p>What a dev buy of <code>sol</code> gets on a fresh curve of that pair, priced with the Pump SDK. <code>→ 200 {`{ "pair", "sol", "quoteIn", "tokens", "pct" }`}</code> · 400 out of range · 502 the RPC did not answer.</p>
+      </Route>
+      <Route method="GET" path="/api/launches/slug?slug=" auth="public">
+        <p>Is a permalink free? <code>→ 200 {`{ "slug", "taken": boolean }`}</code> · 400 not a valid slug. The launch flow asks as you type; the freeze checks again.</p>
+      </Route>
+      <Route method="GET" path="/api/launches" auth="session">
+        <p>The caller&apos;s own launches. <code>→ 200 {`{ "launches": [ { id, slug, name, ticker, status, mint, pair, … } ] }`}</code></p>
+      </Route>
+      <Route method="POST" path="/api/launches/:id/launch" auth="owner">
+        <Code>{`{ "signature": "<base58 of the create transaction>", "mint": "<base58>" }
+→ 200 { "ok": true, "mint", "status": "launched" }
+→ 400 junk · 402 not on chain yet / not paid by you / creator is not the vault / wrong supply or quote · 404 not yours · 409 not frozen`}</Code>
+        <p>Reads the curve from the chain and marks the launch <code>launched</code>. Safe to retry while the transaction confirms.</p>
+      </Route>
+      <Route method="GET" path="/api/launches/:id/metadata" auth="public">
+        <p>The coin&apos;s metadata JSON (name, symbol, description, image) that the mint&apos;s URI points at.</p>
+      </Route>
+      <Route method="GET" path="/api/launches/:id/logo" auth="public">
+        <p>The coin&apos;s image, always PNG 512×512 (pump.fun shows no SVG): the launcher&apos;s upload or Prism&apos;s drawing, else the utility&apos;s cover, else the initial on the project colour.</p>
+      </Route>
+      <Route method="PUT" path="/api/launches/:id/logo" auth="owner">
+        <p>Multipart <code>file</code> (PNG, JPEG, WebP or GIF, under 2 MB), cropped to 512×512. <code>→ 200 {`{ "ok": true, "source": "upload" }`}</code> · 413 · 415. Set it before the create: pump.fun keeps the first image it sees.</p>
+      </Route>
+      <Route method="POST" path="/api/launches/:id/identity" auth="owner">
+        <Code>{`→ 200 { "logo": boolean, "banner": boolean }   // what Prism drew this time
+→ 401 · 404 not yours · 409 SOL pair · 429 · 503 the desk is not switched on`}</Code>
+        <p>Prism draws the logo (skipped when you uploaded one) and the 3:1 banner as SVG, rendered to PNG. Allowed before launch; about a minute.</p>
+      </Route>
+      <Route method="GET" path="/api/launches/:id/banner" auth="public">
+        <p>The banner PNG 1500×500, or 404 until Prism has drawn one.</p>
+      </Route>
+      <Route method="GET" path="/api/launches/:id/gate?wallet=" auth="public · CORS *">
+        <Code>{`→ 200 { "mint", "wallet", "balance": "<base units>", "needed": "<base units>", "unlocked": boolean, "unlocks": "…" }
+→ 400 wallet is required · 404 · 409 not launched yet`}</Code>
+        <p>The holder gate, answered from the chain. Prove the wallet first, as with the <Link href="/docs/ownership-check">ownership check</Link>.</p>
+      </Route>
+      <Route method="POST" path="/api/launches/:id/desk" auth="owner">
+        <Code>{`→ 200 { "deliverables": [ { "kind": "identity" | "narrative" | "site", "agent", "model", "output", "created_at" } ] }
+→ 401 · 404 not yours · 409 SOL pair, or not launched yet · 429 · 503 the desk is not switched on`}</Code>
+        <p>Puts the desk to work on an EVYN-paired, launched coin; about a minute. Running again overwrites.</p>
+      </Route>
+
+      <H2 id="studio">Studio</H2>
+      <Route method="POST" path="/api/agents/sessions" auth="session + EVYN gate">
+        <Code>{`{ "agent": "creative" | "copywriter" | "narrator" | "social" | "analyst", "message": "1–4000 chars",
+  "image": "data:image/png;base64,…" }   // optional: PNG, JPEG, WebP or GIF under 4 MB, shown to the agent for this turn only
+→ 200 { "session": { "id", "agent", "turns", "messages": [ { "role", "content" } ], "created_at" }, "redirect": "<agent id>" | null }
+→ 401 sign in · 402 { error, held, needed } below the gate · 400 unknown agent / bad message
+→ 429 three sessions already open in the last 24 hours, or the hourly brake · 503 not switched on`}</Code>
+        <p><code>redirect</code> is set when the agent declined because the question belongs to another agent; the reply names it.</p>
+      </Route>
+      <Route method="POST" path="/api/agents/sessions/:id" auth="session + EVYN gate, own session">
+        <Code>{`{ "message": "1–4000 chars", "image": "data:image/…;base64,…" (optional) }
+→ 200 same shape · 404 no such session · 409 the session's 12 turns are used`}</Code>
+      </Route>
+
+      <H2 id="cron">Fee rounds</H2>
+      <Route method="GET" path="/api/cron/fees" auth="CRON_SECRET">
+        <Code>{`Authorization: Bearer <CRON_SECRET>      (or ?key=<CRON_SECRET>)
+→ 200 { "ok": true, "rounds": [ { launch, ticker, mint, pair, quote, swept, burnedQuote, launcher, buyback, burned, holders, revshare, lottery, held, txs, graduated, note? } ] }
+→ 401 · 503 VAULT_SECRET is not set`}</Code>
+        <p>Runs one <Link href="/docs/launchpad/fee-rounds">fee round</Link> over every launched coin. Vercel&apos;s cron calls it daily; the repository&apos;s <code>fee rounds</code> workflow every 15 minutes.</p>
+      </Route>
+
       <H2 id="moderation">Moderation</H2>
       <Route method="POST" path="/api/reports" auth="session">
         <p><code>{`{ "productId", "reason" }`}</code> (5–1000 chars). One per wallet per product. <code>→ 200 {`{ ok }`}</code></p>
@@ -227,8 +324,21 @@ npm run dev                          # http://localhost:3000`}</Code>
           <tr><td><code>DATABASE_URL</code></td><td>Neon Postgres. Blank = local PGlite.</td></tr>
           <tr><td><code>BLOB_READ_WRITE_TOKEN</code></td><td>Vercel Blob store for file ciphertext.</td></tr>
           <tr><td><code>GITHUB_API</code></td><td>Optional override of <code>https://api.github.com</code> (used by tests).</td></tr>
+          <tr><td colSpan={2}><strong>Launchpad</strong></td></tr>
+          <tr><td><code>VAULT_WALLET</code></td><td>The vault: creator of every coin, signer of every fee round. Falls back to <code>TREASURY_WALLET</code>.</td></tr>
+          <tr><td><code>VAULT_SECRET</code></td><td>The vault&apos;s secret key (base58 or a JSON byte array). Must match <code>VAULT_WALLET</code>. <strong>Back it up; keep SOL on it for gas.</strong></td></tr>
+          <tr><td><code>CRON_SECRET</code></td><td>Bearer token for <code>/api/cron/fees</code>. Vercel sends it on its cron; the GitHub workflow needs it as a repository secret.</td></tr>
+          <tr><td><code>NEXT_PUBLIC_PAIR_MINT</code></td><td>EVYN&apos;s mint. Unset = SOL pairs only, no desk, studio locked.</td></tr>
+          <tr><td><code>FEE_ROUND_MIN_LAMPORTS</code></td><td>Below this a launch&apos;s pot carries over. Default 5,000,000 (0.005 SOL).</td></tr>
+          <tr><td colSpan={2}><strong>Studio</strong></td></tr>
+          <tr><td><code>ANTHROPIC_API_KEY</code></td><td>Claude API key for the five agents and the desk. Unset = both answer 503.</td></tr>
+          <tr><td><code>NEXT_PUBLIC_AGENT_MIN_EVYN</code></td><td>Whole EVYN a wallet must hold. Default 0.5% of supply (5,000,000).</td></tr>
         </tbody>
       </table>
+      <Code lang="sh">{`node -e "const {Keypair}=require('@solana/web3.js');const bs58=require('bs58');const k=Keypair.generate();console.log(k.publicKey.toBase58(), bs58.encode(k.secretKey))"   # VAULT_WALLET VAULT_SECRET`}</Code>
+      <p>
+        Fee rounds every 15 minutes: add <code>FEES_URL</code> (<code>https://&lt;your host&gt;/api/cron/fees</code>) and <code>CRON_SECRET</code> as repository secrets; <code>.github/workflows/fees.yml</code> does the rest. Vercel&apos;s Hobby plan only allows a daily cron, which <code>vercel.json</code> keeps as a backstop.
+      </p>
       <Code lang="sh">{`node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"   # SESSION_SECRET / MASTER_KEY`}</Code>
       <Note kind="warn">
         <p>
@@ -245,7 +355,10 @@ $env:RPC_URL="http://127.0.0.1:3199"; $env:GITHUB_API="http://127.0.0.1:3198"
 $env:PGLITE_DIR="$env:TEMP\\everynth-e2e"; $env:DATABASE_URL=" "
 $env:ADMIN_WALLETS=(node scripts/e2e.mjs --admin-wallet)
 npm run build; npx next start -p 3100     # terminal 1
-node --env-file=.env.local scripts/e2e.mjs   # terminal 2 — 21 checks`}</Code>
+node --env-file=.env.local scripts/e2e.mjs   # terminal 2 — every check, launchpad and studio included`}</Code>
+      <p>
+        The studio and the desk need <code>ANTHROPIC_API_KEY</code> to answer; the end-to-end suite only checks their gates, so it never spends tokens. The launchpad&apos;s chain path was run against devnet and then mainnet by hand; the scripts are in the repository&apos;s history.
+      </p>
 
       <H2 id="deploy">Deploy to Vercel</H2>
       <ol>

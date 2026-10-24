@@ -4,14 +4,14 @@ import { query } from "./db.ts";
 // enough of the product row for agentFor to name the desk. Public by design — a frozen launch is
 // a statement of terms, and the point of freezing them is that anyone can read them.
 export type LaunchCard = {
-  id: string; slug: string | null; wallet: string; name: string; ticker: string; status: string; stack: string;
+  id: string; slug: string | null; wallet: string; name: string; ticker: string; status: string; stack: string; mint: string | null; pair: string;
   supply: string; gate_balance: number; gate_unlocks: string; creator_fee: number; color: string; description: string; created_at: Date;
   product_id: string; title: string; category: string; creator: string; has_cover: boolean;
 };
 
 export const listLaunches = (limit = 48) =>
   query<LaunchCard>(
-    `select l.id, l.slug, l.wallet, l.name, l.ticker, l.status, l.stack, l.supply::text as supply, l.gate_balance, l.gate_unlocks,
+    `select l.id, l.slug, l.wallet, l.name, l.ticker, l.status, l.stack, l.mint, l.pair, l.supply::text as supply, l.gate_balance, l.gate_unlocks,
             l.creator_fee, l.color, l.description, l.created_at,
             p.id as product_id, p.title, p.category, p.creator, (p.cover is not null) as has_cover
      from launches l join products p on p.id = l.product_id
@@ -23,8 +23,8 @@ export const listLaunches = (limit = 48) =>
 // other two are named now so the lifecycle reads the same way it will later.
 export const COLUMNS = [
   { status: "frozen", title: "Newly created", sub: "terms frozen, not minted" },
-  { status: "pooling", title: "About to graduate", sub: "pool filling, trading opens at the line" },
-  { status: "live", title: "Graduated", sub: "trading, holders unlocking" },
+  { status: "launched", title: "About to graduate", sub: "on the bonding curve, trading" },
+  { status: "graduated", title: "Graduated", sub: "in its PumpSwap pool, holders unlocking" },
 ] as const;
 
 /** One launch, by permalink or id, with the product behind it. */
@@ -33,11 +33,16 @@ export type LaunchRow = {
   gate_balance: number; gate_unlocks: string; status: string; issued_at: number; created_at: Date;
   creator_fee: number; dev_buy: string; description: string; theme: string; color: string; template: string;
   website: string; x: string; telegram: string; github: string; utility_url: string;
+  mint: string | null; mint_signature: string | null; minted_at: Date | null; pair: string;
   product_id: string; title: string; category: string; creator: string; has_cover: boolean;
+  /** Where the logo came from (null = none yet, the default mark shows), and whether Prism's banner exists. */
+  logo_source: "upload" | "prism" | null; has_banner: boolean;
 };
 export const getLaunch = (key: string) =>
   query<LaunchRow>(
-    `select l.*, l.dev_buy::text as dev_buy, p.title, p.category, p.creator, (p.cover is not null) as has_cover
+    `select l.*, l.dev_buy::text as dev_buy, p.title, p.category, p.creator, (p.cover is not null) as has_cover,
+            (select source from launch_images i where i.launch_id = l.id and i.kind = 'logo') as logo_source,
+            exists (select 1 from launch_images i where i.launch_id = l.id and i.kind = 'banner') as has_banner
      from launches l join products p on p.id = l.product_id where l.slug = $1 or l.id = $1`,
     [key],
   ).then((r) => r[0]);
