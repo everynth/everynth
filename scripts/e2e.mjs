@@ -523,6 +523,12 @@ assert.equal((await buyer.json("/api/launches/giga/chat", { body: "gm" })).statu
 const roomPage = await (await fetch(BASE + "/community/giga")).text();
 assert.ok(roomPage.includes("GIGA") && roomPage.includes("opens the moment"), "a frozen coin's room says when it opens");
 assert.equal((await fetch(BASE + "/api/launches/nope/chat")).status, 404);
+const pinAs = (user, id) => fetch(BASE + "/api/launches/giga/chat/pin", { method: "PUT", headers: { cookie: user.cookie, "content-type": "application/json" }, body: JSON.stringify({ id }) });
+// buyer launched GIGA (on the utility it bought); creator did not
+assert.equal((await pinAs(creator, null)).status, 403, "only the launcher pins");
+assert.deepEqual(await (await pinAs(buyer, null)).json(), { pinned: null }, "the launcher clears the pin");
+assert.equal((await pinAs(buyer, "999999")).status, 400, "and cannot pin a message from nowhere");
+assert.ok((await (await fetch(BASE + "/stats")).text()).includes("Holders talking"), "live stats count the community");
 step("token launch: owned utility only, step rules server-side, terms frozen under a signature, read back");
 
 // the studio: signed in, then enough EVYN, before any session opens (the stub chain holds none)
