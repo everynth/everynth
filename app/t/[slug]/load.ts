@@ -1,6 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import { siteData, type Chain, type Round, type SiteData } from "@/components/sites";
 import { RPC_URL } from "@/lib/config";
+import { messages } from "@/lib/community";
 import { query } from "@/lib/db";
 import { deliverables, siteCopy } from "@/lib/desk";
 import { getLaunch, type LaunchRow } from "@/lib/launches";
@@ -24,13 +25,14 @@ function dayStats(t: Awaited<ReturnType<typeof trades>>, history: { at: string; 
 export async function loadSite(slug: string): Promise<{ l: LaunchRow; d: SiteData } | null> {
   const l = await getLaunch(slug);
   if (!l) return null;
-  const [work, rounds] = await Promise.all([
+  const [work, rounds, chat] = await Promise.all([
     agentsOn(l.pair) ? deliverables(l.id) : Promise.resolve([]),
     // What the vault collected for this coin and where it went, newest first; the website shows the mechanics running.
     l.mint ? query<Round>(`select id, created_at::text as created_at, swept::text as swept, buyback::text as buyback, burned::text as burned, holders::text as holders, held::text as held, quote, burned_quote::text as burned_quote from fee_rounds where launch_id = $1 order by created_at desc limit 8`, [l.id]) : Promise.resolve([]),
+    l.mint ? messages(l.id, undefined, 3) : Promise.resolve([]), // the holders, in their own words
   ]);
   const site = siteCopy(work.find((w) => w.kind === "site")?.output ?? "");
-  let chain: Chain = { explorer: null, holders: null, top: null, curve: null, trades: null, rpc: RPC_URL, solUsd: null, work, site, rounds };
+  let chain: Chain = { explorer: null, holders: null, top: null, curve: null, trades: null, rpc: RPC_URL, solUsd: null, work, site, rounds, chat };
   if (l.mint) {
     const [top, c, t, fx] = await Promise.all([largest(l.mint), curve(l.mint, l.pair === "evyn" ? "evyn" : "sol"), trades(l.mint), solUsd()]);
     const supply = Number(baseUnits(l.supply));

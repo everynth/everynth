@@ -280,6 +280,23 @@ export function Landing({ d }: { d: SiteData }) {
         )}
       </section>
 
+      <section className="l-wrap l-sec" id="holders">
+        <p className="l-k">The community</p>
+        <h2>From the holders {live && <a href={`/community/${d.slug}`} className="l-ghost" style={{ verticalAlign: "middle", marginLeft: 12, textTransform: "none", letterSpacing: 0, fontWeight: 500 }}>Join the room →</a>}</h2>
+        {d.chat.length ? (
+          <div className="l-posts">
+            {d.chat.map((m) => (
+              <div key={m.id} className="l-card l-post">
+                <small><b>{m.wallet.slice(0, 4)}…{m.wallet.slice(-4)}</b> · {m.role === "dev" ? "the launcher" : `holds ${(Number(m.held) / 1e6).toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 1 })} $${d.ticker}`}</small>
+                <p>{m.body}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="l-card" style={{ color: "var(--mut)" }}>{live ? `Nobody has written in the $${d.ticker} room yet. Holders can start the conversation; anyone can read it.` : "The holders' room opens when the coin is on the curve."}</div>
+        )}
+      </section>
+
       <section className="l-wrap l-sec" id="vault">
         <p className="l-k">The mechanics, running</p>
         <h2>From the vault {live && <a href={`/api/launches/${d.slug}/rounds`} className="l-ghost" style={{ verticalAlign: "middle", marginLeft: 12, textTransform: "none", letterSpacing: 0, fontWeight: 500 }}>Every round, CSV ↓</a>}</h2>

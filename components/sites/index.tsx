@@ -1,3 +1,4 @@
+import type { Message } from "@/lib/community";
 import type { Deliverable, SiteCopy } from "@/lib/desk";
 import { hooksOf, type LaunchRow } from "@/lib/launches";
 import { hookById } from "@/lib/launchpad";
@@ -36,6 +37,8 @@ export type SiteData = {
   work: Deliverable[]; site: SiteCopy | null;
   /** The vault's fee rounds for this coin, newest first: the mechanics, as they actually ran. */
   rounds: Round[];
+  /** The latest messages from the coin's community room, oldest first. */
+  chat: Message[];
 };
 
 /** One fee round as the website shows it; amounts are base units as text (lamports, or EVYN's 6 decimals when `quote` is EVYN). */
@@ -43,7 +46,7 @@ export type Round = { id: string; created_at: string; swept: string; buyback: st
 
 export type Chain = {
   explorer: string | null; holders: number | null; top: SiteData["top"]; curve: SiteData["curve"]; trades: SiteData["trades"]; history?: SiteData["history"];
-  vol24Sol?: number | null; change24?: number | null; rpc: string; solUsd?: number | null; work?: Deliverable[]; site?: SiteCopy | null; rounds?: Round[];
+  vol24Sol?: number | null; change24?: number | null; rpc: string; solUsd?: number | null; work?: Deliverable[]; site?: SiteCopy | null; rounds?: Round[]; chat?: Message[];
 };
 
 export const siteData = (
@@ -53,7 +56,7 @@ export const siteData = (
   pair: l.pair === "evyn" ? "evyn" : "sol", desk: l.pair === "evyn",
   mint: l.mint, explorer: chain.explorer, holders: chain.holders, top: chain.top, curve: chain.curve, trades: chain.trades, history: chain.history ?? null,
   vol24Sol: chain.vol24Sol ?? null, change24: chain.change24 ?? null, rpc: chain.rpc, solUsd: chain.solUsd ?? null,
-  work: chain.work ?? [], site: chain.site ?? null, rounds: chain.rounds ?? [],
+  work: chain.work ?? [], site: chain.site ?? null, rounds: chain.rounds ?? [], chat: chain.chat ?? [],
   slug: l.slug ?? l.id, name: l.name, ticker: l.ticker, description: l.description, theme: l.theme, color: l.color, template: l.template,
   website: l.website, x: l.x, telegram: l.telegram, github: l.github, utilityUrl: l.utility_url,
   utility: l.title, productId: l.product_id, photo: l.has_cover ? `/api/products/${l.product_id}/cover` : null,
