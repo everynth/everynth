@@ -208,6 +208,9 @@ github  { "kind": "github", "repo": "owner/name", "githubUser": "octocat" | null
         <Code>{`{ "body": "1–500 chars", "replyTo": "<message id in this room>" (optional) }
 → 200 { "message" } · 401 sign in · 403 holds none of the coin · 409 not on the curve yet · 429 more than 20 per 10 minutes`}</Code>
       </Route>
+      <Route method="PUT" path="/api/launches/:id/chat/pin" auth="session · the launcher">
+        <p>Pin one message to the top of the room, or clear it. <code>{`{ "id": "<message id>" | null }`}</code> <code>→ 200 {`{ "pinned": message | null }`}</code> · 403 not the launcher · 400 not in this room.</p>
+      </Route>
       <Route method="GET" path="/api/launches/:id/rounds" auth="public · CORS *">
         <p>Every fee round the vault ran for the coin, oldest first, as CSV (<code>text/csv</code>): time, quote, swept, EVYN burned, launcher, buyback, the coin burned, to holders, lottery, revshare, held — in whole SOL or EVYN.</p>
       </Route>

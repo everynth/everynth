@@ -49,6 +49,20 @@ export async function standing(l: LaunchRow, wallet: string): Promise<{ role: "d
   return { role: wallet === l.wallet ? "dev" : held > 0n ? "holder" : null, held };
 }
 
+/** One message by id, in this room. */
+export const messageIn = (launchId: string, id: string) =>
+  /^\d+$/.test(id) ? query<Message>(`select ${COLS} from launch_messages where id = $1::bigint and launch_id = $2`, [id, launchId]).then((r) => r[0] ?? null) : Promise.resolve(null);
+
+/** The launcher pins one message to the top of the room, or clears it with null. */
+export async function pin(l: LaunchRow, wallet: string, id: unknown): Promise<Message | null> {
+  if (wallet !== l.wallet) throw new ChatError("only the launcher pins in this room", 403);
+  if (id == null || id === "") { await query(`update launches set pinned_message = null where id = $1`, [l.id]); return null; }
+  const m = await messageIn(l.id, String(id));
+  if (!m) throw new ChatError("that message is not in this room", 400);
+  await query(`update launches set pinned_message = $1::bigint where id = $2`, [m.id, l.id]);
+  return m;
+}
+
 export async function post(l: LaunchRow, wallet: string, raw: unknown, replyTo?: unknown): Promise<Message> {
   if (!l.mint) throw new ChatError("the room opens when the coin is on the curve", 409);
   const body = String(raw ?? "").replace(/\r/g, "").trim();

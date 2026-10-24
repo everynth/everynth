@@ -37,10 +37,12 @@ export type LaunchRow = {
   product_id: string; title: string; category: string; creator: string; has_cover: boolean;
   /** Where the logo came from (null = none yet, the default mark shows), and whether Prism's banner exists. */
   logo_source: "upload" | "prism" | null; has_banner: boolean;
+  /** The message the launcher pinned in the coin's community room, if any. */
+  pinned_message: string | null;
 };
 export const getLaunch = (key: string) =>
   query<LaunchRow>(
-    `select l.*, l.dev_buy::text as dev_buy, p.title, p.category, p.creator, (p.cover is not null) as has_cover,
+    `select l.*, l.dev_buy::text as dev_buy, l.pinned_message::text as pinned_message, p.title, p.category, p.creator, (p.cover is not null) as has_cover,
             (select source from launch_images i where i.launch_id = l.id and i.kind = 'logo') as logo_source,
             exists (select 1 from launch_images i where i.launch_id = l.id and i.kind = 'banner') as has_banner
      from launches l join products p on p.id = l.product_id where l.slug = $1 or l.id = $1`,

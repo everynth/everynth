@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Message } from "@/lib/community";
 
 type Props = {
-  id: string; ticker: string; launcher: string; open: boolean; initial: Message[];
+  id: string; ticker: string; launcher: string; open: boolean; initial: Message[]; pinned: Message | null;
   me: { wallet: string; role: "dev" | "holder" | null; held: number } | null; max: number; tradeHref: string;
 };
 
@@ -25,6 +25,15 @@ export function Room(p: Props) {
   const [error, setError] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null); // the message the next one answers
   const canWrite = p.open && !!p.me?.role;
+  const [pinned, setPinned] = useState(p.pinned);
+  const isLauncher = p.me?.wallet === p.launcher;
+  async function setPin(m: Message | null) {
+    setError("");
+    const r = await fetch(`/api/launches/${p.id}/chat/pin`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: m?.id ?? null }) });
+    const j = (await r.json().catch(() => ({}))) as { pinned?: Message | null; error?: string };
+    if (!r.ok) { setError(j.error ?? `error ${r.status}`); return; }
+    setPinned(j.pinned ?? null);
+  }
   const box = useRef<HTMLDivElement>(null);
   const area = useRef<HTMLTextAreaElement>(null);
   const author = (m: Message) => (m.wallet === p.me?.wallet ? "you" : m.role === "dev" ? "the launcher" : short(m.wallet));
@@ -67,6 +76,13 @@ export function Room(p: Props) {
 
   return (
     <section className="chat rise rise-2">
+      {pinned && (
+        <a className="chat-pinned" href={`#m${pinned.id}`}>
+          <span className="chat-pin-k">📌 Pinned by the launcher</span>
+          <span className="chat-pin-body">{pinned.body}</span>
+          {isLauncher && <button type="button" onClick={(e) => { e.preventDefault(); void setPin(null); }}>Unpin</button>}
+        </a>
+      )}
       <div className="chat-log" ref={box}>
         {!p.open && <p className="chat-empty">The room opens the moment ${p.ticker} is on the curve.</p>}
         {p.open && list.length === 0 && <p className="chat-empty">Nobody has written yet. Holders of ${p.ticker} can start the conversation.</p>}
@@ -87,6 +103,7 @@ export function Room(p: Props) {
               )}
               <p>{m.body}</p>
               {canWrite && <button type="button" className="chat-reply" onClick={() => { setReplyTo(m); area.current?.focus(); }}>Reply</button>}
+              {isLauncher && pinned?.id !== m.id && <button type="button" className="chat-reply" style={{ marginLeft: 6 }} onClick={() => void setPin(m)}>📌 Pin</button>}
             </div>
           );
         })}

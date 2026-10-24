@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BODY_MAX, messages, standing } from "@/lib/community";
+import { BODY_MAX, messageIn, messages, standing } from "@/lib/community";
 import { getLaunch } from "@/lib/launches";
 import { DECIMALS } from "@/lib/mint";
 import { sessionWallet } from "@/lib/session";
@@ -16,7 +16,11 @@ export default async function RoomPage({ params }: PageProps<"/community/[slug]"
   const l = await getLaunch((await params).slug);
   if (!l) notFound();
   const wallet = await sessionWallet();
-  const [initial, me] = await Promise.all([messages(l.id), wallet && l.mint ? standing(l, wallet) : Promise.resolve(null)]);
+  const [initial, me, pinned] = await Promise.all([
+    messages(l.id),
+    wallet && l.mint ? standing(l, wallet) : Promise.resolve(null),
+    l.pinned_message ? messageIn(l.id, l.pinned_message) : Promise.resolve(null),
+  ]);
   const slug = l.slug ?? l.id;
   const held = me ? Number(me.held) / 10 ** DECIMALS : 0;
   return (
@@ -43,6 +47,7 @@ export default async function RoomPage({ params }: PageProps<"/community/[slug]"
         launcher={l.wallet}
         open={!!l.mint}
         initial={initial}
+        pinned={pinned}
         me={wallet ? { wallet, role: me?.role ?? null, held } : null}
         max={BODY_MAX}
         tradeHref={`/t/${slug}`}
