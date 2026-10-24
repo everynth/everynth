@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AgentMark } from "@/components/agent";
 import { Spark } from "@/components/spark";
 import { agentFor } from "@/lib/agents";
+import { communityStats, rooms } from "@/lib/community";
 import { launchpadStats } from "@/lib/launchpad-stats";
 import { byCategory, pulse, topCreators, trending } from "@/lib/market";
 import { formatSol } from "@/lib/money";
@@ -11,7 +12,7 @@ export const metadata = { title: "Live stats — EVERYNTH" };
 
 // Live numbers straight from products + purchases, and from the launchpad's curves and fee rounds.
 export default async function StatsPage() {
-  const [p, hot, creators, cats, lp] = await Promise.all([pulse(30), trending(10), topCreators(10), byCategory(), launchpadStats()]);
+  const [p, hot, creators, cats, lp, cm, busiest] = await Promise.all([pulse(30), trending(10), topCreators(10), byCategory(), launchpadStats(), communityStats(), rooms()]);
   const money = (sol: number) => (lp.fx ? usd(sol * lp.fx) : `${sol.toFixed(2)} SOL`);
   const solSub = (sol: number, p = 3) => `${sol.toFixed(p)} SOL`;
   const maxCat = Math.max(1, ...cats.map((c) => c.sales));
@@ -74,6 +75,34 @@ export default async function StatsPage() {
                   <span className="rank mono">{String(i + 1).padStart(2, "0")}</span>
                   <span className="prow-name">{c.launch.name} <small style={{ display: "inline" }}>${c.launch.ticker}</small><small>{c.complete ? "graduated" : `${c.progress.toFixed(1)}% of the curve`} · {c.tradeCount} trades · {c.launch.pair === "evyn" ? "EVYN" : "SOL"} pair</small></span>
                   <span className="prow-val"><b className="chrome">{money(c.mcapSol)}</b><small>vol {money(c.volumeSol)}</small></span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* Community: the holders' rooms, how much they talk, and where. */}
+      <section className="panel panel-feature rise rise-3" aria-label="Community">
+        <div className="feature-left">
+          <header className="panel-head"><h2>Community</h2><span>holder rooms</span></header>
+          <dl className="pulse">
+            <div><dt>Rooms open</dt><dd className="chrome">{cm.rooms}<small> one per coin on the curve</small></dd></div>
+            <div><dt>Messages</dt><dd className="v-info">{cm.messages}<small> all time</small></dd></div>
+            <div><dt>Holders talking</dt><dd className="chrome">{cm.writers}<small> wallets that wrote</small></dd></div>
+            <div><dt>Last 24 hours</dt><dd className={cm.day ? "v-good" : "chrome"}>{cm.day}<small> messages from {cm.day_writers} wallets</small></dd></div>
+          </dl>
+        </div>
+        <div className="feature-art">
+          <p className="kicker">Busiest rooms</p>
+          <ol className="plist" style={{ marginTop: 8 }}>
+            {busiest.length === 0 && <li className="pempty">No room open yet</li>}
+            {busiest.slice(0, 5).map((r, i) => (
+              <li key={r.id}>
+                <Link href={`/community/${r.slug ?? r.id}`} className="prow">
+                  <span className="rank mono">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="prow-name">{r.name} <small style={{ display: "inline" }}>${r.ticker}</small><small>{r.members} talking · {r.pair === "evyn" ? "EVYN" : "SOL"} pair</small></span>
+                  <span className="prow-val"><b className="chrome">{r.messages}</b><small>messages</small></span>
                 </Link>
               </li>
             ))}

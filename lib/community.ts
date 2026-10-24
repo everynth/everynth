@@ -32,6 +32,18 @@ export const rooms = () =>
      order by max(m.created_at) desc nulls last, l.minted_at desc nulls last`,
   );
 
+/** The community across the launchpad: rooms open, messages, wallets that wrote, and the last day's share. */
+export async function communityStats() {
+  const [r] = await query<{ rooms: number; messages: number; writers: number; day: number; day_writers: number }>(
+    `select (select count(*)::int from launches where mint is not null) as rooms,
+            count(*)::int as messages, count(distinct wallet)::int as writers,
+            count(*) filter (where created_at > now() - interval '1 day')::int as day,
+            count(distinct wallet) filter (where created_at > now() - interval '1 day')::int as day_writers
+     from launch_messages`,
+  );
+  return r ?? { rooms: 0, messages: 0, writers: 0, day: 0, day_writers: 0 };
+}
+
 /** A room's messages, oldest first: the latest `limit`, or only those after `after` (for polling). */
 export async function messages(launchId: string, after?: string, limit = 80): Promise<Message[]> {
   const cols = COLS;
