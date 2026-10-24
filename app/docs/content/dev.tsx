@@ -205,7 +205,7 @@ github  { "kind": "github", "repo": "owner/name", "githubUser": "octocat" | null
         <p>The coin&apos;s community room, oldest first: the latest 80 messages, or only those newer than <code>after</code> (a message id). <code>→ 200 {`{ "messages": [ { id, wallet, role: "dev" | "holder", held, body, created_at } ] }`}</code> — <code>held</code> is the coin in base units at the moment of writing.</p>
       </Route>
       <Route method="POST" path="/api/launches/:id/chat" auth="session · holds the coin, or launched it">
-        <Code>{`{ "body": "1–500 chars" }
+        <Code>{`{ "body": "1–500 chars", "replyTo": "<message id in this room>" (optional) }
 → 200 { "message" } · 401 sign in · 403 holds none of the coin · 409 not on the curve yet · 429 more than 20 per 10 minutes`}</Code>
       </Route>
       <Route method="GET" path="/api/launches/:id/rounds" auth="public · CORS *">

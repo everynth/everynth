@@ -23,7 +23,12 @@ export function Room(p: Props) {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [replyTo, setReplyTo] = useState<Message | null>(null); // the message the next one answers
+  const canWrite = p.open && !!p.me?.role;
   const box = useRef<HTMLDivElement>(null);
+  const area = useRef<HTMLTextAreaElement>(null);
+  const author = (m: Message) => (m.wallet === p.me?.wallet ? "you" : m.role === "dev" ? "the launcher" : short(m.wallet));
+  const snippet = (s: string) => (s.length > 90 ? `${s.slice(0, 90)}…` : s);
   const last = list.at(-1)?.id;
 
   // Poll for newer messages; cheap, and a room this size does not need a socket.
@@ -47,11 +52,12 @@ export function Room(p: Props) {
     setBusy(true);
     setError("");
     try {
-      const r = await fetch(`/api/launches/${p.id}/chat`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ body }) });
+      const r = await fetch(`/api/launches/${p.id}/chat`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ body, replyTo: replyTo?.id ?? null }) });
       const j = (await r.json()) as { message?: Message; error?: string };
       if (!r.ok || !j.message) throw new Error(j.error ?? `error ${r.status}`);
       setList((l) => [...l, j.message!]);
       setDraft("");
+      setReplyTo(null);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -59,7 +65,6 @@ export function Room(p: Props) {
     }
   }
 
-  const canWrite = p.open && !!p.me?.role;
   return (
     <section className="chat rise rise-2">
       <div className="chat-log" ref={box}>
@@ -67,14 +72,21 @@ export function Room(p: Props) {
         {p.open && list.length === 0 && <p className="chat-empty">Nobody has written yet. Holders of ${p.ticker} can start the conversation.</p>}
         {list.map((m) => {
           const mine = m.wallet === p.me?.wallet;
+          const quoted = m.reply_to ? list.find((x) => x.id === m.reply_to) : null;
           return (
-            <div key={m.id} className={`chat-msg${mine ? " is-mine" : ""}`}>
+            <div key={m.id} id={`m${m.id}`} className={`chat-msg${mine ? " is-mine" : ""}`}>
               <header>
                 <b>{mine ? "you" : short(m.wallet)}</b>
                 {m.role === "dev" ? <span className="chat-tag is-dev">launcher</span> : <span className="chat-tag">holds {amount(m.held)} ${p.ticker}</span>}
                 <time>{time(m.created_at)}</time>
               </header>
+              {m.reply_to && (
+                <a className="chat-quote" href={`#m${m.reply_to}`}>
+                  {quoted ? <><b>↪ {author(quoted)}</b> {snippet(quoted.body)}</> : <b>↪ an earlier message</b>}
+                </a>
+              )}
               <p>{m.body}</p>
+              {canWrite && <button type="button" className="chat-reply" onClick={() => { setReplyTo(m); area.current?.focus(); }}>Reply</button>}
             </div>
           );
         })}
@@ -82,7 +94,13 @@ export function Room(p: Props) {
 
       {canWrite ? (
         <form onSubmit={send} className="chat-form">
-          <textarea className="field" rows={2} value={draft} maxLength={p.max} disabled={busy} placeholder={`Say something to the $${p.ticker} holders…`}
+          {replyTo && (
+            <div className="chat-replying">
+              <span><b>Replying to {author(replyTo)}</b> · {snippet(replyTo.body)}</span>
+              <button type="button" onClick={() => setReplyTo(null)} aria-label="Cancel the reply">×</button>
+            </div>
+          )}
+          <textarea ref={area} className="field" rows={2} value={draft} maxLength={p.max} disabled={busy} placeholder={`Say something to the $${p.ticker} holders…`}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(e); } }} />
           <div className="chat-foot">

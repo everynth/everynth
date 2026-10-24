@@ -163,6 +163,7 @@ create table if not exists launch_messages (
   created_at timestamptz not null default now()
 );
 create index if not exists launch_messages_room on launch_messages (launch_id, id desc);
+alter table launch_messages add column if not exists reply_to bigint; -- the message this one answers, in the same room
 -- The launch's logo and banner as PNG: uploaded by the launcher, or drawn by Prism as SVG and rendered.
 create table if not exists launch_images (
   launch_id text not null references launches(id),

@@ -6,11 +6,13 @@ import type { LaunchRow } from "./launches.ts";
 import { balanceOf } from "./token.ts";
 
 export const BODY_MAX = 500;
-export type Message = { id: string; wallet: string; role: "dev" | "holder"; held: string; body: string; created_at: string };
+export type Message = { id: string; wallet: string; role: "dev" | "holder"; held: string; body: string; created_at: string; reply_to: string | null };
 export type Room = {
   id: string; slug: string | null; name: string; ticker: string; pair: string; color: string; mint: string; description: string;
   messages: number; members: number; last_at: string | null; last_body: string | null;
 };
+
+const COLS = "id::text as id, wallet, role, held, body, created_at::text as created_at, reply_to::text as reply_to";
 
 export class ChatError extends Error {
   status: number;
@@ -32,7 +34,7 @@ export const rooms = () =>
 
 /** A room's messages, oldest first: the latest `limit`, or only those after `after` (for polling). */
 export async function messages(launchId: string, after?: string, limit = 80): Promise<Message[]> {
-  const cols = "id::text as id, wallet, role, held, body, created_at::text as created_at";
+  const cols = COLS;
   if (after && /^\d+$/.test(after)) {
     return query<Message>(`select ${cols} from launch_messages where launch_id = $1 and id > $2::bigint order by id asc limit $3`, [launchId, after, limit]);
   }
@@ -47,16 +49,20 @@ export async function standing(l: LaunchRow, wallet: string): Promise<{ role: "d
   return { role: wallet === l.wallet ? "dev" : held > 0n ? "holder" : null, held };
 }
 
-export async function post(l: LaunchRow, wallet: string, raw: unknown): Promise<Message> {
+export async function post(l: LaunchRow, wallet: string, raw: unknown, replyTo?: unknown): Promise<Message> {
   if (!l.mint) throw new ChatError("the room opens when the coin is on the curve", 409);
   const body = String(raw ?? "").replace(/\r/g, "").trim();
   if (!body || body.length > BODY_MAX) throw new ChatError(`a message is 1–${BODY_MAX} characters`, 400);
+  // A reply must answer a message in this same room.
+  const reply = replyTo == null || replyTo === "" ? null : String(replyTo);
+  if (reply !== null && (!/^\d+$/.test(reply) || !(await query(`select 1 from launch_messages where id = $1::bigint and launch_id = $2`, [reply, l.id])).length)) {
+    throw new ChatError("that message is not in this room", 400);
+  }
   const { role, held } = await standing(l, wallet);
   if (!role) throw new ChatError(`hold some $${l.ticker} to write here — reading is open to everyone`, 403);
   const [m] = await query<Message>(
-    `insert into launch_messages (launch_id, wallet, role, held, body) values ($1, $2, $3, $4, $5)
-     returning id::text as id, wallet, role, held, body, created_at::text as created_at`,
-    [l.id, wallet, role, held.toString(), body],
+    `insert into launch_messages (launch_id, wallet, role, held, body, reply_to) values ($1, $2, $3, $4, $5, $6::bigint) returning ${COLS}`,
+    [l.id, wallet, role, held.toString(), body, reply],
   );
   return m;
 }

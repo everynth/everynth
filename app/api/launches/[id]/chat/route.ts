@@ -18,9 +18,9 @@ export async function POST(request: Request, { params }: RouteContext<"/api/laun
   const l = await getLaunch((await params).id);
   if (!l) return Response.json({ error: "not found" }, { status: 404 });
   if (!(await allow("chat", `w:${wallet}`))) return tooMany("chat");
-  const b = ((await request.json().catch(() => null)) ?? {}) as { body?: unknown };
+  const b = ((await request.json().catch(() => null)) ?? {}) as { body?: unknown; replyTo?: unknown };
   try {
-    return Response.json({ message: await post(l, wallet, b.body) });
+    return Response.json({ message: await post(l, wallet, b.body, b.replyTo) });
   } catch (e) {
     if (e instanceof ChatError) return Response.json({ error: e.message }, { status: e.status });
     throw e;
